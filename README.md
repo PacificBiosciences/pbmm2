@@ -10,7 +10,6 @@ pbcopper).
 
 TODO
 ----
-- A proper frontend using pbcopper (Hkw from minimap2)
 - Output filter (length and accuracy of alignments)
 - Sort and index the output file by default?
 - Benchmarks!!
