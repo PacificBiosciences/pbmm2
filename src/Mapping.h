@@ -40,8 +40,8 @@ PacBio::BAM::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const i
 struct MapOptions
 {
     MapOptions() {
-		mm_mapopt_init(&opts_);
-		opts_.flag |= MM_F_CIGAR;  // always perform alignment
+        mm_mapopt_init(&opts_);
+        opts_.flag |= MM_F_CIGAR;  // always perform alignment
         opts_.flag |= MM_F_SOFTCLIP;  // always soft-clip
     }
 
@@ -57,7 +57,7 @@ std::vector<PacBio::BAM::BamRecord> Align(const PacBio::BAM::BamRecord rec,
 {
     using namespace PacBio::BAM;
 
-	static constexpr const uint32_t nCigarMax = 65535;
+    static constexpr const uint32_t nCigarMax = 65535;
     static thread_local ThreadBuffer tbuf;
 
     std::vector<BamRecord> result;

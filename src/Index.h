@@ -23,9 +23,9 @@ struct IndexOptions
         mm_idxopt_init(&opts_);
         // set default map-pb options
         // map-pb settings (aka -Hk19)
-		opts_.flag |= MM_I_HPC;  // homopolymer compression (-H)
+        opts_.flag |= MM_I_HPC;  // homopolymer compression (-H)
         opts_.k = 19;  // k-mer of 19 (-k19)
-		opts_.batch_size = 0x7fffffffffffffffL;  // always build a uni-part index
+        opts_.batch_size = 0x7fffffffffffffffL;  // always build a uni-part index
     }
 
     mm_idxopt_t opts_;
