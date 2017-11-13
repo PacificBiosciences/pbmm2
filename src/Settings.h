@@ -56,5 +56,5 @@ struct Settings
     /// necessary CLI::Options for the ccs executable.
     static PacBio::CLI::Interface CreateCLI();
 };
-}
-}  // ::PacBio::minimap2
+} // namespace minimap2
+} // namespace PacBio

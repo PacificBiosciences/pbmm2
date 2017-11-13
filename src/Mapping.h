@@ -86,5 +86,5 @@ std::vector<PacBio::BAM::BamRecord> Align(const PacBio::BAM::BamRecord rec,
 
     return result;
 }
-
-}}
+} // namespace minimap2
+} // namespace PacBio

@@ -17,5 +17,5 @@ struct ThreadBuffer
 
     mm_tbuf_t* tbuf_;
 };
-
-}}
+} // namespace minimap2
+} // namespace PacBio
