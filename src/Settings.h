@@ -45,12 +45,17 @@ struct Settings
     const std::string CLI;
     const std::vector<std::string> InputFiles;
     int NumThreads;
+
+    // minimap2 alignment parameters
+    int Kmer;  // -k
+    int Window;  // -w
+
     bool NoPbi;
 
     /// Parses the provided CLI::Results and retrieves a defined set of options.
     Settings(const PacBio::CLI::Results& options);
 
-    size_t ThreadCount(int n);
+    int ThreadCount(int n);
 
     /// Given the description of the tool and its version, create all
     /// necessary CLI::Options for the ccs executable.

@@ -18,13 +18,16 @@ namespace minimap2 {
 
 struct IndexOptions
 {
-    IndexOptions(int nthreads = 3) : nthreads_{nthreads} {
+    IndexOptions(const int k = 19, const int w = 10, const int nthreads = 3)
+        : nthreads_{nthreads}
+    {
         // not included in minimap.h for some reason
         mm_idxopt_init(&opts_);
         // set default map-pb options
         // map-pb settings (aka -Hk19)
         opts_.flag |= MM_I_HPC;  // homopolymer compression (-H)
-        opts_.k = 19;  // k-mer of 19 (-k19)
+        opts_.k = k;  // k-mer of 19 (-k19)
+        opts_.w = w;  // minimizer window of 10 (default)
         opts_.batch_size = 0x7fffffffffffffffL;  // always build a uni-part index
     }
 

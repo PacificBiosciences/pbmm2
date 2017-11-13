@@ -182,7 +182,7 @@ int Workflow::Runner(const CLI::Results& options)
 
     Settings settings(options);
 
-    IndexOptions idxOpts;
+    IndexOptions idxOpts(settings.Kmer, settings.Window, settings.NumThreads);
     MapOptions mapOpts;
 
     BAM::DataSet qryFile;

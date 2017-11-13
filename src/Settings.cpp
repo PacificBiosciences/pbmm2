@@ -11,6 +11,20 @@ const PlainOption NumThreads{
     "Number of threads to use, 0 means autodetection.",
     CLI::Option::IntType(0)
 };
+const PlainOption Kmer{
+    "kmer",
+    { "k", "kmer" },
+    "K-mer Length",
+    "The K in K-mer.",
+    CLI::Option::IntType(19)
+};
+const PlainOption Window{
+    "window",
+    { "w", "window" },
+    "Minimizer Window Size",
+    "Minimizer window size.",
+    CLI::Option::IntType(10)
+};
 const PlainOption NoPbi{
     "nopbi",
     { "no-pbi" },
@@ -24,6 +38,8 @@ const PlainOption NoPbi{
 Settings::Settings(const PacBio::CLI::Results& options)
     : CLI(options.InputCommandLine())
     , InputFiles(options.PositionalArguments())
+    , Kmer(options[OptionNames::Kmer])
+    , Window(options[OptionNames::Window])
     , NoPbi(true)
 {
     int requestedNThreads;
@@ -35,7 +51,7 @@ Settings::Settings(const PacBio::CLI::Results& options)
     NumThreads = ThreadCount(requestedNThreads);
 }
 
-size_t Settings::ThreadCount(int n)
+int Settings::ThreadCount(int n)
 {
     const int m = std::thread::hardware_concurrency();
     if (n <= 0) n = m + n;  // permit n <= 0 to subtract from max threads
@@ -54,7 +70,9 @@ PacBio::CLI::Interface Settings::CreateCLI()
     i.AddVersionOption();  // use built-in version output
 
     i.AddOptions({
-        OptionNames::NumThreads
+        OptionNames::NumThreads,
+        OptionNames::Kmer,
+        OptionNames::Window
         // OptionNames::NoPbi
     });
 
