@@ -49,6 +49,7 @@ struct Settings
     // minimap2 alignment parameters
     int Kmer;  // -k
     int Window;  // -w
+    bool NoHPC; // -H, homopolymer compression
 
     bool NoPbi;
 

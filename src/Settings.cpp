@@ -25,6 +25,13 @@ const PlainOption Window{
     "Minimizer window size.",
     CLI::Option::IntType(10)
 };
+const PlainOption NoHPC{
+    "nohpc",
+    { "no-hpc" },
+    "Disable Homopolymer Compression",
+    "Disable homopolymer compression.",
+    CLI::Option::BoolType(false)
+};
 const PlainOption NoPbi{
     "nopbi",
     { "no-pbi" },
@@ -40,6 +47,7 @@ Settings::Settings(const PacBio::CLI::Results& options)
     , InputFiles(options.PositionalArguments())
     , Kmer(options[OptionNames::Kmer])
     , Window(options[OptionNames::Window])
+    , NoHPC(options[OptionNames::NoHPC])
     , NoPbi(true)
 {
     int requestedNThreads;
@@ -72,7 +80,8 @@ PacBio::CLI::Interface Settings::CreateCLI()
     i.AddOptions({
         OptionNames::NumThreads,
         OptionNames::Kmer,
-        OptionNames::Window
+        OptionNames::Window,
+        OptionNames::NoHPC
         // OptionNames::NoPbi
     });
 
