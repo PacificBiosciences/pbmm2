@@ -18,8 +18,12 @@ typedef std::vector<BamRecord> Results;
 
 void WriteRecords(BamWriter& out, Results&& results)
 {
+    if (!results.empty())
+        out.Write(results[0]);
+    /*
     for (const auto& aln : results)
         out.Write(aln);
+    */
 }
 
 void WriterThread(WorkQueue<Results>& queue, std::unique_ptr<BamWriter> out)
