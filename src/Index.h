@@ -3,6 +3,8 @@
 #include <map>
 #include <vector>
 
+#include <boost/algorithm/string.hpp>
+
 #include <pbbam/FastaReader.h>
 #include <pbbam/MD5.h>
 #include <pbbam/SequenceInfo.h>
@@ -33,6 +35,8 @@ struct IndexOptions
 struct Index
 {
     Index(const std::string& fname, const IndexOptions& opts) : idx_{nullptr} {
+        using boost::algorithm::trim_right_if;
+        using boost::algorithm::is_any_of;
         auto rdr = mm_idx_reader_open(fname.c_str(), &opts.opts_, nullptr);
         if (!rdr) throw std::runtime_error("unable to load reference for indexing!");
         idx_ = mm_idx_reader_read(rdr, opts.nthreads_);
@@ -40,8 +44,11 @@ struct Index
         mm_idx_reader_close(rdr);
         PacBio::BAM::FastaReader faRdr(fname);
         PacBio::BAM::FastaSequence rec;
-        while (faRdr.GetNext(rec))
-            m5m_[rec.Name()] = PacBio::BAM::MD5Hash(rec.Bases());
+        while (faRdr.GetNext(rec)) {
+            std::string name = rec.Name();
+            trim_right_if(name, is_any_of("\r"));
+            m5m_[name] = PacBio::BAM::MD5Hash(rec.Bases());
+        }
     }
 
     ~Index() {
