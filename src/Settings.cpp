@@ -32,6 +32,20 @@ const PlainOption NoHPC{
     "Disable homopolymer compression.",
     CLI::Option::BoolType(false)
 };
+const PlainOption MinAccuracy{
+    "minaccuracy",
+    { "min-accuracy" },
+    "Minimum Alignment Accuracy",
+    "Minimum alignment accuracy.",
+    CLI::Option::FloatType(0.75f)
+};
+const PlainOption MinAlignmentLength{
+    "minalnlength",
+    { "min-length" },
+    "Minimum Alignment Length",
+    "Minimum alignment length.",
+    CLI::Option::IntType(50)
+};
 const PlainOption NoPbi{
     "nopbi",
     { "no-pbi" },
@@ -48,6 +62,8 @@ Settings::Settings(const PacBio::CLI::Results& options)
     , Kmer(options[OptionNames::Kmer])
     , Window(options[OptionNames::Window])
     , NoHPC(options[OptionNames::NoHPC])
+    , MinAccuracy(options[OptionNames::MinAccuracy])
+    , MinAlignmentLength(options[OptionNames::MinAlignmentLength])
     , NoPbi(true)
 {
     int requestedNThreads;
@@ -81,7 +97,9 @@ PacBio::CLI::Interface Settings::CreateCLI()
         OptionNames::NumThreads,
         OptionNames::Kmer,
         OptionNames::Window,
-        OptionNames::NoHPC
+        OptionNames::NoHPC,
+        OptionNames::MinAccuracy,
+        OptionNames::MinAlignmentLength
         // OptionNames::NoPbi
     });
 

@@ -51,6 +51,10 @@ struct Settings
     int Window;  // -w
     bool NoHPC; // -H, homopolymer compression
 
+    // alignment output filters
+    float MinAccuracy;
+    int MinAlignmentLength;
+
     bool NoPbi;
 
     /// Parses the provided CLI::Results and retrieves a defined set of options.

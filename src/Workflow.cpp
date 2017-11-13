@@ -1,3 +1,4 @@
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <thread>
@@ -25,22 +26,25 @@ using namespace PacBio::BAM;
 using namespace PacBio::Parallel;
 
 typedef std::vector<BamRecord> Results;
+typedef std::function<bool(const BamRecord&)> FilterFunc;
 
 namespace PacBio {
 namespace minimap2 {
-void WriteRecords(BamWriter& out, Results&& results)
+
+void WriteRecords(BamWriter& out, const FilterFunc& filter, Results&& results)
 {
-    if (!results.empty())
-        out.Write(results[0]);
-    /*
-    for (const auto& aln : results)
-        out.Write(aln);
-    */
+    for (const auto& aln : results) {
+        if (filter(aln)) {
+            out.Write(aln);
+            break;
+        }
+    }
 }
 
-void WriterThread(WorkQueue<Results>& queue, std::unique_ptr<BamWriter> out)
+void WriterThread(WorkQueue<Results>& queue, std::unique_ptr<BamWriter> out,
+                  const FilterFunc& filter)
 {
-    while (queue.ConsumeWith(WriteRecords, std::ref(*out)));
+    while (queue.ConsumeWith(WriteRecords, std::ref(*out), std::cref(filter)));
 }
 
 std::tuple<std::string, std::string, std::string>
@@ -200,6 +204,16 @@ int Workflow::Runner(const CLI::Results& options)
     if (alnFile != outFile && Utility::FileExists(outFile))
         std::cerr << "Warning: Overwriting existing output file: " << outFile << std::endl;
 
+    const FilterFunc filter = [&settings](const BamRecord& aln) {
+        const int span = aln.ReferenceEnd() - aln.ReferenceStart();
+        const int nErr = aln.NumDeletedBases() + aln.NumInsertedBases() + aln.NumMismatches();
+        if (1.0 - 1.0 * nErr / span < settings.MinAccuracy)
+            return false;
+        if (span < settings.MinAlignmentLength)
+            return false;
+        return true;
+    };
+
     {
         Index idx(refFile, idxOpts);
         mapOpts.Update(idx);
@@ -221,7 +235,8 @@ int Workflow::Runner(const CLI::Results& options)
         WorkQueue<Results> queue(std::max(1, settings.NumThreads - 1));
 
         std::unique_ptr<BamWriter> out(new BamWriter(alnFile, hdr));
-        std::future<void> writer = std::async(std::launch::async, WriterThread, ref(queue), move(out));
+        std::future<void> writer = std::async(std::launch::async, WriterThread, ref(queue),
+                                              move(out), cref(filter));
 
         BamRecord rec;
         while (qryRdr->GetNext(rec)) queue.ProduceWith(&Align, rec, cref(idx), cref(mapOpts));
