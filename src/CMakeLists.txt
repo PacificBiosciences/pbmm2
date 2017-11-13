@@ -1,5 +1,8 @@
-
-add_executable(pbmm2 ${PBMM2_SourceDir}/main.cpp)
+add_executable(pbmm2
+    ${PBMM2_SourceDir}/main.cpp
+    ${PBMM2_SourceDir}/Workflow.cpp
+    ${PBMM2_SourceDir}/Settings.cpp
+    )
 
 set_target_properties(pbmm2 PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
