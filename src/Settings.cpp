@@ -105,9 +105,9 @@ PacBio::CLI::Interface Settings::CreateCLI()
 
     // clang-format off
     i.AddPositionalArguments({
-        { "input", "Source BAM or DATASET", "INPUT" },
-        { "reference", "FASTA", "REFERENCE" },
-        { "output", "Output BAM", "OUTPUT" }
+        { "INPUT", "Source BAM or DataSet XML", "INPUT" },
+        { "REFERENCE", "Reference FASTA or ReferenceSet XML", "REFERENCE" },
+        { "OUTPUT", "Output BAM or DataSet XML", "OUTPUT" }
     });
 
     const std::string id = "mapping.tasks.pbmm2";
