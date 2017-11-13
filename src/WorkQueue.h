@@ -185,6 +185,5 @@ private:
     std::mutex m;
     size_t sz;
 };
-
 }  // namespace parallel
 }  // namespace PacBio

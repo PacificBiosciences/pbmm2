@@ -234,5 +234,5 @@ int Workflow::Runner(const PacBio::CLI::Results& options)
 
     return EXIT_SUCCESS;
 }
-}
-}
+} // namespace minimap2
+} // namespace PacBio

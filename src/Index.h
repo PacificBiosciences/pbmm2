@@ -70,5 +70,5 @@ struct Index
     mm_idx_t* idx_;
     std::map<std::string, std::string> m5m_;
 };
-
-}}
+} // namespace minimap2
+} // namespace PacBio
