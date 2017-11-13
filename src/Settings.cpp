@@ -24,7 +24,7 @@ const PlainOption NoPbi{
 Settings::Settings(const PacBio::CLI::Results& options)
     : CLI(options.InputCommandLine())
     , InputFiles(options.PositionalArguments())
-    , NoPbi(options[OptionNames::NoPbi])
+    , NoPbi(true)
 {
     int requestedNThreads;
     if (options.IsFromRTC()) {
@@ -38,6 +38,7 @@ Settings::Settings(const PacBio::CLI::Results& options)
 size_t Settings::ThreadCount(int n)
 {
     const int m = std::thread::hardware_concurrency();
+    if (n <= 0) n = m + n;  // permit n <= 0 to subtract from max threads
     return std::max(1, std::min(m, n));
 }
 
@@ -53,8 +54,8 @@ PacBio::CLI::Interface Settings::CreateCLI()
     i.AddVersionOption();  // use built-in version output
 
     i.AddOptions({
-        OptionNames::NumThreads,
-        OptionNames::NoPbi        
+        OptionNames::NumThreads
+        // OptionNames::NoPbi
     });
 
     // clang-format off

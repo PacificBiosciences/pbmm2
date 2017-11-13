@@ -53,7 +53,7 @@ CheckPositionalArgs(const std::vector<std::string>& args)
     }
 
     const auto inputFile = args[0];
-    if (!PacBio::Utility::FileExists(inputFile)) {
+    if (!Utility::FileExists(inputFile)) {
         std::cerr << "ERROR: Input data file does not exist: " << inputFile << std::endl;
         exit(1);
     }
@@ -73,7 +73,7 @@ CheckPositionalArgs(const std::vector<std::string>& args)
     }
 
     const auto& referenceFiles = args[1];
-    if (!PacBio::Utility::FileExists(referenceFiles)) {
+    if (!Utility::FileExists(referenceFiles)) {
         std::cerr << "ERROR: Input reference file does not exist: " << referenceFiles << std::endl;
         exit(1);
     }
@@ -97,11 +97,7 @@ CheckPositionalArgs(const std::vector<std::string>& args)
             exit(1);
     }
 
-    const auto& outputFile = args[2];
-    if (PacBio::Utility::FileExists(outputFile))
-        std::cerr << "Warning: Overwriting existing output file: " << outputFile << std::endl;
-
-    return {inputFile, fastaFiles.front(), outputFile};
+    return {inputFile, fastaFiles.front(), args[2]};
 }
 
 std::unique_ptr<BAM::internal::IQuery> BamQuery(const BAM::DataSet& ds)
@@ -166,10 +162,11 @@ std::string OutputFilePrefix(const std::string& outputFile) {
     const std::string outputExt = Utility::FileExtension(outputFile);
     std::string prefix = outputFile;
     if (outputExt == "xml") {
-        boost::ireplace_all(prefix, ".consensusreadset.xml", "");
-        boost::ireplace_all(prefix, ".subreadset.xml", "");
+        boost::ireplace_last(prefix, ".consensusalignmentset.xml", "");
+        boost::ireplace_last(prefix, ".alignmentset.xml", "");
     } else if (outputExt == "bam") {
-        boost::ireplace_all(prefix, ".bam", "");
+        boost::ireplace_last(prefix, ".bam", "");
+        boost::ireplace_last(prefix, ".subreads", "");
     } else {
         std::cerr << "ERROR: Unknown file extension for output file: " << outputFile << std::endl;
         exit(1);
@@ -177,7 +174,7 @@ std::string OutputFilePrefix(const std::string& outputFile) {
     return prefix;
 }
 
-int Workflow::Runner(const PacBio::CLI::Results& options)
+int Workflow::Runner(const CLI::Results& options)
 {
     using std::cref;
     using std::move;
@@ -189,13 +186,20 @@ int Workflow::Runner(const PacBio::CLI::Results& options)
     MapOptions mapOpts;
 
     BAM::DataSet qryFile;
-    std::string refFile;
-    std::string alnFile;
+    std::string refFile, outFile, alnFile;
 
-    std::tie(qryFile, refFile, alnFile) = CheckPositionalArgs(options.PositionalArguments());
-    auto outputFilePrefix = OutputFilePrefix(alnFile);
+    std::tie(qryFile, refFile, outFile) = CheckPositionalArgs(options.PositionalArguments());
 
-    [&](){
+    const auto outputFilePrefix = OutputFilePrefix(outFile);
+    if (Utility::FileExtension(outFile) == "xml") alnFile = outputFilePrefix + ".bam";
+    else alnFile = outFile;
+
+    if (Utility::FileExists(alnFile))
+        std::cerr << "Warning: Overwriting existing output file: " << alnFile << std::endl;
+    if (alnFile != outFile && Utility::FileExists(outFile))
+        std::cerr << "Warning: Overwriting existing output file: " << outFile << std::endl;
+
+    {
         Index idx(refFile, idxOpts);
         mapOpts.Update(idx);
 
@@ -212,7 +216,8 @@ int Workflow::Runner(const PacBio::CLI::Results& options)
             hdr.AddProgram(ProgramInfo("pbmm2").Name("pbmm2").Version("0.0.1"));
         }
 
-        WorkQueue<Results> queue(settings.NumThreads);
+        // we use at least 1 thread for the BamWriter, subtract it here
+        WorkQueue<Results> queue(std::max(1, settings.NumThreads - 1));
 
         std::unique_ptr<BamWriter> out(new BamWriter(alnFile, hdr));
         std::future<void> writer = std::async(std::launch::async, WriterThread, ref(queue), move(out));
@@ -222,15 +227,18 @@ int Workflow::Runner(const PacBio::CLI::Results& options)
 
         queue.Finalize();
         writer.wait();
-    }();
+    }
 
+    /* disabled for now, until we can get sorting in
     if (!settings.NoPbi) {
         BAM::BamFile validationBam(alnFile);
         BAM::PbiFile::CreateFrom(validationBam,
                                     BAM::PbiBuilder::CompressionLevel::CompressionLevel_1,
                                     settings.NumThreads);
     }
-    CreateDataSet(qryFile, outputFilePrefix, settings);
+    */
+    if (Utility::FileExtension(outFile) == "xml")
+        CreateDataSet(qryFile, outputFilePrefix, settings);
 
     return EXIT_SUCCESS;
 }
