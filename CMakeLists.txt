@@ -15,6 +15,7 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 
 # Main project paths
 set(PBMM2_RootDir       ${UNANIMITY_SOURCE_DIR})
+set(PBMM2_SourceDir     ${PBMM2_RootDir}/src)
 set(PBMM2_ThirdPartyDir ${PBMM2_RootDir}/third-party)
 
 # Project configuration
@@ -25,4 +26,4 @@ include(pbmm2-releasewithassert)
 include(pbmm2-dependencies)
 include(pbmm2-compilerflags)
 
-include(${PBMM2_RootDir}/pbmm2.cmake)
+add_subdirectory(${PBMM2_SourceDir})

@@ -1,5 +1,5 @@
 
-add_executable(pbmm2 ${PBMM2_RootDir}/pbmm2.cpp)
+add_executable(pbmm2 ${PBMM2_SourceDir}/main.cpp)
 
 set_target_properties(pbmm2 PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
