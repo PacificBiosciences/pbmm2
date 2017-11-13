@@ -207,9 +207,9 @@ int Workflow::Runner(const CLI::Results& options)
     const FilterFunc filter = [&settings](const BamRecord& aln) {
         const int span = aln.ReferenceEnd() - aln.ReferenceStart();
         const int nErr = aln.NumDeletedBases() + aln.NumInsertedBases() + aln.NumMismatches();
-        if (1.0 - 1.0 * nErr / span < settings.MinAccuracy)
+        if (span <= 0 || span < settings.MinAlignmentLength)
             return false;
-        if (span < settings.MinAlignmentLength)
+        if (1.0 - 1.0 * nErr / span < settings.MinAccuracy)
             return false;
         return true;
     };
