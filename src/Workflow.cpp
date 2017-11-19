@@ -1,3 +1,4 @@
+
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -25,26 +26,20 @@
 using namespace PacBio::BAM;
 using namespace PacBio::Parallel;
 
-typedef std::vector<BamRecord> Results;
 typedef std::function<bool(const BamRecord&)> FilterFunc;
 
 namespace PacBio {
 namespace minimap2 {
 
-void WriteRecords(BamWriter& out, const FilterFunc& filter, Results&& results)
+void WriteRecords(BamWriter& out, RecordsType results)
 {
-    for (const auto& aln : results) {
-        if (filter(aln)) {
-            out.Write(aln);
-            break;
-        }
-    }
+    if (!results) return;
+    for (const auto& aln : *results) out.Write(aln);
 }
 
-void WriterThread(WorkQueue<Results>& queue, std::unique_ptr<BamWriter> out,
-                  const FilterFunc& filter)
+void WriterThread(WorkQueue<RecordsType>& queue, std::unique_ptr<BamWriter> out)
 {
-    while (queue.ConsumeWith(WriteRecords, std::ref(*out), std::cref(filter)));
+    while (queue.ConsumeWith(WriteRecords, std::ref(*out)));
 }
 
 std::tuple<std::string, std::string, std::string>
@@ -231,18 +226,28 @@ int Workflow::Runner(const CLI::Results& options)
             hdr.AddProgram(ProgramInfo("pbmm2").Name("pbmm2").Version("0.0.1"));
         }
 
-        // we use at least 1 thread for the BamWriter, subtract it here
-        WorkQueue<Results> queue(std::max(1, settings.NumThreads - 1));
+        WorkQueue<RecordsType> queue(std::max(2, settings.NumThreads) - 1);
+        auto out = std::make_unique<BamWriter>(alnFile, hdr);
+        auto writer = std::thread(WriterThread, ref(queue), move(out));
 
-        std::unique_ptr<BamWriter> out(new BamWriter(alnFile, hdr));
-        std::future<void> writer = std::async(std::launch::async, WriterThread, ref(queue),
-                                              move(out), cref(filter));
-
-        BamRecord rec;
-        while (qryRdr->GetNext(rec)) queue.ProduceWith(&Align, rec, cref(idx), cref(mapOpts));
+        int i = 0;
+        static constexpr const int chunkSize = 100;
+        auto records = std::make_unique<std::vector<BamRecord>>(chunkSize);
+        while (qryRdr->GetNext((*records)[i++])) {
+            if (i >= chunkSize) {
+                queue.ProduceWith(&Align, move(records), cref(idx), cref(mapOpts), cref(filter));
+                records = std::make_unique<std::vector<BamRecord>>(chunkSize);
+                i = 0;
+            }
+        }
+        // terminal records, if they exist
+        if (i > 0) {
+            records->resize(i);
+            queue.ProduceWith(&Align, move(records), cref(idx), cref(mapOpts), cref(filter));
+        }
 
         queue.Finalize();
-        writer.wait();
+        writer.join();
     }
 
     /* disabled for now, until we can get sorting in

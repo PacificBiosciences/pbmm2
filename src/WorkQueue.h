@@ -42,6 +42,7 @@
 #include <future>
 #include <mutex>
 #include <queue>
+#include <vector>
 
 #include <boost/optional.hpp>
 
@@ -56,7 +57,7 @@ private:
     typedef boost::optional<std::future<T>> TFuture;
 
 public:
-    WorkQueue(const size_t size) : exc{nullptr}, sz{size}
+    WorkQueue(const size_t size, const size_t mul = 2) : exc{nullptr}, sz{size*mul}
     {
         for (size_t i = 0; i < size; ++i) {
             threads.emplace_back(std::thread([this]() {
@@ -113,25 +114,26 @@ public:
     template <typename F, typename... Args>
     bool ConsumeWith(F&& cont, Args&&... args)
     {
-        TFuture fut(boost::none);
+        std::queue<TFuture> futs;
 
         {
             std::unique_lock<std::mutex> lk(m);
-            popped.wait(lk, [&fut, this]() {
+            popped.wait(lk, [&futs, this]() {
                 if (tail.empty()) return false;
-
-                if ((fut = std::move(tail.front()))) {
-                    tail.pop();
-                }
-
-                return true;
+                tail.swap(futs);
+                return !futs.empty();
             });
         }
+        pushed.notify_all();
 
         try {
-            if (!fut) return false;
+            while (!futs.empty()) {
+                TFuture fut = std::move(futs.front());
+                if (!fut) return false;
+                futs.pop();
+                cont(std::forward<Args>(args)..., std::move(fut->get()));
+            }
 
-            cont(std::forward<Args>(args)..., std::move(fut->get()));
             return true;
         } catch (...) {
             {
@@ -160,11 +162,11 @@ private:
         {
             std::unique_lock<std::mutex> lk(m);
             pushed.wait(lk, [&task, this]() {
-                if (head.empty()) return false;
+                if (head.empty() || tail.size() >= sz) return false;
 
                 if ((task = std::move(head.front()))) {
                     head.pop();
-                    tail.emplace(task->get_future());
+                    tail.emplace(std::move(task->get_future()));
                 } else
                     tail.emplace(boost::none);
 

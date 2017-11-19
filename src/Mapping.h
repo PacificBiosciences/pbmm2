@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+#include <memory>
 #include <vector>
 
 #include <pbbam/BamRecord.h>
@@ -52,39 +54,49 @@ struct MapOptions
     mm_mapopt_t opts_;
 };
 
-std::vector<PacBio::BAM::BamRecord> Align(const PacBio::BAM::BamRecord rec,
-                                          const Index& idx, const MapOptions& mapOpts)
+typedef std::unique_ptr<std::vector<PacBio::BAM::BamRecord>> RecordsType;
+typedef std::function<bool(const PacBio::BAM::BamRecord&)> FilterFunc;
+
+RecordsType Align(const RecordsType& records, const Index& idx, const MapOptions& mapOpts, const FilterFunc& filter)
 {
     using namespace PacBio::BAM;
 
     static constexpr const uint32_t nCigarMax = 65535;
-    static thread_local ThreadBuffer tbuf;
 
-    std::vector<BamRecord> result;
+    ThreadBuffer tbuf;
+    auto result = std::make_unique<std::vector<BamRecord>>();
+    result->reserve(records->size());
 
-    int nAlns;
-    const auto seq = rec.Sequence();
-    const int qlen = seq.length();
-    auto alns = mm_map(idx.idx_, qlen, seq.c_str(), &nAlns, tbuf.tbuf_, &mapOpts.opts_, nullptr);
-    for (int i = 0; i < nAlns; ++i) {
-        auto aln = alns[i];
-        // if no alignment, continue
-        if (aln.p == nullptr) continue;
-        if (aln.p->n_cigar > nCigarMax) {
-            // TODO(lhepler): log this
-            continue;
+    for (const auto& record : *records) {
+        int numAlns;
+        const auto seq = record.Sequence();
+        const int qlen = seq.length();
+        auto alns = mm_map(idx.idx_, qlen, seq.c_str(), &numAlns, tbuf.tbuf_, &mapOpts.opts_, nullptr);
+        for (int i = 0; i < numAlns; ++i) {
+            auto aln = alns[i];
+            // if no alignment, continue
+            if (aln.p == nullptr) continue;
+            if (aln.p->n_cigar > nCigarMax) {
+                // TODO(lhepler): log this
+                continue;
+            }
+            const int32_t refId = aln.rid;
+            const Position refStart = aln.rs;
+            const Strand strand = aln.rev ? Strand::REVERSE : Strand::FORWARD;
+            const Cigar cigar = RenderCigar(&aln, qlen, mapOpts.opts_.flag);
+            const uint8_t mapq = aln.mapq;
+            auto mapped = BamRecord::Mapped(record, refId, refStart, strand, cigar, mapq);
+            if (filter(mapped)) {
+                result->emplace_back(std::move(mapped));
+                break;  // only report the best alignment for now
+            }
         }
-        const int32_t refId = aln.rid;
-        const Position refStart = aln.rs;
-        const Strand strand = aln.rev ? Strand::REVERSE : Strand::FORWARD;
-        const Cigar cigar = RenderCigar(&aln, qlen, mapOpts.opts_.flag);
-        const uint8_t mapq = aln.mapq;
-        result.emplace_back(BamRecord::Mapped(rec, refId, refStart, strand, cigar, mapq));
-        free(aln.p);
+        // cleanup
+        for (int i = 0; i < numAlns; ++i) if (alns[i].p) free(alns[i].p);
+        free(alns);
     }
-    free(alns);
 
-    return result;
+    return std::move(result);
 }
 } // namespace minimap2
 } // namespace PacBio
