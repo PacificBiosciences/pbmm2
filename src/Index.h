@@ -50,8 +50,11 @@ struct Index
         PacBio::BAM::FastaSequence rec;
         while (faRdr.GetNext(rec)) {
             std::string name = rec.Name();
-            trim_right_if(name, is_any_of("\r"));
-            m5m_[name] = PacBio::BAM::MD5Hash(rec.Bases());
+            trim_right_if(name, is_any_of("\r\n"));
+            std::string m5 = PacBio::BAM::MD5Hash(rec.Bases());
+            m5m_[name] = m5;
+            name = name.substr(0, name.find_first_of(" \f\n\r\t\v"));
+            m5m_[name] = m5;
         }
     }
 
