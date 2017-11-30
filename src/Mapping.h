@@ -96,7 +96,7 @@ RecordsType Align(const RecordsType& records, const Index& idx, const MapOptions
         free(alns);
     }
 
-    return std::move(result);
+    return result;
 }
 } // namespace minimap2
 } // namespace PacBio

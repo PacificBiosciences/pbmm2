@@ -226,7 +226,7 @@ int Workflow::Runner(const CLI::Results& options)
             hdr.AddProgram(ProgramInfo("pbmm2").Name("pbmm2").Version("0.0.1"));
         }
 
-        WorkQueue<RecordsType> queue(std::max(2, settings.NumThreads) - 1);
+        WorkQueue<RecordsType> queue(settings.NumThreads);
         auto out = std::make_unique<BamWriter>(alnFile, hdr);
         auto writer = std::thread(WriterThread, ref(queue), move(out));
 

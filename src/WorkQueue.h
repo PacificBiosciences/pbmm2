@@ -38,10 +38,10 @@
 #pragma once
 
 #include <condition_variable>
+#include <deque>
 #include <exception>
 #include <future>
 #include <mutex>
-#include <queue>
 #include <vector>
 
 #include <boost/optional.hpp>
@@ -101,20 +101,20 @@ public:
                 if (exc) std::rethrow_exception(exc);
 
                 if (head.size() < sz) {
-                    head.emplace(std::move(task));
+                    head.emplace_back(std::move(task));
                     return true;
                 }
 
                 return false;
             });
         }
-        pushed.notify_all();
+        pushed.notify_one();
     }
 
     template <typename F, typename... Args>
     bool ConsumeWith(F&& cont, Args&&... args)
     {
-        std::queue<TFuture> futs;
+        std::deque<TFuture> futs;
 
         {
             std::unique_lock<std::mutex> lk(m);
@@ -124,13 +124,11 @@ public:
                 return !futs.empty();
             });
         }
-        pushed.notify_all();
+        pushed.notify_one();
 
         try {
-            while (!futs.empty()) {
-                TFuture fut = std::move(futs.front());
+            for (auto& fut : futs) {
                 if (!fut) return false;
-                futs.pop();
                 cont(std::forward<Args>(args)..., std::move(fut->get()));
             }
 
@@ -149,7 +147,7 @@ public:
     {
         {
             std::lock_guard<std::mutex> g(m);
-            head.emplace(boost::none);
+            head.emplace_back(boost::none);
         }
         pushed.notify_all();
     }
@@ -165,22 +163,23 @@ private:
                 if (head.empty() || tail.size() >= sz) return false;
 
                 if ((task = std::move(head.front()))) {
-                    head.pop();
-                    tail.emplace(std::move(task->get_future()));
+                    head.pop_front();
+                    tail.emplace_back(std::move(task->get_future()));
                 } else
-                    tail.emplace(boost::none);
+                    tail.emplace_back(boost::none);
 
                 return true;
             });
         }
-        popped.notify_all();
+        popped.notify_one();  // ProduceWith/ConsumeWith may be waiting
+        pushed.notify_one();  // other PopTask's may also be waiting
 
         return task;
     }
 
     std::vector<std::thread> threads;
-    std::queue<TTask> head;
-    std::queue<TFuture> tail;
+    std::deque<TTask> head;
+    std::deque<TFuture> tail;
     std::condition_variable popped;
     std::condition_variable pushed;
     std::exception_ptr exc;
