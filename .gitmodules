@@ -1,9 +1,0 @@
-[submodule "third-party/pbbam"]
-	path = third-party/pbbam
-	url = https://github.com/PacificBiosciences/pbbam.git
-[submodule "third-party/pbcopper"]
-	path = third-party/pbcopper
-	url = https://github.com/PacificBiosciences/pbcopper.git
-[submodule "third-party/minimap2/src"]
-	path = third-party/minimap2/src
-	url = https://github.com/lh3/minimap2.git

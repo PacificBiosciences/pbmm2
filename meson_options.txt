@@ -1,0 +1,1 @@
+option('enable-build-static', type : 'boolean', value : true, description : 'Enable static binary build')

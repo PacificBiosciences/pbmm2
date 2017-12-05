@@ -18,8 +18,7 @@ BUILD
 -----
 
 ```sh
-> git submodule update --init --remote --recursive
-> pushd third-party/pbbam && patch -p1 < ../pbbam_htslib_pkgconfig.diff && popd
-> pushd third-party/minimap2/src && patch -p1 < ../m_to_eqx.diff && popd
-> mkdir build && pushd build && cmake -GNinja .. && ninja
+> mkdir -p build && pushd build && meson && popd
+> pushd subprojects/minimap2 && patch -p1 < ../../m_to_eqx.diff && popd
+> pushd build && ninja
 ```

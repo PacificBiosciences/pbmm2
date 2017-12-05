@@ -84,7 +84,6 @@ int Settings::ThreadCount(int n)
 
 PacBio::CLI::Interface Settings::CreateCLI()
 {
-    using Option = PacBio::CLI::Option;
     using Task = PacBio::CLI::ToolContract::Task;
 
     PacBio::CLI::Interface i{"pbmm2", "minimap2 with native PacBio BAM support",

@@ -17,10 +17,12 @@
 #include <pbbam/PbiFilter.h>
 #include <pbbam/PbiFilterQuery.h>
 
-#include "Index.h"
-#include "Mapping.h"
+#include <pbcopper/parallel/WorkQueue.h>
+
+#include <pacbio/minimap2/Index.h>
+#include <pacbio/minimap2/Mapping.h>
+
 #include "Settings.h"
-#include "WorkQueue.h"
 #include "Workflow.h"
 
 using namespace PacBio::BAM;
