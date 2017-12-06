@@ -14,6 +14,12 @@ TODO
 - Sort and index the output file by default?
 - Benchmarks!!
 
+DEPENDENCIES
+------------
+ - C++14 compiler
+ - Meson
+ - htslib installed
+
 BUILD
 -----
 
@@ -21,4 +27,5 @@ BUILD
 > mkdir -p build && pushd build && meson && popd
 > pushd subprojects/minimap2 && patch -p1 < ../../m_to_eqx.diff && popd
 > pushd build && ninja
+> ./src/pbmm2
 ```
