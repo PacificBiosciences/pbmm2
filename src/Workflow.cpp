@@ -48,7 +48,9 @@ std::tuple<std::string, std::string, std::string>
 CheckPositionalArgs(const std::vector<std::string>& args)
 {
     if (args.size() != 3) {
-        std::cerr << "ERROR: Please provide all three arguments: input barcodes output"
+        std::cerr << "ERROR: Please provide all three arguments: input reference output"
+                  << std::endl
+                  << "EXAMPLE: pbmm2 input.subreads.bam reference.fasta output.bam"
                   << std::endl;
         exit(1);
     }
