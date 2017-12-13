@@ -25,7 +25,7 @@ BUILD
 
 ```sh
 > mkdir -p build && pushd build && meson && popd
-> pushd subprojects/minimap2 && patch -p1 < ../../m_to_eqx.diff && popd
+> pushd subprojects/minimap2-2.6 && patch -p1 < ../../m_to_eqx.diff && popd
 > pushd build && ninja
 > ./src/pbmm2
 ```
