@@ -29,12 +29,13 @@ not via mail to developers.
 ## Background
 *Lima* can demultiplex samples that have a unique per-sample barcode pair and
 have been pooled and sequenced on the same SMRT cell.
-There are three different methods to associate barcodes with a sample,
+There are four different methods to associate barcodes with a sample,
 by PCR or ligation:
 
 1. Sequence-specific primers
 2. Barcoded universal primers
 3. Barcoded adapters
+4. Probe-based linear barcoded adapters
 
 <img src="img/barcoding-schemes.png" width="886px">
 
@@ -83,6 +84,11 @@ The sort order is defined by the barcode indices, lowest first.
 
 ## Changelog
 
+ * 1.5.0: Support spacer sequence between adapter and barcode
+ * 1.4.0:
+   * Minimum reference span requirements
+   * Single-side library improvements
+ * 1.3.0: --peek-guess uses only full-length ZMWs
  * 1.2.0:
    * Streaming of split BAM files
    * New fat binary build approach
@@ -860,6 +866,28 @@ Even if you only want to remove IsoSeq primers, *lima* is the tool of choice.
     demux.Forward_P5--SampleBrain_P3.bam
     demux.Forward_P5--SampleLiver_P3.bam
 ```
+
+### What is a universal spacer sequence and how does it affect demultiplexing?
+For library designs that include an identical sequence between adapter
+and barcode, e.g. probe-based linear barcoded adapters samples,
+*lima* offers a special mode that is activated if it finds a shared prefix
+sequence among all provided barcode sequences. Example:
+
+```
+    >custombc1
+    ACATGACTGTGACTATCTCACACATATCAGAGTGCG
+    >custombc2
+    ACATGACTGTGACTATCTCAACACACAGACTGTGAG
+```
+
+In this case, *lima* detects the shared prefix `ACATGACTGTGACTATCTCA` and
+removes it internally from all barcodes. Subsequently, it increases the
+window size by the length `L` of the prefix sequence.
+If `--window-size-bp N` is used, the actual window size is `L + N`.
+If `--window-size-mult M` is used, the actual window size is `(L + |bc|) * M`.
+
+Because the alignment is semi-global, a leading reference gap can be added
+without any penalty to the barcode score.
 
 ### Why do most of my ZMWs get filtered by the score lead threshold?
 The score lead measures how close the best barcode call is to the second best.
