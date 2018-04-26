@@ -84,9 +84,14 @@ The sort order is defined by the barcode indices, lowest first.
 
 ## Changelog
 
+ * 1.6.0:
+   * New filter `--min-end-score`
+   * Add latest filters to summary file
+   * New IsoSeq default parameters
+   * Fix streaming of asymmetric BAM files
  * 1.5.0: Support spacer sequence between adapter and barcode
  * 1.4.0:
-   * Minimum reference span requirements
+   * New filter `--min-ref-span` and `--min-scoring-regions`
    * Single-side library improvements
  * 1.3.0: --peek-guess uses only full-length ZMWs
  * 1.2.0:
@@ -193,12 +198,17 @@ how ZMWs many are *same/different*, and how many reads have been filtered.
     ZMW marginals for (C):
     Below min length              : 26 (0%)
     Below min score               : 0 (0%)
+    Below min end score           : 5138 (13%)
     Below min passes              : 0 (0%)
     Below min score lead          : 11656 (32%)
+    Below min ref span            : 3124 (8%)
     Without adapter               : 25094 (68%)
-    Undesired hybrids:            : xxx (xx%) <- Only with --peek-guess
+    Undesired hybrids             : xxx (xx%) <- Only with --peek-guess
     Undesired same barcode pairs  : xxx (xx%) <- Only with --different
     Undesired diff barcode pairs  : xxx (xx%) <- Only with --same
+    Undesired 5p--5p pairs        : xxx (xx%) <- Only with --isoseq
+    Undesired 3p--3p pairs        : xxx (xx%) <- Only with --isoseq
+    Undesired single side         : xxx (xx%) <- Only with --isoseq
 
     ZMWs for (B):
     With same barcode             : 162244 (92%)
@@ -261,9 +271,6 @@ Example:
 ### Removed records
 Using the option `--dump-removed`, records that did not pass provided thresholds
 or are without barcodes, are stored in the file `prefix.lima.removed.bam`.
-*Lima* does not generate a `.pbi`, nor dataset for this file.
-
-This option cannot be used with any splitting option.
 
 ### DataSet
 One DataSet, SubreadSet or ConsensusReadset, is generated per output BAM file.
@@ -383,8 +390,37 @@ Reads with length above `N` bp are omitted for scoring in the demultiplexing
 step. The default is `0`, meaning deactivated.
 
 ### `--min-score`
+Threshold for the average barcode score of the leading and trailing ends.
 ZMWs with barcode score below `N` are omitted. The default is `0`.
-It is advised to set it to `45`.
+It is advised to set it to `26`.
+
+### `--min-end-score`
+This threshold is applied to the two individual barcode scores, the leading and
+trailing barcode.
+ZMWs with at least one individual barcode score below `N` are omitted.
+The default is `0`.
+
+Simplified example: A ZMW is tagged with two barcodes `A` and `B`.
+All leading barcode regions match to `A` with score `90` and
+all trailing barcode regions match `B` with score `30`.
+On average, the barcode score is `(90+30)/2=60`. Option `--min-end-score`
+filters on an individual barcode level, checking `90` and `30`.
+Using `--min-end-score 45`, this ZMW would not pass, because `B` is below the
+threshold.
+
+This filter can be used to remove ZMWs that have one good and one bad call,
+only useful for asymmetric barcoding schemes with *different* barcodes in a pair.
+For libraries with the *same* barcode in pair, this option is identical to
+`--min-score`.
+
+### `--min-ref-span` && `--min-scoring-regions`
+Those options are used in combination to remove ZMWs that have spurious barcode
+hits.
+Option `--min-ref-span` defines the minimum reference span relative to
+the barcode length to call a barcode region *scoring*.
+Option `--min-scoring-regions` defines the minimum number of *scoring* barcode
+regions. ZMWs with less than `-min-scoring-regions N` *scoring* regions are
+omitted.
 
 ### `--min-passes`
 ZMWs with less than `N` full passes, a read with a leading and
@@ -394,7 +430,7 @@ trailing adapter, are omitted. The default is `0`, no full-pass needed. Example
     1 pass  : insert - adapter - INSERT - adapter - insert
     2 passes: insert - adapter - INSERT - adapter - INSERT - adapter - insert
 
-### `max-scored-barcode-pairs`
+### `--max-scored-barcode-pairs`
 Only use up to first `N` barcode pair regions for barcode identification.
 The default is `0`, deactivated filter. This is equivalent to the
 maximum number of scored adapters in bam2bam.
@@ -503,6 +539,9 @@ the additional flexibility might lead to yet-unknown problems.
 For this mode, high-scoring barcode regions are whitelisted. Only whitelisted
 barcode regions contribute to the final mean barcode score and to the
 calculation of `--min-score-lead`.
+
+### `--scored-adapter-ratio`
+Minimum ratio of scored vs sequenced adapters. The default is `0.25`.
 
 ### `--enforce-first-barcode`
 Set the first barcode to be barcode index 0.
@@ -848,24 +887,47 @@ hybrids in *lima*.
 Even if you only want to remove IsoSeq primers, *lima* is the tool of choice.
 
 1) Remove all duplicate sequences.
-2) Annotate sequence names with a P5 or P3 suffix. Example:
+2) Annotate sequence names with a `5p` or `3p` suffix. Example:
 
 ```
-    >Forward_P5
+    >primer_5p
     AAGCAGTGGTATCAACGCAGAGTACATGGGG
-    >SampleBrain_P3
+    >sample_brain_3p
     AAGCAGTGGTATCAACGCAGAGTACCACATATCAGAGTGCG
-    >SampleLiver_P3
+    >sample_liver_3p
     AAGCAGTGGTATCAACGCAGAGTACACACACAGACTGTGAG
 ```
 
 3) Use the `--isoseq` mode; cannot be combined with `--guess`.
-4) Output will be only different pairs with a `P5` and `P3` combination:
+4) Output will be only different pairs with a `5p` and `3p` combination:
 
 ```
-    demux.Forward_P5--SampleBrain_P3.bam
-    demux.Forward_P5--SampleLiver_P3.bam
+    demux.primer_5p--sample_brain_3p.bam
+    demux.primer_5p--sample_liver_3p.bam
 ```
+
+Option `--isoseq` sets following options:
+
+```
+    --split-bam-mamed
+    --shared-prefix
+    --min-passes 1
+    --min-signal-increase 0
+    --min-score-lead -1
+    --match-score 2
+    --mismatch-penalty 4
+    --deletion-penalty 4
+    --insertion-penalty 4
+    --branch-penalty 3
+    --min-end-score 50
+    --min-scoring-regions 2
+    --min-ref-span 0.75
+```
+
+Those options are very conservative to remove any spurious and ambiguous
+calls, in order to guarantee that only proper asymmetric (barcoded) primer
+are used in downstream analyses. Good libraries reach >75% CCS reads passing
+*lima* filters.
 
 ### What is a universal spacer sequence and how does it affect demultiplexing?
 For library designs that include an identical sequence between adapter
