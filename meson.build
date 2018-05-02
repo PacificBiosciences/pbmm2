@@ -9,7 +9,7 @@ project(
     'cpp_std=c++14',
     'c_std=gnu11'],
   license : 'BSD-3',
-  meson_version : '>= 0.41.1')
+  meson_version : '>= 0.46.0')
 
 ############
 # CXXFLAGS #
