@@ -84,6 +84,7 @@ The sort order is defined by the barcode indices, lowest first.
 
 ## Changelog
 
+ * 1.6.1: Fix `--min-end-score` in combination with `--isoseq`
  * 1.6.0:
    * New filter `--min-end-score`
    * Add latest filters to summary file
