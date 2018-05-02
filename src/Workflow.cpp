@@ -36,22 +36,23 @@ namespace minimap2 {
 void WriteRecords(BamWriter& out, RecordsType results)
 {
     if (!results) return;
-    for (const auto& aln : *results) out.Write(aln);
+    for (const auto& aln : *results)
+        out.Write(aln);
 }
 
 void WriterThread(WorkQueue<RecordsType>& queue, std::unique_ptr<BamWriter> out)
 {
-    while (queue.ConsumeWith(WriteRecords, std::ref(*out)));
+    while (queue.ConsumeWith(WriteRecords, std::ref(*out)))
+        ;
 }
 
-std::tuple<std::string, std::string, std::string>
-CheckPositionalArgs(const std::vector<std::string>& args)
+std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
+    const std::vector<std::string>& args)
 {
     if (args.size() != 3) {
         std::cerr << "ERROR: Please provide all three arguments: input reference output"
                   << std::endl
-                  << "EXAMPLE: pbmm2 input.subreads.bam reference.fasta output.bam"
-                  << std::endl;
+                  << "EXAMPLE: pbmm2 input.subreads.bam reference.fasta output.bam" << std::endl;
         exit(1);
     }
 
@@ -97,7 +98,7 @@ CheckPositionalArgs(const std::vector<std::string>& args)
     const auto fastaFiles = dsRef.FastaFiles();
     if (fastaFiles.size() != 1) {
         std::cerr << "Only one reference sequence allowed" << std::endl;
-            exit(1);
+        exit(1);
     }
 
     return {inputFile, fastaFiles.front(), args[2]};
@@ -114,7 +115,9 @@ std::unique_ptr<BAM::internal::IQuery> BamQuery(const BAM::DataSet& ds)
     return query;
 };
 
-void CreateDataSet(const BAM::DataSet& originalInputDataset, const std::string& outputFile, const Settings& settings) {
+void CreateDataSet(const BAM::DataSet& originalInputDataset, const std::string& outputFile,
+                   const Settings& settings)
+{
     using BAM::DataSet;
     std::string metatype;
     std::string outputType;
@@ -160,7 +163,8 @@ void CreateDataSet(const BAM::DataSet& originalInputDataset, const std::string& 
     ds.SaveToStream(dsOut);
 }
 
-std::string OutputFilePrefix(const std::string& outputFile) {
+std::string OutputFilePrefix(const std::string& outputFile)
+{
     // Check if output type is a dataset
     const std::string outputExt = Utility::FileExtension(outputFile);
     std::string prefix = outputFile;
@@ -185,8 +189,7 @@ int Workflow::Runner(const CLI::Results& options)
 
     Settings settings(options);
 
-    IndexOptions idxOpts(settings.Kmer, settings.Window, !settings.NoHPC,
-                         settings.NumThreads);
+    IndexOptions idxOpts(settings.Kmer, settings.Window, !settings.NoHPC, settings.NumThreads);
     MapOptions mapOpts;
 
     BAM::DataSet qryFile;
@@ -195,8 +198,10 @@ int Workflow::Runner(const CLI::Results& options)
     std::tie(qryFile, refFile, outFile) = CheckPositionalArgs(options.PositionalArguments());
 
     const auto outputFilePrefix = OutputFilePrefix(outFile);
-    if (Utility::FileExtension(outFile) == "xml") alnFile = outputFilePrefix + ".bam";
-    else alnFile = outFile;
+    if (Utility::FileExtension(outFile) == "xml")
+        alnFile = outputFilePrefix + ".bam";
+    else
+        alnFile = outFile;
 
     if (Utility::FileExists(alnFile))
         std::cerr << "Warning: Overwriting existing output file: " << alnFile << std::endl;
@@ -206,10 +211,8 @@ int Workflow::Runner(const CLI::Results& options)
     const FilterFunc filter = [&settings](const BamRecord& aln) {
         const int span = aln.ReferenceEnd() - aln.ReferenceStart();
         const int nErr = aln.NumDeletedBases() + aln.NumInsertedBases() + aln.NumMismatches();
-        if (span <= 0 || span < settings.MinAlignmentLength)
-            return false;
-        if (1.0 - 1.0 * nErr / span < settings.MinAccuracy)
-            return false;
+        if (span <= 0 || span < settings.MinAlignmentLength) return false;
+        if (1.0 - 1.0 * nErr / span < settings.MinAccuracy) return false;
         return true;
     };
 
@@ -267,5 +270,5 @@ int Workflow::Runner(const CLI::Results& options)
 
     return EXIT_SUCCESS;
 }
-} // namespace minimap2
-} // namespace PacBio
+}  // namespace minimap2
+}  // namespace PacBio

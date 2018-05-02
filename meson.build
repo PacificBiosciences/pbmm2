@@ -1,7 +1,7 @@
 project(
   'pbmm2',
   ['c', 'cpp'],
-  version : '0.2.0',
+  version : '0.3.0',
   default_options : [
     'buildtype=release',
     'default_library=static',
@@ -36,16 +36,16 @@ pbmm2_thread_dep = dependency('threads', required : true)
 pbmm2_boost_dep = dependency('boost', required : true)
 
 # zlib
-pbmm2_zlib_dep = dependency('zlib', fallback : ['zlib', 'zlib_dep'], static : true)
+pbmm2_zlib_dep = dependency('zlib', fallback : ['zlib', 'zlib_dep'])
 
 # pbbam
-pbmm2_pbbam_dep = dependency('pbbam', fallback : ['pbbam', 'pbbam_dep'], static : true)
+pbmm2_pbbam_dep = dependency('pbbam', fallback : ['pbbam', 'pbbam_dep'])
 
 # pbcopper
-pbmm2_pbcopper_dep = dependency('pbcopper', fallback : ['pbcopper', 'pbcopper_dep'], static : true)
+pbmm2_pbcopper_dep = dependency('pbcopper', fallback : ['pbcopper', 'pbcopper_dep'])
 
 # minimap2
-pbmm2_minimap2_dep = dependency('minimap2', fallback : ['minimap2', 'mm2_dep'], static : true)
+pbmm2_minimap2_dep = dependency('minimap2', fallback : ['minimap2', 'mm2_dep'])
 
 pbmm2_lib_deps = [
   pbmm2_thread_dep,

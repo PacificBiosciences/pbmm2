@@ -47,9 +47,9 @@ struct Settings
     int NumThreads;
 
     // minimap2 alignment parameters
-    int Kmer;  // -k
+    int Kmer;    // -k
     int Window;  // -w
-    bool NoHPC; // -H, homopolymer compression
+    bool NoHPC;  // -H, homopolymer compression
 
     // alignment output filters
     float MinAccuracy;
@@ -66,5 +66,5 @@ struct Settings
     /// necessary CLI::Options for the ccs executable.
     static PacBio::CLI::Interface CreateCLI();
 };
-} // namespace minimap2
-} // namespace PacBio
+}  // namespace minimap2
+}  // namespace PacBio

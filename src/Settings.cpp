@@ -86,19 +86,14 @@ PacBio::CLI::Interface Settings::CreateCLI()
 {
     using Task = PacBio::CLI::ToolContract::Task;
 
-    PacBio::CLI::Interface i{"pbmm2", "minimap2 with native PacBio BAM support",
-                             "0.0.1"};
+    PacBio::CLI::Interface i{"pbmm2", "minimap2 with native PacBio BAM support", "0.3.0"};
 
     i.AddHelpOption();     // use built-in help output
     i.AddVersionOption();  // use built-in version output
 
     i.AddOptions({
-        OptionNames::NumThreads,
-        OptionNames::Kmer,
-        OptionNames::Window,
-        OptionNames::NoHPC,
-        OptionNames::MinAccuracy,
-        OptionNames::MinAlignmentLength
+        OptionNames::NumThreads, OptionNames::Kmer, OptionNames::Window, OptionNames::NoHPC,
+        OptionNames::MinAccuracy, OptionNames::MinAlignmentLength
         // OptionNames::NoPbi
     });
 
@@ -144,5 +139,5 @@ PacBio::CLI::Interface Settings::CreateCLI()
 
     return i;
 }
-} // namespace minimap2
-} // namespace PacBio
+}  // namespace minimap2
+}  // namespace PacBio
