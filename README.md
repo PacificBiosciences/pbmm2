@@ -18,7 +18,10 @@ of multiplexed samples.
 
 ## Availability
 The latest pre-release linux binary can be found under
-[releases](https://github.com/PacificBiosciences/barcoding/releases).
+[releases](https://github.com/PacificBiosciences/barcoding/releases) or
+installed via [bioconda](https://bioconda.github.io/):
+
+    conda install lima
 
 Official support is only provided for official and stable SMRT Link builds
 provided by PacBio.
