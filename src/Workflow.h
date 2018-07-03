@@ -1,3 +1,7 @@
+#pragma once
+
+#include <pbcopper/cli/CLI.h>
+
 namespace PacBio {
 namespace minimap2 {
 struct Workflow

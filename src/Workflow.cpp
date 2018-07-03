@@ -19,10 +19,10 @@
 
 #include <pbcopper/parallel/WorkQueue.h>
 
-#include <pacbio/minimap2/Index.h>
-#include <pacbio/minimap2/Mapping.h>
-
+#include "Index.h"
+#include "Mapping.h"
 #include "Settings.h"
+
 #include "Workflow.h"
 
 using namespace PacBio::BAM;

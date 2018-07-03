@@ -4,7 +4,6 @@ project(
   version : '0.3.0',
   default_options : [
     'buildtype=release',
-    'default_library=static',
     'warning_level=3',
     'cpp_std=c++14',
     'c_std=gnu11'],
@@ -15,15 +14,42 @@ project(
 # CXXFLAGS #
 ############
 
-pbmm2_warning_flags = []
+pbmm2_flags = []
 cpp = meson.get_compiler('cpp')
 foreach cflag: [
   '-Wno-terminate',
-  '-Wno-missing-field-initializers']
+  '-Wno-missing-field-initializers',
+  '-Wno-c99-extensions']
     if cpp.has_argument(cflag)
-      pbmm2_warning_flags += cflag
+      pbmm2_flags += cflag
     endif
 endforeach
+
+pbmm2_c_flags = []
+c = meson.get_compiler('c')
+foreach cflag: [
+  '-Wc++-compat',
+  '-Wno-unused-parameter',
+  '-Wno-unused-variable',
+  '-Wno-sign-compare']
+    if c.has_argument(cflag)
+      pbmm2_c_flags += cflag
+    endif
+endforeach
+
+if get_option('sse41')
+  if cpp.has_argument('-msse4.1')
+    pbmm2_flags += '-msse4.1'
+  else
+    error('Requested SSE4.1, but the C++ compiler does not support -msse4.1')
+  endif
+
+  if c.has_argument('-msse4.1')
+    pbmm2_c_flags += '-msse4.1'
+  else
+    error('Requested SSE4.1, but the C compiler does not support -msse4.1')
+  endif
+endif
 
 ################
 # dependencies #
@@ -55,34 +81,8 @@ pbmm2_lib_deps = [
   pbmm2_pbcopper_dep,
   pbmm2_minimap2_dep]
 
-###########
-# headers #
-###########
-
-subdir('include')
-
 #####################
 # sources + library #
 #####################
 
 subdir('src')
-
-###################
-# dependency info #
-###################
-
-if not meson.is_subproject()
-  import('pkgconfig').generate(
-    libraries : pbmm2_lib,
-    version : meson.project_version(),
-    name : 'pbmm2',
-    filebase : 'pbmm2',
-    description : 'minimap2 with native PacBio BAM support')
-endif
-
-pbmm2_dep = declare_dependency(
-  include_directories : pbmm2_include_directories,
-  link_with : pbmm2_lib,
-  dependencies : pbmm2_lib_deps,
-  version : meson.project_version(),
-  compile_args : pbmm2_warning_flags)

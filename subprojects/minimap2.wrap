@@ -1,4 +1,4 @@
 [wrap-git]
 directory=minimap2
 url=https://github.com/armintoepfer/minimap2.git
-revision=2.10-meson
+revision=2.11-meson

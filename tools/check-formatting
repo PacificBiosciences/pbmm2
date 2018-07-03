@@ -2,7 +2,7 @@
 
 PLATFORM=$(uname)
 TOOLSPATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
-CLANGFORMAT="${TOOLSPATH}/${PLATFORM}/clang-format -style=file"
+CLANGFORMAT="clang-format -style=file"
 
 if [ "$1" == "--all" ]
 then

@@ -1,1 +1,4 @@
-option('enable-build-static', type : 'boolean', value : true, description : 'Enable static binary build')
+option('sse41',
+    type : 'boolean',
+    value : true,
+    description : 'Enable SSE4 codepaths')
