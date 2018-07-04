@@ -20,28 +20,26 @@
 
 #include <pbcopper/parallel/WorkQueue.h>
 
+#include <Pbmm2Version.h>
+
 #include "Index.h"
 #include "Mapping.h"
 #include "Settings.h"
 
 #include "Workflow.h"
 
-using namespace PacBio::BAM;
-using namespace PacBio::Parallel;
-
-typedef std::function<bool(const BamRecord&)> FilterFunc;
-
 namespace PacBio {
 namespace minimap2 {
+using FilterFunc = std::function<bool(const BAM::BamRecord&)>;
 
-void WriteRecords(BamWriter& out, RecordsType results)
+void WriteRecords(BAM::BamWriter& out, RecordsType results)
 {
     if (!results) return;
     for (const auto& aln : *results)
         out.Write(aln);
 }
 
-void WriterThread(WorkQueue<RecordsType>& queue, std::unique_ptr<BamWriter> out)
+void WriterThread(Parallel::WorkQueue<RecordsType>& queue, std::unique_ptr<BAM::BamWriter> out)
 {
     while (queue.ConsumeWith(WriteRecords, std::ref(*out)))
         ;
@@ -150,7 +148,7 @@ void CreateDataSet(const BAM::DataSet& originalInputDataset, const std::string& 
     }
     BAM::ExternalResource resource(metatype, fileName + ".bam");
 
-    if (!settings.NoPbi) {
+    if (settings.Pbi) {
         BAM::FileIndex pbi("PacBio.Index.PacBioIndex", fileName + ".bam.pbi");
         resource.FileIndices().Add(pbi);
     }
@@ -222,9 +220,9 @@ int Workflow::Runner(const CLI::Results& options)
     if (alnFile != outFile && Utility::FileExists(outFile))
         PBLOG_WARN << "Warning: Overwriting existing output file: " << outFile;
 
-    const FilterFunc filter = [&settings](const BamRecord& aln) {
-        const int span = aln.ReferenceEnd() - aln.ReferenceStart();
-        const int nErr = aln.NumDeletedBases() + aln.NumInsertedBases() + aln.NumMismatches();
+    const FilterFunc filter = [&settings](const BAM::BamRecord& aln) {
+        const int32_t span = aln.ReferenceEnd() - aln.ReferenceStart();
+        const int32_t nErr = aln.NumDeletedBases() + aln.NumInsertedBases() + aln.NumMismatches();
         if (span <= 0 || span < settings.MinAlignmentLength) return false;
         if (1.0 - 1.0 * nErr / span < settings.MinAccuracy) return false;
         return true;
@@ -241,24 +239,23 @@ int Workflow::Runner(const CLI::Results& options)
         for (size_t i = 1; i < bamFiles.size(); ++i)
             hdr += bamFiles.at(i).Header();
 
-        {
-            for (const auto si : idx.SequenceInfos())
-                hdr.AddSequence(si);
-            hdr.AddProgram(ProgramInfo("pbmm2").Name("pbmm2").Version("0.0.1"));
-        }
+        const auto version = PacBio::Pbmm2Version() + " (commit " + PacBio::Pbmm2GitSha1() + ")";
+        for (const auto si : idx.SequenceInfos())
+            hdr.AddSequence(si);
+        hdr.AddProgram(BAM::ProgramInfo("pbmm2").Name("pbmm2").Version(version));
 
-        WorkQueue<RecordsType> queue(settings.NumThreads);
-        auto out = std::make_unique<BamWriter>(alnFile, hdr);
+        Parallel::WorkQueue<RecordsType> queue(settings.NumThreads);
+        auto out = std::make_unique<BAM::BamWriter>(alnFile, hdr);
         auto writer = std::thread(WriterThread, std::ref(queue), std::move(out));
 
-        int i = 0;
-        static constexpr const int chunkSize = 100;
-        auto records = std::make_unique<std::vector<BamRecord>>(chunkSize);
+        int32_t i = 0;
+        static constexpr const int32_t chunkSize = 100;
+        auto records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
         while (qryRdr->GetNext((*records)[i++])) {
             if (i >= chunkSize) {
                 queue.ProduceWith(&Align, std::move(records), std::cref(idx), std::cref(mapOpts),
                                   std::cref(filter));
-                records = std::make_unique<std::vector<BamRecord>>(chunkSize);
+                records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
                 i = 0;
             }
         }
@@ -273,14 +270,12 @@ int Workflow::Runner(const CLI::Results& options)
         writer.join();
     }
 
-    /* disabled for now, until we can get sorting in
-    if (!settings.NoPbi) {
+    if (settings.Pbi) {
         BAM::BamFile validationBam(alnFile);
         BAM::PbiFile::CreateFrom(validationBam,
-                                    BAM::PbiBuilder::CompressionLevel::CompressionLevel_1,
-                                    settings.NumThreads);
+                                 BAM::PbiBuilder::CompressionLevel::CompressionLevel_1,
+                                 settings.NumThreads);
     }
-    */
     if (Utility::FileExtension(outFile) == "xml")
         CreateDataSet(qryFile, outputFilePrefix, settings);
 

@@ -1,0 +1,15 @@
+// Author: Armin Töpfer
+
+#include <Pbmm2Version.h>
+
+namespace PacBio {
+namespace {
+constexpr char   pbmm2Version[]    = "@PBMM2_VERSION@";
+constexpr size_t pbmm2VersionMajor = @PBMM2_VERSION_MAJOR@;
+constexpr size_t pbmm2VersionMinor = @PBMM2_VERSION_MINOR@;
+constexpr size_t pbmm2VersionPatch = @PBMM2_VERSION_PATCH@;
+}
+
+std::string Pbmm2Version()
+{ return pbmm2Version; }
+} // ::PacBio

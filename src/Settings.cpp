@@ -1,3 +1,5 @@
+#include <Pbmm2Version.h>
+
 #include "Settings.h"
 
 namespace PacBio {
@@ -90,7 +92,9 @@ Settings::Settings(const PacBio::CLI::Results& options)
     , NoHPC(options[OptionNames::NoHPC])
     , MinAccuracy(options[OptionNames::MinAccuracy])
     , MinAlignmentLength(options[OptionNames::MinAlignmentLength])
-    , NoPbi(options[OptionNames::Pbi])
+    , Pbi(options[OptionNames::Pbi])
+    , LogFile{options[OptionNames::LogFile].get<decltype(LogFile)>()}
+    , LogLevel{options.LogLevel()}
 {
     int requestedNThreads;
     if (options.IsFromRTC()) {
@@ -112,7 +116,8 @@ PacBio::CLI::Interface Settings::CreateCLI()
 {
     using Task = PacBio::CLI::ToolContract::Task;
 
-    PacBio::CLI::Interface i{"pbmm2", "minimap2 with native PacBio BAM support", "0.3.0"};
+    const auto version = PacBio::Pbmm2Version() + " (commit " + PacBio::Pbmm2GitSha1() + ")";
+    PacBio::CLI::Interface i{"pbmm2", "minimap2 with native PacBio BAM support", version};
 
     // clang-format off
     i.AddGroup("Basic Options", {

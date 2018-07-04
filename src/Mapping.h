@@ -30,20 +30,21 @@ PacBio::BAM::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const i
 
     if (clip_len[0]) cigar.emplace_back(clip_char, clip_len[0]);
     for (k = 0; k < r->p->n_cigar; ++k)
-        cigar.emplace_back("MIDN=X"[r->p->cigar[k] & 0xf], r->p->cigar[k] >> 4);
+        cigar.emplace_back("MIDN=X"[r->p->cigar[k] & 0xf], r -> p -> cigar[k] >> 4);
     if (clip_len[1]) cigar.emplace_back(clip_char, clip_len[1]);
 
     return cigar;
 }
-}
+}  // namespace
 
 struct MapOptions
 {
     MapOptions()
     {
         mm_mapopt_init(&opts_);
-        opts_.flag |= MM_F_CIGAR;     // always perform alignment
-        opts_.flag |= MM_F_SOFTCLIP;  // always soft-clip
+        opts_.flag |= MM_F_CIGAR;
+        // opts_.flag |= MM_F_SOFTCLIP;
+        opts_.flag |= MM_F_LONG_CIGAR;
     }
 
     void Update(const Index& idx) { mm_mapopt_update(&opts_, idx.idx_); }
@@ -59,8 +60,6 @@ RecordsType Align(const RecordsType& records, const Index& idx, const MapOptions
 {
     using namespace PacBio::BAM;
 
-    static constexpr const uint32_t nCigarMax = 65535;
-
     ThreadBuffer tbuf;
     auto result = std::make_unique<std::vector<BamRecord>>();
     result->reserve(records->size());
@@ -75,10 +74,6 @@ RecordsType Align(const RecordsType& records, const Index& idx, const MapOptions
             auto aln = alns[i];
             // if no alignment, continue
             if (aln.p == nullptr) continue;
-            if (aln.p->n_cigar > nCigarMax) {
-                // TODO(lhepler): log this
-                continue;
-            }
             const int32_t refId = aln.rid;
             const Position refStart = aln.rs;
             const Strand strand = aln.rev ? Strand::REVERSE : Strand::FORWARD;

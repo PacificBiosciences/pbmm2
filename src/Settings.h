@@ -28,8 +28,7 @@ struct PlainOption
         , defaultValue(std::move(defaultValue))
         , choices(std::move(choices))
         , flags(std::move(flags))
-    {
-    }
+    {}
 
     operator CLI::Option() const
     {
@@ -55,7 +54,10 @@ struct Settings
     float MinAccuracy;
     int MinAlignmentLength;
 
-    bool NoPbi;
+    bool Pbi;
+
+    std::string LogFile;
+    Logging::LogLevel LogLevel;
 
     /// Parses the provided CLI::Results and retrieves a defined set of options.
     Settings(const PacBio::CLI::Results& options);

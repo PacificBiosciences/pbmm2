@@ -1,8 +1,33 @@
+# version info
+pbmm2_ver_arr = meson.project_version().split('.')
+pbmm2_major_version = pbmm2_ver_arr[0]
+pbmm2_minor_version = pbmm2_ver_arr[1]
+pbmm2_patch_version = pbmm2_ver_arr[2]
+
+pbmm2_config = configuration_data()
+pbmm2_config.set('PBMM2_VERSION', meson.project_version())
+pbmm2_config.set('PBMM2_VERSION_MAJOR', pbmm2_major_version)
+pbmm2_config.set('PBMM2_VERSION_MINOR', pbmm2_minor_version)
+pbmm2_config.set('PBMM2_VERSION_PATCH', pbmm2_patch_version)
+
+pbmm2_version_sources = [
+  vcs_tag(
+    input : 'Pbmm2GitHash.cpp.in',
+    output : 'Pbmm2GitHash.cpp',
+    command : ['git', 'describe', '--always', '--dirty=*'],
+    replace_string : '@PBMM2_GIT_SHA1@'),
+  configure_file(
+    input : 'Pbmm2Version.cpp.in',
+    output : 'Pbmm2Version.cpp',
+    configuration : pbmm2_config)]
+
 pbmm2_src_include_directories = include_directories('.')
 
 pbmm2_cpp_sources = files([
   'Settings.cpp',
-  'Workflow.cpp',])
+  'Workflow.cpp'])
+
+pbmm2_cpp_sources += pbmm2_version_sources
 
 pbmm2_lib = static_library(
   'pbmm2',
