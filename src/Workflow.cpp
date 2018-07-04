@@ -6,6 +6,7 @@
 #include <tuple>
 #include <vector>
 
+#include <pbcopper/logging/Logging.h>
 #include <pbcopper/utility/FileUtils.h>
 
 #include <pbbam/BamReader.h>
@@ -50,16 +51,15 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
     const std::vector<std::string>& args)
 {
     if (args.size() != 3) {
-        std::cerr << "ERROR: Please provide all three arguments: input reference output"
-                  << std::endl
-                  << "EXAMPLE: pbmm2 input.subreads.bam reference.fasta output.bam" << std::endl;
-        exit(1);
+        PBLOG_FATAL << "Please provide all three arguments: input reference output!";
+        PBLOG_FATAL << "EXAMPLE: pbmm2 input.subreads.bam reference.fasta output.bam";
+        std::exit(EXIT_FAILURE);
     }
 
     const auto inputFile = args[0];
     if (!Utility::FileExists(inputFile)) {
-        std::cerr << "ERROR: Input data file does not exist: " << inputFile << std::endl;
-        exit(1);
+        PBLOG_FATAL << "Input data file does not exist: " << inputFile;
+        std::exit(EXIT_FAILURE);
     }
     BAM::DataSet dsInput(inputFile);
     switch (dsInput.Type()) {
@@ -71,15 +71,15 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
         case BAM::DataSet::TypeEnum::BARCODE:
         case BAM::DataSet::TypeEnum::REFERENCE:
         default:
-            std::cerr << "ERROR: Unsupported input data file " << inputFile << "\n";
-            std::cerr << "       of type " << BAM::DataSet::TypeToName(dsInput.Type()) << std::endl;
-            exit(1);
+            PBLOG_FATAL << "Unsupported input data file " << inputFile << " of type "
+                        << BAM::DataSet::TypeToName(dsInput.Type());
+            std::exit(EXIT_FAILURE);
     }
 
     const auto& referenceFiles = args[1];
     if (!Utility::FileExists(referenceFiles)) {
-        std::cerr << "ERROR: Input reference file does not exist: " << referenceFiles << std::endl;
-        exit(1);
+        PBLOG_FATAL << "Input reference file does not exist: " << referenceFiles;
+        std::exit(EXIT_FAILURE);
     }
     BAM::DataSet dsRef(referenceFiles);
     switch (dsRef.Type()) {
@@ -91,14 +91,14 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
         case BAM::DataSet::TypeEnum::CONSENSUS_ALIGNMENT:
         case BAM::DataSet::TypeEnum::CONSENSUS_READ:
         default:
-            std::cerr << "ERROR: Unsupported reference input file " << referenceFiles << "\n";
-            std::cerr << "       of type " << BAM::DataSet::TypeToName(dsRef.Type()) << std::endl;
-            exit(1);
+            PBLOG_FATAL << "ERROR: Unsupported reference input file " << referenceFiles
+                        << " of type " << BAM::DataSet::TypeToName(dsRef.Type());
+            std::exit(EXIT_FAILURE);
     }
     const auto fastaFiles = dsRef.FastaFiles();
     if (fastaFiles.size() != 1) {
-        std::cerr << "Only one reference sequence allowed" << std::endl;
-        exit(1);
+        PBLOG_FATAL << "Only one reference sequence allowed!";
+        std::exit(EXIT_FAILURE);
     }
 
     return {inputFile, fastaFiles.front(), args[2]};
@@ -175,17 +175,31 @@ std::string OutputFilePrefix(const std::string& outputFile)
         boost::ireplace_last(prefix, ".bam", "");
         boost::ireplace_last(prefix, ".subreads", "");
     } else {
-        std::cerr << "ERROR: Unknown file extension for output file: " << outputFile << std::endl;
-        exit(1);
+        PBLOG_FATAL << "Unknown file extension for output file: " << outputFile;
+        std::exit(EXIT_FAILURE);
     }
     return prefix;
 }
 
 int Workflow::Runner(const CLI::Results& options)
 {
-    using std::cref;
-    using std::move;
-    using std::ref;
+    std::ofstream logStream;
+    {
+        const std::string logFile = options["log_file"];
+        const Logging::LogLevel logLevel(
+            options.IsFromRTC() ? options.LogLevel() : options["log_level"].get<std::string>());
+
+        using Logger = PacBio::Logging::Logger;
+
+        Logger* logger;
+        if (!logFile.empty()) {
+            logStream.open(logFile);
+            logger = &Logger::Default(new Logger(logStream, logLevel));
+        } else {
+            logger = &Logger::Default(new Logger(std::cout, logLevel));
+        }
+        PacBio::Logging::InstallSignalHandlers(*logger);
+    }
 
     Settings settings(options);
 
@@ -204,9 +218,9 @@ int Workflow::Runner(const CLI::Results& options)
         alnFile = outFile;
 
     if (Utility::FileExists(alnFile))
-        std::cerr << "Warning: Overwriting existing output file: " << alnFile << std::endl;
+        PBLOG_WARN << "Warning: Overwriting existing output file: " << alnFile;
     if (alnFile != outFile && Utility::FileExists(outFile))
-        std::cerr << "Warning: Overwriting existing output file: " << outFile << std::endl;
+        PBLOG_WARN << "Warning: Overwriting existing output file: " << outFile;
 
     const FilterFunc filter = [&settings](const BamRecord& aln) {
         const int span = aln.ReferenceEnd() - aln.ReferenceStart();
@@ -235,14 +249,15 @@ int Workflow::Runner(const CLI::Results& options)
 
         WorkQueue<RecordsType> queue(settings.NumThreads);
         auto out = std::make_unique<BamWriter>(alnFile, hdr);
-        auto writer = std::thread(WriterThread, ref(queue), move(out));
+        auto writer = std::thread(WriterThread, std::ref(queue), std::move(out));
 
         int i = 0;
         static constexpr const int chunkSize = 100;
         auto records = std::make_unique<std::vector<BamRecord>>(chunkSize);
         while (qryRdr->GetNext((*records)[i++])) {
             if (i >= chunkSize) {
-                queue.ProduceWith(&Align, move(records), cref(idx), cref(mapOpts), cref(filter));
+                queue.ProduceWith(&Align, std::move(records), std::cref(idx), std::cref(mapOpts),
+                                  std::cref(filter));
                 records = std::make_unique<std::vector<BamRecord>>(chunkSize);
                 i = 0;
             }
@@ -250,7 +265,8 @@ int Workflow::Runner(const CLI::Results& options)
         // terminal records, if they exist
         if (i > 0) {
             records->resize(i);
-            queue.ProduceWith(&Align, move(records), cref(idx), cref(mapOpts), cref(filter));
+            queue.ProduceWith(&Align, std::move(records), std::cref(idx), std::cref(mapOpts),
+                              std::cref(filter));
         }
 
         queue.Finalize();
