@@ -35,6 +35,7 @@ using FilterFunc = std::function<bool(const BAM::BamRecord&)>;
 struct Summary
 {
     int32_t NumAlns = 0;
+    int64_t Bases = 0;
     double Similarity = 0;
 };
 
@@ -44,6 +45,7 @@ void WriteRecords(BAM::BamWriter& out, Summary& s, RecordsType results)
     for (const auto& aln : *results) {
         const int32_t span = aln.ReferenceEnd() - aln.ReferenceStart();
         const int32_t nErr = aln.NumDeletedBases() + aln.NumInsertedBases() + aln.NumMismatches();
+        s.Bases += span;
         s.Similarity += 1.0 - 1.0 * nErr / span;
         ++s.NumAlns;
         out.Write(aln);
@@ -55,7 +57,8 @@ void WriterThread(Parallel::WorkQueue<RecordsType>& queue, std::unique_ptr<BAM::
     Summary s;
     while (queue.ConsumeWith(WriteRecords, std::ref(*out), std::ref(s)))
         ;
-    PBLOG_INFO << "Number of alignments: " << s.NumAlns;
+    PBLOG_INFO << "Number of Alignments: " << s.NumAlns;
+    PBLOG_INFO << "Number of Bases: " << s.Bases;
     PBLOG_INFO << "Mean Concordance (mapped) : " << s.Similarity / s.NumAlns;
 }
 
