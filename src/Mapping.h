@@ -5,6 +5,7 @@
 #include <vector>
 
 #include <pbbam/BamRecord.h>
+#include <pbcopper/logging/Logging.h>
 
 #include <minimap.h>
 
@@ -29,8 +30,9 @@ PacBio::BAM::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const i
     const char clip_char = !(opt_flag & MM_F_SOFTCLIP) ? 'H' : 'S'; /* (sam_flag & 0x800) && */
 
     if (clip_len[0]) cigar.emplace_back(clip_char, clip_len[0]);
-    for (k = 0; k < r->p->n_cigar; ++k)
-        cigar.emplace_back("MIDN=X"[r->p->cigar[k] & 0xf], r -> p -> cigar[k] >> 4);
+    for (k = 0; k < r->p->n_cigar; ++k) {
+        cigar.emplace_back("MIDNSHP=XB"[r->p->cigar[k] & 0xf], r -> p -> cigar[k] >> 4);
+    }
     if (clip_len[1]) cigar.emplace_back(clip_char, clip_len[1]);
 
     return cigar;
@@ -45,6 +47,7 @@ struct MapOptions
         opts_.flag |= MM_F_CIGAR;
         // opts_.flag |= MM_F_SOFTCLIP;
         opts_.flag |= MM_F_LONG_CIGAR;
+        opts_.flag |= MM_F_EQX;
     }
 
     void Update(const Index& idx) { mm_mapopt_update(&opts_, idx.idx_); }
