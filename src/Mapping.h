@@ -45,7 +45,7 @@ struct MapOptions
     {
         mm_mapopt_init(&opts_);
         opts_.flag |= MM_F_CIGAR;
-        // opts_.flag |= MM_F_SOFTCLIP;
+        opts_.flag |= MM_F_SOFTCLIP;
         opts_.flag |= MM_F_LONG_CIGAR;
         opts_.flag |= MM_F_EQX;
     }
