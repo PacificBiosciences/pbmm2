@@ -87,7 +87,7 @@ The sort order is defined by the barcode indices, lowest first.
 
 ## Changelog
 
- * 1.6.2: Error message improvements, included in SMRT Link 6.0.0
+ * 1.7.0: Fix corner-case bug, included in SMRT Link 6.0.0
  * 1.6.1: Fix `--min-end-score` in combination with `--isoseq`
  * 1.6.0:
    * New filter `--min-end-score`
@@ -98,7 +98,7 @@ The sort order is defined by the barcode indices, lowest first.
  * 1.4.0:
    * New filter `--min-ref-span` and `--min-scoring-regions`
    * Single-side library improvements
- * 1.3.0: --peek-guess uses only full-length ZMWs
+ * 1.3.0: `--peek-guess` uses only full-length ZMWs
  * 1.2.0:
    * Streaming of split BAM files
    * New fat binary build approach
@@ -106,7 +106,10 @@ The sort order is defined by the barcode indices, lowest first.
  * 1.0.0: Initial release, included in SMRT Link 5.1.0
 
 ## Execution
-**Attention: Existing output files will be overwritten!**
+
+**Note:** Any existing output files will be overwritten after execution.
+
+**Note:** Always use `--peek-guess` to remove spurious barcode hits.
 
 Run on raw subread data:
 
@@ -130,6 +133,12 @@ to use `--no-pbi`, omit the pbi index file, to minimize time to result.
 
     Raw: --different
     CCS: --different --ccs
+
+### Example execution
+
+    lima m54317_180718_075644.subreadset.xml Sequel_RSII_384_barcodes_v1.barcodeset.xml \
+         m54317_180718_075644.demux.subreadset.xml --different --peek-guess
+
 
 ## Input data
 Input data is either raw unaligned subreads, straight from a Sequel, or
@@ -214,6 +223,7 @@ how ZMWs many are *same/different*, and how many reads have been filtered.
     Undesired 5p--5p pairs        : xxx (xx%) <- Only with --isoseq
     Undesired 3p--3p pairs        : xxx (xx%) <- Only with --isoseq
     Undesired single side         : xxx (xx%) <- Only with --isoseq
+    Undesired no hit              : xxx (xx%) <- Only with --isoseq
 
     ZMWs for (B):
     With same barcode             : 162244 (92%)
@@ -531,7 +541,7 @@ In the second run, the barcode mask is used to demultiplex all ZMWs.
 ### `--peek-guess`
 Equivalent to the `Infer Barcodes Used parameter` option in SMRT Link.
 Sets the following options:
-`--peek 35000 --guess 45 --guess-min-count 10`.
+`--peek 50000 --guess 45 --guess-min-count 10`.
 
 ### `--single-side`
 Identify barcodes in molecules that only have barcodes adjacent to one adapter.
