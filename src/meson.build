@@ -24,6 +24,7 @@ pbmm2_version_sources = [
 pbmm2_src_include_directories = include_directories('.')
 
 pbmm2_cpp_sources = files([
+  'MM2Helper.cpp',
   'Settings.cpp',
   'Workflow.cpp'])
 

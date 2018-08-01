@@ -1,3 +1,5 @@
+// Author: Armin Töpfer
+
 #pragma once
 
 #include <pbcopper/cli/CLI.h>

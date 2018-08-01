@@ -1,3 +1,4 @@
+// Author: Armin Töpfer
 
 #include <functional>
 #include <iostream>
@@ -22,8 +23,7 @@
 
 #include <Pbmm2Version.h>
 
-#include "Index.h"
-#include "Mapping.h"
+#include "MM2Helper.h"
 #include "Settings.h"
 
 #include "Workflow.h"
@@ -218,9 +218,6 @@ int Workflow::Runner(const CLI::Results& options)
 
     Settings settings(options);
 
-    IndexOptions idxOpts(settings.Kmer, settings.Window, !settings.NoHPC, settings.NumThreads);
-    MapOptions mapOpts;
-
     BAM::DataSet qryFile;
     std::string refFile, outFile, alnFile;
 
@@ -245,10 +242,9 @@ int Workflow::Runner(const CLI::Results& options)
         return true;
     };
 
-    {
-        Index idx(refFile, idxOpts);
-        mapOpts.Update(idx);
+    MM2Helper mm2helper(refFile, settings.NumThreads);
 
+    {
         auto qryRdr = BamQuery(qryFile);
 
         const auto bamFiles = qryFile.BamFiles();
@@ -256,10 +252,20 @@ int Workflow::Runner(const CLI::Results& options)
         for (size_t i = 1; i < bamFiles.size(); ++i)
             hdr += bamFiles.at(i).Header();
 
+        if (!settings.SampleName.empty()) {
+            auto rgs = hdr.ReadGroups();
+            hdr.ClearReadGroups();
+            for (auto& rg : rgs) {
+                rg.Sample(settings.SampleName);
+                hdr.AddReadGroup(rg);
+            }
+        }
+
         const auto version = PacBio::Pbmm2Version() + " (commit " + PacBio::Pbmm2GitSha1() + ")";
-        for (const auto si : idx.SequenceInfos())
+        for (const auto& si : mm2helper.SequenceInfos())
             hdr.AddSequence(si);
-        hdr.AddProgram(BAM::ProgramInfo("pbmm2").Name("pbmm2").Version(version));
+        hdr.AddProgram(
+            BAM::ProgramInfo("pbmm2").Name("pbmm2").Version(version).CommandLine(settings.CLI));
 
         Parallel::WorkQueue<RecordsType> queue(settings.NumThreads);
         auto out = std::make_unique<BAM::BamWriter>(alnFile, hdr);
@@ -268,10 +274,14 @@ int Workflow::Runner(const CLI::Results& options)
         int32_t i = 0;
         static constexpr const int32_t chunkSize = 100;
         auto records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
+
+        auto Align = [&](const std::unique_ptr<std::vector<BAM::BamRecord>>& recs) -> RecordsType {
+            return mm2helper.Align(recs, filter);
+        };
+
         while (qryRdr->GetNext((*records)[i++])) {
             if (i >= chunkSize) {
-                queue.ProduceWith(&Align, std::move(records), std::cref(idx), std::cref(mapOpts),
-                                  std::cref(filter));
+                queue.ProduceWith(Align, std::move(records));
                 records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
                 i = 0;
             }
@@ -279,8 +289,7 @@ int Workflow::Runner(const CLI::Results& options)
         // terminal records, if they exist
         if (i > 0) {
             records->resize(i);
-            queue.ProduceWith(&Align, std::move(records), std::cref(idx), std::cref(mapOpts),
-                              std::cref(filter));
+            queue.ProduceWith(Align, std::move(records));
         }
 
         queue.Finalize();
