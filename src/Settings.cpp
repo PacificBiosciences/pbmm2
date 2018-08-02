@@ -79,6 +79,13 @@ const PlainOption AlignModeOpt{
     CLI::Option::StringType("SUBREAD"),
     {"SUBREAD"}
 };
+const PlainOption BestN{
+    "bestn",
+    { "bestn" },
+    "Max alignments",
+    "Retain at most N alignments.",
+    CLI::Option::IntType(5)
+};
 // clang-format on
 }  // namespace OptionNames
 
@@ -91,6 +98,7 @@ Settings::Settings(const PacBio::CLI::Results& options)
     , LogFile{options[OptionNames::LogFile].get<decltype(LogFile)>()}
     , LogLevel{options.LogLevel()}
     , SampleName{options[OptionNames::SampleName].get<decltype(SampleName)>()}
+    , BestN(options[OptionNames::BestN])
 {
     int32_t requestedNThreads;
     if (options.IsFromRTC()) {
@@ -138,7 +146,8 @@ PacBio::CLI::Interface Settings::CreateCLI()
 
     i.AddGroup("Filter Options", {
         OptionNames::MinAccuracy,
-        OptionNames::MinAlignmentLength
+        OptionNames::MinAlignmentLength,
+        OptionNames::BestN
     });
 
     i.AddPositionalArguments({

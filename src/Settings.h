@@ -60,6 +60,7 @@ struct Settings
 
     const std::string SampleName;
     AlignmentMode AlignMode;
+    int32_t BestN;
 
     /// Parses the provided CLI::Results and retrieves a defined set of options.
     Settings(const PacBio::CLI::Results& options);

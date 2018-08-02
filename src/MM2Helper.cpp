@@ -69,6 +69,7 @@ RecordsType MM2Helper::Align(const RecordsType& records, const FilterFunc& filte
         const auto seq = record.Sequence();
         const int qlen = seq.length();
         auto alns = mm_map(Idx->idx_, qlen, seq.c_str(), &numAlns, tbuf.tbuf_, &MapOpts, nullptr);
+        int numSecondary = 0;
         for (int i = 0; i < numAlns; ++i) {
             auto aln = alns[i];
             // if no alignment, continue
@@ -80,8 +81,10 @@ RecordsType MM2Helper::Align(const RecordsType& records, const FilterFunc& filte
             const uint8_t mapq = aln.mapq;
             auto mapped = BamRecord::Mapped(record, refId, refStart, strand, cigar, mapq);
             if (filter(mapped)) {
-                result->emplace_back(std::move(mapped));
-                break;  // only report the best alignment for now
+                if (numSecondary++ < 5)
+                    result->emplace_back(std::move(mapped));
+                else
+                    break;
             }
         }
         // cleanup
