@@ -85,25 +85,11 @@ The sort order is defined by the barcode indices, lowest first.
  * Guess the subset of barcodes used in an input Barcode Set given a mean barcode score threshold
  * Enhanced filtering options to remove ambiguous calls
 
-## Changelog
+## Latest Version
 
- * 1.7.0: Fix corner-case bug, included in SMRT Link 6.0.0
- * 1.6.1: Fix `--min-end-score` in combination with `--isoseq`
- * 1.6.0:
-   * New filter `--min-end-score`
-   * Add latest filters to summary file
-   * New IsoSeq default parameters
-   * Fix streaming of asymmetric BAM files
- * 1.5.0: Support spacer sequence between adapter and barcode
- * 1.4.0:
-   * New filter `--min-ref-span` and `--min-scoring-regions`
-   * Single-side library improvements
- * 1.3.0: `--peek-guess` uses only full-length ZMWs
- * 1.2.0:
-   * Streaming of split BAM files
-   * New fat binary build approach
- * 1.1.0: IsoSeq support
- * 1.0.0: Initial release, included in SMRT Link 5.1.0
+Version **1.7.1**: Fix rare-care PBI generation bug, included in SMRT Link 6.0.0
+
+[Full changelog here](#full-changelog)
 
 ## Execution
 
@@ -989,6 +975,27 @@ false positives.
    ascending sorting
  * Calls barcodes per barcode region and does not enforce adapter coupling
  * Nice reports for QC
+
+## Full Changelog
+
+ * 1.7.1: Fix rare-care PBI generation bug, included in SMRT Link 6.0.0
+ * 1.7.0: Fix corner-case bug
+ * 1.6.1: Fix `--min-end-score` in combination with `--isoseq`
+ * 1.6.0:
+   * New filter `--min-end-score`
+   * Add latest filters to summary file
+   * New IsoSeq default parameters
+   * Fix streaming of asymmetric BAM files
+ * 1.5.0: Support spacer sequence between adapter and barcode
+ * 1.4.0:
+   * New filter `--min-ref-span` and `--min-scoring-regions`
+   * Single-side library improvements
+ * 1.3.0: `--peek-guess` uses only full-length ZMWs
+ * 1.2.0:
+   * Streaming of split BAM files
+   * New fat binary build approach
+ * 1.1.0: IsoSeq support
+ * 1.0.0: Initial release, included in SMRT Link 5.1.0
 
 ## DISCLAIMER
 
