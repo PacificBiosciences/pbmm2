@@ -1,3 +1,5 @@
+// Author: Armin Töpfer
+
 #include <cstring>
 #include <iostream>
 #include <stdexcept>

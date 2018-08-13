@@ -1,3 +1,7 @@
+// Author: Armin Töpfer
+
+#include <map>
+
 #include <Pbmm2Version.h>
 
 #include "Settings.h"
@@ -39,27 +43,6 @@ const PlainOption NumThreads{
     "Number of threads to use, 0 means autodetection.",
     CLI::Option::IntType(0)
 };
-const PlainOption Kmer{
-    "kmer",
-    { "k", "kmer" },
-    "K-mer Length",
-    "K-mer size (no larger than 28).",
-    CLI::Option::IntType(19)
-};
-const PlainOption Window{
-    "window",
-    { "w", "window" },
-    "Minimizer Window Size",
-    "Minimizer window size.",
-    CLI::Option::IntType(10)
-};
-const PlainOption NoHPC{
-    "nohpc",
-    { "no-hpc" },
-    "Disable Homopolymer Compression",
-    "Disable homopolymer compression.",
-    CLI::Option::BoolType(false)
-};
 const PlainOption MinAccuracy{
     "minaccuracy",
     { "min-accuracy" },
@@ -81,33 +64,57 @@ const PlainOption Pbi{
     "Generate a PBI file that is needed for SMRTLink, slower.",
     CLI::Option::BoolType()
 };
+const PlainOption SampleName{
+    "biosample_name",
+    { "sample-name" },
+    "Sample Name",
+    "Add sample name to read groups.",
+    CLI::Option::StringType()
+};
+const PlainOption AlignModeOpt{
+    "align_mode",
+    { "preset" },
+    "Alignment mode",
+    R"(Set alignment mode: "SUBREAD".)",
+    CLI::Option::StringType("SUBREAD"),
+    {"SUBREAD"}
+};
+const PlainOption BestN{
+    "bestn",
+    { "bestn" },
+    "Max alignments",
+    "Retain at most N alignments.",
+    CLI::Option::IntType(5)
+};
 // clang-format on
 }  // namespace OptionNames
 
 Settings::Settings(const PacBio::CLI::Results& options)
     : CLI(options.InputCommandLine())
     , InputFiles(options.PositionalArguments())
-    , Kmer(options[OptionNames::Kmer])
-    , Window(options[OptionNames::Window])
-    , NoHPC(options[OptionNames::NoHPC])
     , MinAccuracy(options[OptionNames::MinAccuracy])
     , MinAlignmentLength(options[OptionNames::MinAlignmentLength])
     , Pbi(options[OptionNames::Pbi])
     , LogFile{options[OptionNames::LogFile].get<decltype(LogFile)>()}
     , LogLevel{options.LogLevel()}
+    , SampleName{options[OptionNames::SampleName].get<decltype(SampleName)>()}
+    , BestN(options[OptionNames::BestN])
 {
-    int requestedNThreads;
+    int32_t requestedNThreads;
     if (options.IsFromRTC()) {
         requestedNThreads = options.NumProcessors();
     } else {
         requestedNThreads = options[OptionNames::NumThreads];
     }
     NumThreads = ThreadCount(requestedNThreads);
+
+    const std::map<std::string, AlignmentMode> alignModeMap{{"SUBREAD", AlignmentMode::SUBREADS}};
+    AlignMode = alignModeMap.at(options[OptionNames::AlignModeOpt].get<std::string>());
 }
 
-int Settings::ThreadCount(int n)
+int32_t Settings::ThreadCount(int32_t n)
 {
-    const int m = std::thread::hardware_concurrency();
+    const int32_t m = std::thread::hardware_concurrency();
     if (n <= 0) n = m + n;  // permit n <= 0 to subtract from max threads
     return std::max(1, std::min(m, n));
 }
@@ -121,6 +128,7 @@ PacBio::CLI::Interface Settings::CreateCLI()
 
     // clang-format off
     i.AddGroup("Basic Options", {
+        OptionNames::AlignModeOpt,
         OptionNames::HelpOption,
         OptionNames::VersionOption,
         OptionNames::LogFile,
@@ -128,10 +136,8 @@ PacBio::CLI::Interface Settings::CreateCLI()
         OptionNames::NumThreads
     });
 
-    i.AddGroup("Indexing Options", {
-        OptionNames::Kmer, 
-        OptionNames::Window, 
-        OptionNames::NoHPC
+    i.AddGroup("Read Group Options", {
+        OptionNames::SampleName
     });
 
     i.AddGroup("Post-processing Options", {
@@ -139,8 +145,9 @@ PacBio::CLI::Interface Settings::CreateCLI()
     });
 
     i.AddGroup("Filter Options", {
-        OptionNames::MinAccuracy, 
-        OptionNames::MinAlignmentLength
+        OptionNames::MinAccuracy,
+        OptionNames::MinAlignmentLength,
+        OptionNames::BestN
     });
 
     i.AddPositionalArguments({
