@@ -116,7 +116,7 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
         std::exit(EXIT_FAILURE);
     }
 
-    return {inputFile, fastaFiles.front(), args[2]};
+    return std::tuple<std::string, std::string, std::string>{inputFile, fastaFiles.front(), args[2]};
 }
 
 std::unique_ptr<BAM::internal::IQuery> BamQuery(const BAM::DataSet& ds)
@@ -128,7 +128,7 @@ std::unique_ptr<BAM::internal::IQuery> BamQuery(const BAM::DataSet& ds)
     else
         query = std::make_unique<BAM::PbiFilterQuery>(filter, ds);
     return query;
-};
+}
 
 void CreateDataSet(const BAM::DataSet& originalInputDataset, const std::string& outputFile,
                    const Settings& settings)

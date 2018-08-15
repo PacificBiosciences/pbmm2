@@ -13,6 +13,7 @@
 #include <pbbam/FastaReader.h>
 #include <pbbam/MD5.h>
 #include <pbbam/SequenceInfo.h>
+#include <pbcopper/PbcopperMakeUnique.h>
 #include <pbcopper/logging/Logging.h>
 
 #include <minimap.h>

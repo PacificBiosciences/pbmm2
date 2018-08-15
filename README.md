@@ -11,7 +11,7 @@ native PacBio BAM in, native PacBio BAM out.
 ## Source Build
 
 ### Dependencies
- - C++14 compiler
+ - C++11 compiler
  - Meson
  - htslib installed
 
