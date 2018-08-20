@@ -23,13 +23,14 @@
 
 #include <Pbmm2Version.h>
 
+#include "AlignSettings.h"
 #include "MM2Helper.h"
-#include "Settings.h"
 
-#include "Workflow.h"
+#include "AlignWorkflow.h"
 
 namespace PacBio {
 namespace minimap2 {
+namespace {
 using FilterFunc = std::function<bool(const BAM::BamRecord&)>;
 
 struct Summary
@@ -39,7 +40,7 @@ struct Summary
     double Similarity = 0;
 };
 
-void WriteRecords(BAM::BamWriter& out, Summary& s, RecordsType results)
+void WriteRecords(BAM::BamWriter& out, Summary& s, int64_t& alignedRecords, RecordsType results)
 {
     if (!results) return;
     for (const auto& aln : *results) {
@@ -49,17 +50,22 @@ void WriteRecords(BAM::BamWriter& out, Summary& s, RecordsType results)
         s.Similarity += 1.0 - 1.0 * nErr / span;
         ++s.NumAlns;
         out.Write(aln);
+        if (++alignedRecords % 1000 == 0) {
+            PBLOG_INFO << "Number of Alignments: " << alignedRecords;
+        }
     }
 }
 
 void WriterThread(Parallel::WorkQueue<RecordsType>& queue, std::unique_ptr<BAM::BamWriter> out)
 {
     Summary s;
-    while (queue.ConsumeWith(WriteRecords, std::ref(*out), std::ref(s)))
-        ;
+    int64_t alignedRecords = 0;
+    while (queue.ConsumeWith(WriteRecords, std::ref(*out), std::ref(s), std::ref(alignedRecords))) {
+    }
     PBLOG_INFO << "Number of Alignments: " << s.NumAlns;
     PBLOG_INFO << "Number of Bases: " << s.Bases;
-    PBLOG_INFO << "Mean Concordance (mapped) : " << s.Similarity / s.NumAlns;
+    PBLOG_INFO << "Mean Concordance (mapped) : "
+               << std::round(1000.0 * s.Similarity / s.NumAlns) / 10.0 << "%";
 }
 
 std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
@@ -96,27 +102,33 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
         PBLOG_FATAL << "Input reference file does not exist: " << referenceFiles;
         std::exit(EXIT_FAILURE);
     }
-    BAM::DataSet dsRef(referenceFiles);
-    switch (dsRef.Type()) {
-        case BAM::DataSet::TypeEnum::REFERENCE:
-            break;
-        case BAM::DataSet::TypeEnum::BARCODE:
-        case BAM::DataSet::TypeEnum::SUBREAD:
-        case BAM::DataSet::TypeEnum::ALIGNMENT:
-        case BAM::DataSet::TypeEnum::CONSENSUS_ALIGNMENT:
-        case BAM::DataSet::TypeEnum::CONSENSUS_READ:
-        default:
-            PBLOG_FATAL << "ERROR: Unsupported reference input file " << referenceFiles
-                        << " of type " << BAM::DataSet::TypeToName(dsRef.Type());
+    std::string reference;
+    if (boost::algorithm::ends_with(referenceFiles, ".mmi")) {
+        reference = referenceFiles;
+    } else {
+        BAM::DataSet dsRef(referenceFiles);
+        switch (dsRef.Type()) {
+            case BAM::DataSet::TypeEnum::REFERENCE:
+                break;
+            case BAM::DataSet::TypeEnum::BARCODE:
+            case BAM::DataSet::TypeEnum::SUBREAD:
+            case BAM::DataSet::TypeEnum::ALIGNMENT:
+            case BAM::DataSet::TypeEnum::CONSENSUS_ALIGNMENT:
+            case BAM::DataSet::TypeEnum::CONSENSUS_READ:
+            default:
+                PBLOG_FATAL << "ERROR: Unsupported reference input file " << referenceFiles
+                            << " of type " << BAM::DataSet::TypeToName(dsRef.Type());
+                std::exit(EXIT_FAILURE);
+        }
+        const auto fastaFiles = dsRef.FastaFiles();
+        if (fastaFiles.size() != 1) {
+            PBLOG_FATAL << "Only one reference sequence allowed!";
             std::exit(EXIT_FAILURE);
-    }
-    const auto fastaFiles = dsRef.FastaFiles();
-    if (fastaFiles.size() != 1) {
-        PBLOG_FATAL << "Only one reference sequence allowed!";
-        std::exit(EXIT_FAILURE);
+        }
+        reference = fastaFiles.front();
     }
 
-    return std::tuple<std::string, std::string, std::string>{inputFile, fastaFiles.front(), args[2]};
+    return std::tuple<std::string, std::string, std::string>{inputFile, reference, args[2]};
 }
 
 std::unique_ptr<BAM::internal::IQuery> BamQuery(const BAM::DataSet& ds)
@@ -131,7 +143,7 @@ std::unique_ptr<BAM::internal::IQuery> BamQuery(const BAM::DataSet& ds)
 }
 
 void CreateDataSet(const BAM::DataSet& originalInputDataset, const std::string& outputFile,
-                   const Settings& settings)
+                   const AlignSettings& settings)
 {
     using BAM::DataSet;
     std::string metatype;
@@ -195,8 +207,9 @@ std::string OutputFilePrefix(const std::string& outputFile)
     }
     return prefix;
 }
+}  // namespace
 
-int Workflow::Runner(const CLI::Results& options)
+int AlignWorkflow::Runner(const CLI::Results& options)
 {
     std::ofstream logStream;
     {
@@ -216,7 +229,7 @@ int Workflow::Runner(const CLI::Results& options)
         PacBio::Logging::InstallSignalHandlers(*logger);
     }
 
-    Settings settings(options);
+    AlignSettings settings(options);
 
     BAM::DataSet qryFile;
     std::string refFile, outFile, alnFile;

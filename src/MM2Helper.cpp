@@ -29,7 +29,8 @@ PacBio::BAM::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const i
 }
 }  // namespace
 
-MM2Helper::MM2Helper(const std::string& refs, const int32_t nthreads) : NumThreads{nthreads}
+MM2Helper::MM2Helper(const std::string& refs, const int32_t nthreads, const std::string& outputMmi)
+    : NumThreads{nthreads}
 {
     mm_idxopt_init(&IdxOpts);
     IdxOpts.flag |= MM_I_HPC;
@@ -52,7 +53,7 @@ MM2Helper::MM2Helper(const std::string& refs, const int32_t nthreads) : NumThrea
     MapOpts.zdrop_inv = 50;
     MapOpts.bw = 2000;
 
-    Idx = std::make_unique<Index>(refs, IdxOpts, NumThreads);
+    Idx = std::make_unique<Index>(refs, IdxOpts, NumThreads, outputMmi);
     mm_mapopt_update(&MapOpts, Idx->idx_);
 }
 
@@ -101,24 +102,18 @@ std::vector<PacBio::BAM::SequenceInfo> MM2Helper::SequenceInfos() const
     return Idx->SequenceInfos();
 }
 
-Index::Index(const std::string& fname, const mm_idxopt_t& opts, const int32_t& numThreads)
+Index::Index(const std::string& fname, const mm_idxopt_t& opts, const int32_t& numThreads,
+             const std::string& outputMmi)
     : idx_{nullptr}
 {
-    auto rdr = mm_idx_reader_open(fname.c_str(), &opts, nullptr);
+    PBLOG_INFO << "Start reading and indexing references";
+    auto rdr =
+        mm_idx_reader_open(fname.c_str(), &opts, outputMmi.empty() ? nullptr : outputMmi.c_str());
     if (!rdr) throw std::runtime_error("unable to load reference for indexing!");
     idx_ = mm_idx_reader_read(rdr, numThreads);
     if (!idx_) throw std::runtime_error("unable to index reference!");
     mm_idx_reader_close(rdr);
-    PacBio::BAM::FastaReader faRdr(fname);
-    PacBio::BAM::FastaSequence rec;
-    while (faRdr.GetNext(rec)) {
-        std::string name = rec.Name();
-        boost::algorithm::trim_right_if(name, boost::algorithm::is_any_of("\r\n"));
-        std::string m5 = PacBio::BAM::MD5Hash(rec.Bases());
-        m5m_[name] = m5;
-        name = name.substr(0, name.find_first_of(" \f\n\r\t\v"));
-        m5m_[name] = m5;
-    }
+    PBLOG_INFO << "Finished reading and indexing references";
 }
 
 Index::~Index() { mm_idx_destroy(idx_); }
@@ -129,8 +124,7 @@ std::vector<PacBio::BAM::SequenceInfo> Index::SequenceInfos() const
     for (unsigned i = 0; i < idx_->n_seq; ++i) {
         const std::string name = idx_->seq[i].name;
         const std::string len = std::to_string(idx_->seq[i].len);
-        const std::string md5 = m5m_.at(name);
-        result.emplace_back(PacBio::BAM::SequenceInfo(name, len).Checksum(md5));
+        result.emplace_back(PacBio::BAM::SequenceInfo(name, len));
     }
     return result;
 }

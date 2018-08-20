@@ -27,14 +27,14 @@ typedef std::function<bool(const PacBio::BAM::BamRecord&)> FilterFunc;
 
 struct Index
 {
-    Index(const std::string& fname, const mm_idxopt_t& opts, const int32_t& numThreads);
+    Index(const std::string& fname, const mm_idxopt_t& opts, const int32_t& numThreads,
+          const std::string& outputMmi = "");
 
     ~Index();
 
     std::vector<PacBio::BAM::SequenceInfo> SequenceInfos() const;
 
     mm_idx_t* idx_;
-    std::map<std::string, std::string> m5m_;
 };
 
 struct ThreadBuffer
@@ -49,7 +49,8 @@ struct ThreadBuffer
 class MM2Helper
 {
 public:
-    MM2Helper(const std::string& refs, const int32_t nthreads = 3);
+    MM2Helper(const std::string& refs, const int32_t nthreads = 3,
+              const std::string& outputMmi = "");
 
 public:
     RecordsType Align(const RecordsType& records, const FilterFunc& filter) const;
