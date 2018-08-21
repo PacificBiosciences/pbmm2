@@ -24,6 +24,8 @@ Expect extreme changes and different output between versions until release of
 the first stable release.
 
 ## Usage examples
+
+### Align
 Align and create index in memory
 ```sh
 > pbmm2 align movie.subreads.bam hg38.fasta hg38.movie.aligned.bam
@@ -32,11 +34,19 @@ Align and create index in memory
 > pbmm2 align movie.consensusreadset.xml hg38.referenceset.xml hg38.movie.alignmentset.xml
 ```
 
+### Index first, align second
 Optionally, create and reuse an index
 ```sh
 > pbmm2 index hg38.fasta hg38.mmi
 > pbmm2 align movie1.subreadset.xml hg38.mmi hg38.movie1.alignmentset.xml
 > pbmm2 align movie2.subreadset.xml hg38.mmi hg38.movie2.alignmentset.xml
+```
+
+### Sort and pbindex alignment
+Omit output file to stream BAM output to stdout
+```sh
+> pbmm2 align movie1.subreadset.xml hg38.mmi | samtools sort > hg38.movie1.sorted.bam
+> pbindex hg38.movie1.sorted.bam
 ```
 
 ## Acknowledgements

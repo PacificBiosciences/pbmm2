@@ -94,7 +94,10 @@ int main(int argc, char* argv[])
     $ pbmm2 align ref.mmi movie.subreads.bam ref.movie.bam
 
   B. Align reads and generate index on-the-fly
-    $ pbmm2 align ref.fasta movie.subreads.bam ref.movie.bam)"
+    $ pbmm2 align ref.fasta movie.subreads.bam ref.movie.bam
+
+  C. Omit output file to stream BAM output to stdout
+    $ pbmm2 align movie1.subreadset.xml hg38.mmi | samtools sort > hg38.movie1.sorted.bam)"
                   << std::endl;
         return EXIT_SUCCESS;
     }
