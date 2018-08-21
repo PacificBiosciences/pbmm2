@@ -4,7 +4,7 @@
 
 #include <Pbmm2Version.h>
 
-#include "Settings.h"
+#include "IndexSettings.h"
 
 namespace PacBio {
 namespace minimap2 {
@@ -43,34 +43,6 @@ const PlainOption NumThreads{
     "Number of threads to use, 0 means autodetection.",
     CLI::Option::IntType(0)
 };
-const PlainOption MinAccuracy{
-    "minaccuracy",
-    { "min-accuracy" },
-    "Minimum Alignment Accuracy",
-    "Minimum alignment accuracy.",
-    CLI::Option::FloatType(0.75f)
-};
-const PlainOption MinAlignmentLength{
-    "minalnlength",
-    { "min-length" },
-    "Minimum Alignment Length",
-    "Minimum alignment length.",
-    CLI::Option::IntType(50)
-};
-const PlainOption Pbi{
-    "pbi",
-    { "pbi" },
-    "Generate PBI",
-    "Generate a PBI file that is needed for SMRTLink, slower.",
-    CLI::Option::BoolType()
-};
-const PlainOption SampleName{
-    "biosample_name",
-    { "sample-name" },
-    "Sample Name",
-    "Add sample name to read groups.",
-    CLI::Option::StringType()
-};
 const PlainOption AlignModeOpt{
     "align_mode",
     { "preset" },
@@ -79,26 +51,14 @@ const PlainOption AlignModeOpt{
     CLI::Option::StringType("SUBREAD"),
     {"SUBREAD"}
 };
-const PlainOption BestN{
-    "bestn",
-    { "bestn" },
-    "Max alignments",
-    "Retain at most N alignments.",
-    CLI::Option::IntType(5)
-};
 // clang-format on
 }  // namespace OptionNames
 
-Settings::Settings(const PacBio::CLI::Results& options)
+IndexSettings::IndexSettings(const PacBio::CLI::Results& options)
     : CLI(options.InputCommandLine())
     , InputFiles(options.PositionalArguments())
-    , MinAccuracy(options[OptionNames::MinAccuracy])
-    , MinAlignmentLength(options[OptionNames::MinAlignmentLength])
-    , Pbi(options[OptionNames::Pbi])
     , LogFile{options[OptionNames::LogFile].get<decltype(LogFile)>()}
     , LogLevel{options.LogLevel()}
-    , SampleName{options[OptionNames::SampleName].get<decltype(SampleName)>()}
-    , BestN(options[OptionNames::BestN])
 {
     int32_t requestedNThreads;
     if (options.IsFromRTC()) {
@@ -112,23 +72,22 @@ Settings::Settings(const PacBio::CLI::Results& options)
     AlignMode = alignModeMap.at(options[OptionNames::AlignModeOpt].get<std::string>());
 }
 
-int32_t Settings::ThreadCount(int32_t n)
+int32_t IndexSettings::ThreadCount(int32_t n)
 {
     const int32_t m = std::thread::hardware_concurrency();
     if (n <= 0) n = m + n;  // permit n <= 0 to subtract from max threads
     return std::max(1, std::min(m, n));
 }
 
-PacBio::CLI::Interface Settings::CreateCLI()
+PacBio::CLI::Interface IndexSettings::CreateCLI()
 {
     using Task = PacBio::CLI::ToolContract::Task;
 
     const auto version = PacBio::Pbmm2Version() + " (commit " + PacBio::Pbmm2GitSha1() + ")";
-    PacBio::CLI::Interface i{"pbmm2", "minimap2 with native PacBio BAM support", version};
+    PacBio::CLI::Interface i{"pbmm2_index", "bla", version};
 
     // clang-format off
     i.AddGroup("Basic Options", {
-        OptionNames::AlignModeOpt,
         OptionNames::HelpOption,
         OptionNames::VersionOption,
         OptionNames::LogFile,
@@ -136,37 +95,20 @@ PacBio::CLI::Interface Settings::CreateCLI()
         OptionNames::NumThreads
     });
 
-    i.AddGroup("Read Group Options", {
-        OptionNames::SampleName
-    });
-
-    i.AddGroup("Post-processing Options", {
-        OptionNames::Pbi
-    });
-
-    i.AddGroup("Filter Options", {
-        OptionNames::MinAccuracy,
-        OptionNames::MinAlignmentLength,
-        OptionNames::BestN
+    i.AddGroup("Index Options", {
+        OptionNames::AlignModeOpt
     });
 
     i.AddPositionalArguments({
-        { "in.subreads.bam|xml", "Input BAM or DataSet XML", "<in.subreads.bam|xml>" },
-        { "ref.fa|xml", "Reference FASTA or ReferenceSet XML", "<ref.fa|xml>" },
-        { "out.aligned.bam|xml", "Output BAM or DataSet XML", "<out.aligned.bam|xml>" }
+        { "ref.fa|xml", "Reference FASTA, ReferenceSet XML", "<ref.fa|xml>" },
+        { "out.mmi", "Output Reference Index", "<out.mmi>" }
     });
 
-    const std::string id = "mapping.tasks.pbmm2";
+    const std::string id = "mapping.tasks.pbmm2_index";
     Task tcTask(id);
     tcTask.NumProcessors(Task::MAX_NPROC);
 
     tcTask.InputFileTypes({
-        {
-            "subread_set",
-            "SubreadSet",
-            "Subread DataSet or .bam file",
-            "PacBio.DataSet.SubreadSet"
-        },
         {
             "reference_set",
             "ReferenceSet",
@@ -177,10 +119,10 @@ PacBio::CLI::Interface Settings::CreateCLI()
 
     tcTask.OutputFileTypes({
         {
-            "aligned_bam_output",
-            "AlignmentSet",
-            "AlignmentSet for output .bam file",
-            "PacBio.DataSet.AlignmentSet",
+            "reference_index_output",
+            "Minimap2IndexSet",
+            "Minimap2IndexSet for output .mmi file",
+            "PacBio.DataSet.Minimap2IndexSet",
             "pbmm2_output"
         }
     });

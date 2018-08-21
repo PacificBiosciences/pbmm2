@@ -6,7 +6,7 @@
 
 namespace PacBio {
 namespace minimap2 {
-struct Workflow
+struct IndexWorkflow
 {
     static int Runner(const PacBio::CLI::Results& options);
 };

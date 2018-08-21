@@ -25,8 +25,10 @@ pbmm2_src_include_directories = include_directories('.')
 
 pbmm2_cpp_sources = files([
   'MM2Helper.cpp',
-  'Settings.cpp',
-  'Workflow.cpp'])
+  'AlignSettings.cpp',
+  'AlignWorkflow.cpp',
+  'IndexSettings.cpp',
+  'IndexWorkflow.cpp'])
 
 pbmm2_cpp_sources += pbmm2_version_sources
 

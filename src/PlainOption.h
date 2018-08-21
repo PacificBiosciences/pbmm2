@@ -7,8 +7,6 @@
 
 #include <pbcopper/cli/CLI.h>
 
-#include "AlignmentMode.h"
-
 namespace PacBio {
 namespace minimap2 {
 struct PlainOption
@@ -40,36 +38,6 @@ struct PlainOption
     }
     operator std::pair<std::string, std::string>() const { return std::make_pair(id, name); }
     operator std::string() const { return id; }
-};
-
-/// Contains user provided CLI configuration for lima_raw
-struct Settings
-{
-    const std::string CLI;
-    const std::vector<std::string> InputFiles;
-    int32_t NumThreads;
-
-    // alignment output filters
-    float MinAccuracy;
-    int32_t MinAlignmentLength;
-
-    bool Pbi;
-
-    std::string LogFile;
-    Logging::LogLevel LogLevel;
-
-    const std::string SampleName;
-    AlignmentMode AlignMode;
-    int32_t BestN;
-
-    /// Parses the provided CLI::Results and retrieves a defined set of options.
-    Settings(const PacBio::CLI::Results& options);
-
-    int32_t ThreadCount(int32_t n);
-
-    /// Given the description of the tool and its version, create all
-    /// necessary CLI::Options for the ccs executable.
-    static PacBio::CLI::Interface CreateCLI();
 };
 }  // namespace minimap2
 }  // namespace PacBio
