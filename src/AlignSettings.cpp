@@ -124,7 +124,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     using Task = PacBio::CLI::ToolContract::Task;
 
     const auto version = PacBio::Pbmm2Version() + " (commit " + PacBio::Pbmm2GitSha1() + ")";
-    PacBio::CLI::Interface i{"pbmm2_align", "mm2", version};
+    PacBio::CLI::Interface i{"pbmm2_align", "Align subreads or ccs reads to a reference", version};
 
     // clang-format off
     i.AddGroup("Basic Options", {
@@ -153,7 +153,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     i.AddPositionalArguments({
         { "in.subreads.bam|xml", "Input BAM or DataSet XML", "<in.subreads.bam|xml>" },
         { "ref.fa|xml|mmi", "Reference FASTA, ReferenceSet XML, or Reference Index", "<ref.fa|xml|mmi>" },
-        { "out.aligned.bam|xml", "Output BAM or DataSet XML", "<out.aligned.bam|xml>" }
+        { "out.aligned.bam|xml", "Output BAM or DataSet XML", "[out.aligned.bam|xml]" }
     });
 
     const std::string id = "mapping.tasks.pbmm2_align";

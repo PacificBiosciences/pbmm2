@@ -71,8 +71,8 @@ void WriterThread(Parallel::WorkQueue<RecordsType>& queue, std::unique_ptr<BAM::
 std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
     const std::vector<std::string>& args)
 {
-    if (args.size() != 3) {
-        PBLOG_FATAL << "Please provide all three arguments: input reference output!";
+    if (args.size() < 2) {
+        PBLOG_FATAL << "Please provide at least the input arguments: input reference output!";
         PBLOG_FATAL << "EXAMPLE: pbmm2 input.subreads.bam reference.fasta output.bam";
         std::exit(EXIT_FAILURE);
     }
@@ -128,7 +128,13 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
         reference = fastaFiles.front();
     }
 
-    return std::tuple<std::string, std::string, std::string>{inputFile, reference, args[2]};
+    std::string out;
+    if (args.size() == 3)
+        out = args[2];
+    else
+        out = "-";
+
+    return std::tuple<std::string, std::string, std::string>{inputFile, reference, out};
 }
 
 std::unique_ptr<BAM::internal::IQuery> BamQuery(const BAM::DataSet& ds)
@@ -224,7 +230,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             logStream.open(logFile);
             logger = &Logger::Default(new Logger(logStream, logLevel));
         } else {
-            logger = &Logger::Default(new Logger(std::cout, logLevel));
+            logger = &Logger::Default(new Logger(std::cerr, logLevel));
         }
         PacBio::Logging::InstallSignalHandlers(*logger);
     }
@@ -232,20 +238,27 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     AlignSettings settings(options);
 
     BAM::DataSet qryFile;
-    std::string refFile, outFile, alnFile;
+    std::string refFile;
+    std::string outFile;
+    std::string alnFile{"-"};
 
     std::tie(qryFile, refFile, outFile) = CheckPositionalArgs(options.PositionalArguments());
 
-    const auto outputFilePrefix = OutputFilePrefix(outFile);
-    if (Utility::FileExtension(outFile) == "xml")
-        alnFile = outputFilePrefix + ".bam";
-    else
-        alnFile = outFile;
+    std::string outputFilePrefix;
+    bool outputIsXML = false;
+    if (outFile != "-") {
+        outputFilePrefix = OutputFilePrefix(outFile);
+        outputIsXML = Utility::FileExtension(outFile) == "xml";
+        if (outputIsXML)
+            alnFile = outputFilePrefix + ".bam";
+        else
+            alnFile = outFile;
 
-    if (Utility::FileExists(alnFile))
-        PBLOG_WARN << "Warning: Overwriting existing output file: " << alnFile;
-    if (alnFile != outFile && Utility::FileExists(outFile))
-        PBLOG_WARN << "Warning: Overwriting existing output file: " << outFile;
+        if (Utility::FileExists(alnFile))
+            PBLOG_WARN << "Warning: Overwriting existing output file: " << alnFile;
+        if (alnFile != outFile && Utility::FileExists(outFile))
+            PBLOG_WARN << "Warning: Overwriting existing output file: " << outFile;
+    }
 
     const FilterFunc filter = [&settings](const BAM::BamRecord& aln) {
         const int32_t span = aln.ReferenceEnd() - aln.ReferenceStart();
@@ -315,8 +328,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                                  BAM::PbiBuilder::CompressionLevel::CompressionLevel_1,
                                  settings.NumThreads);
     }
-    if (Utility::FileExtension(outFile) == "xml")
-        CreateDataSet(qryFile, outputFilePrefix, settings);
+    if (outputIsXML) CreateDataSet(qryFile, outputFilePrefix, settings);
 
     return EXIT_SUCCESS;
 }
