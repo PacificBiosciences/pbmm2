@@ -153,7 +153,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     i.AddPositionalArguments({
         { "in.subreads.bam|xml", "Input BAM or DataSet XML", "<in.subreads.bam|xml>" },
         { "ref.fa|xml|mmi", "Reference FASTA, ReferenceSet XML, or Reference Index", "<ref.fa|xml|mmi>" },
-        { "out.aligned.bam|xml", "Output BAM or DataSet XML", "<out.aligned.bam|xml>" }
+        { "out.aligned.bam|xml", "Output BAM or DataSet XML", "[out.aligned.bam|xml]" }
     });
 
     const std::string id = "mapping.tasks.pbmm2_align";
