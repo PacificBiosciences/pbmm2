@@ -124,7 +124,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     using Task = PacBio::CLI::ToolContract::Task;
 
     const auto version = PacBio::Pbmm2Version() + " (commit " + PacBio::Pbmm2GitSha1() + ")";
-    PacBio::CLI::Interface i{"pbmm2_align", "mm2", version};
+    PacBio::CLI::Interface i{"pbmm2_align", "Align subreads or ccs reads to a reference", version};
 
     // clang-format off
     i.AddGroup("Basic Options", {

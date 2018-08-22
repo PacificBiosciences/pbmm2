@@ -84,7 +84,7 @@ PacBio::CLI::Interface IndexSettings::CreateCLI()
     using Task = PacBio::CLI::ToolContract::Task;
 
     const auto version = PacBio::Pbmm2Version() + " (commit " + PacBio::Pbmm2GitSha1() + ")";
-    PacBio::CLI::Interface i{"pbmm2_index", "bla", version};
+    PacBio::CLI::Interface i{"pbmm2_index", "Index reference and store as .mmi file", version};
 
     // clang-format off
     i.AddGroup("Basic Options", {
