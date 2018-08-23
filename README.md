@@ -1,6 +1,7 @@
+<h1 align="center"><img width="200px" src="img/pbmm2.png"/></h1>
 <h1 align="center">pbmm2</h1>
 <p align="center">A minimap2 frontend for PacBio data:
-native PacBio BAM in, native PacBio BAM out.</p>
+native PacBio BAM in ⇨ native PacBio BAM out.</p>
 
 ***
 
