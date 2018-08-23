@@ -110,7 +110,28 @@ int IndexWorkflow::Runner(const CLI::Results& options)
 
     if (!CheckPositionalArgs(options.PositionalArguments())) std::exit(EXIT_FAILURE);
 
-    const std::string refFile = options.PositionalArguments()[0];
+    BAM::DataSet dsRef(options.PositionalArguments()[0]);
+    switch (dsRef.Type()) {
+        case BAM::DataSet::TypeEnum::REFERENCE:
+            break;
+        case BAM::DataSet::TypeEnum::BARCODE:
+        case BAM::DataSet::TypeEnum::SUBREAD:
+        case BAM::DataSet::TypeEnum::ALIGNMENT:
+        case BAM::DataSet::TypeEnum::CONSENSUS_ALIGNMENT:
+        case BAM::DataSet::TypeEnum::CONSENSUS_READ:
+        default:
+            PBLOG_FATAL << "ERROR: Unsupported reference input file "
+                        << options.PositionalArguments()[0] << " of type "
+                        << BAM::DataSet::TypeToName(dsRef.Type());
+            std::exit(EXIT_FAILURE);
+    }
+    const auto fastaFiles = dsRef.FastaFiles();
+    if (fastaFiles.size() != 1) {
+        PBLOG_FATAL << "Only one reference sequence allowed!";
+        std::exit(EXIT_FAILURE);
+    }
+
+    const std::string refFile = fastaFiles.front();
     const std::string outFile = options.PositionalArguments()[1];
 
     if (Utility::FileExists(outFile))
