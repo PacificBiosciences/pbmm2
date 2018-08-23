@@ -86,6 +86,13 @@ const PlainOption BestN{
     "Retain at most N alignments.",
     CLI::Option::IntType(5)
 };
+const PlainOption ChunkSize{
+    "chunk_size",
+    { "chunk-size" },
+    "Chunk Size",
+    "Process N records per chunk.",
+    CLI::Option::IntType(100)
+};
 // clang-format on
 }  // namespace OptionNames
 
@@ -99,6 +106,7 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     , LogLevel{options.LogLevel()}
     , SampleName{options[OptionNames::SampleName].get<decltype(SampleName)>()}
     , BestN(options[OptionNames::BestN])
+    , ChunkSize(options[OptionNames::ChunkSize])
 {
     int32_t requestedNThreads;
     if (options.IsFromRTC()) {
@@ -133,6 +141,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         OptionNames::VersionOption,
         OptionNames::LogFile,
         OptionNames::LogLevelOption,
+        OptionNames::ChunkSize,
         OptionNames::NumThreads
     });
 

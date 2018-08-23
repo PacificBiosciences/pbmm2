@@ -1,8 +1,11 @@
 // Author: Armin Töpfer
 
+#include <atomic>
+#include <chrono>
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <thread>
 #include <tuple>
 #include <vector>
@@ -19,6 +22,7 @@
 #include <pbbam/PbiFilter.h>
 #include <pbbam/PbiFilterQuery.h>
 
+#include <pbcopper/parallel/FireAndForget.h>
 #include <pbcopper/parallel/WorkQueue.h>
 
 #include <Pbmm2Version.h>
@@ -39,34 +43,6 @@ struct Summary
     int64_t Bases = 0;
     double Similarity = 0;
 };
-
-void WriteRecords(BAM::BamWriter& out, Summary& s, int64_t& alignedRecords, RecordsType results)
-{
-    if (!results) return;
-    for (const auto& aln : *results) {
-        const int32_t span = aln.ReferenceEnd() - aln.ReferenceStart();
-        const int32_t nErr = aln.NumDeletedBases() + aln.NumInsertedBases() + aln.NumMismatches();
-        s.Bases += span;
-        s.Similarity += 1.0 - 1.0 * nErr / span;
-        ++s.NumAlns;
-        out.Write(aln);
-        if (++alignedRecords % 1000 == 0) {
-            PBLOG_INFO << "Number of Alignments: " << alignedRecords;
-        }
-    }
-}
-
-void WriterThread(Parallel::WorkQueue<RecordsType>& queue, std::unique_ptr<BAM::BamWriter> out)
-{
-    Summary s;
-    int64_t alignedRecords = 0;
-    while (queue.ConsumeWith(WriteRecords, std::ref(*out), std::ref(s), std::ref(alignedRecords))) {
-    }
-    PBLOG_INFO << "Number of Alignments: " << s.NumAlns;
-    PBLOG_INFO << "Number of Bases: " << s.Bases;
-    PBLOG_INFO << "Mean Concordance (mapped) : "
-               << std::round(1000.0 * s.Similarity / s.NumAlns) / 10.0 << "%";
-}
 
 std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
     const std::vector<std::string>& args)
@@ -270,6 +246,8 @@ int AlignWorkflow::Runner(const CLI::Results& options)
 
     MM2Helper mm2helper(refFile, settings.NumThreads);
 
+    Summary s;
+
     {
         auto qryRdr = BamQuery(qryFile);
 
@@ -293,21 +271,40 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         hdr.AddProgram(
             BAM::ProgramInfo("pbmm2").Name("pbmm2").Version(version).CommandLine(settings.CLI));
 
-        Parallel::WorkQueue<RecordsType> queue(settings.NumThreads);
-        auto out = std::make_unique<BAM::BamWriter>(alnFile, hdr);
-        auto writer = std::thread(WriterThread, std::ref(queue), std::move(out));
+        PacBio::Parallel::FireAndForget faf(settings.NumThreads, 3);
+        BAM::BamWriter out(alnFile, hdr);
 
         int32_t i = 0;
-        static constexpr const int32_t chunkSize = 100;
+        const int32_t chunkSize = settings.ChunkSize;
         auto records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
 
-        auto Align = [&](const std::unique_ptr<std::vector<BAM::BamRecord>>& recs) -> RecordsType {
-            return mm2helper.Align(recs, filter);
+        std::mutex outputMutex;
+        int64_t alignedRecords = 0;
+        std::atomic_int waiting{0};
+        auto Submit = [&](const std::unique_ptr<std::vector<BAM::BamRecord>>& recs) {
+            auto output = mm2helper.Align(recs, filter);
+            if (output) {
+                std::lock_guard<std::mutex> lock(outputMutex);
+                for (const auto& aln : *output) {
+                    const int32_t span = aln.ReferenceEnd() - aln.ReferenceStart();
+                    const int32_t nErr =
+                        aln.NumDeletedBases() + aln.NumInsertedBases() + aln.NumMismatches();
+                    s.Bases += span;
+                    s.Similarity += 1.0 - 1.0 * nErr / span;
+                    ++s.NumAlns;
+                    out.Write(aln);
+                    if (++alignedRecords % 1000 == 0) {
+                        PBLOG_INFO << "Number of Alignments: " << alignedRecords;
+                    }
+                }
+            }
+            waiting--;
         };
 
         while (qryRdr->GetNext((*records)[i++])) {
             if (i >= chunkSize) {
-                queue.ProduceWith(Align, std::move(records));
+                waiting++;
+                faf.ProduceWith(Submit, std::move(records));
                 records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
                 i = 0;
             }
@@ -315,12 +312,19 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         // terminal records, if they exist
         if (i > 0) {
             records->resize(i);
-            queue.ProduceWith(Align, std::move(records));
+            waiting++;
+            faf.ProduceWith(Submit, std::move(records));
         }
 
-        queue.Finalize();
-        writer.join();
+        faf.Finalize();
+
+        while (waiting)
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
+    PBLOG_INFO << "Number of Alignments: " << s.NumAlns;
+    PBLOG_INFO << "Number of Bases: " << s.Bases;
+    PBLOG_INFO << "Mean Concordance (mapped) : "
+               << std::round(1000.0 * s.Similarity / s.NumAlns) / 10.0 << "%";
 
     if (settings.Pbi) {
         BAM::BamFile validationBam(alnFile);
