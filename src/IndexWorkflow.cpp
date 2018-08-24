@@ -137,7 +137,7 @@ int IndexWorkflow::Runner(const CLI::Results& options)
     if (Utility::FileExists(outFile))
         PBLOG_WARN << "Warning: Overwriting existing output file: " << outFile;
 
-    MM2Helper mm2helper(refFile, settings.NumThreads, outFile);
+    MM2Helper mm2helper(refFile, settings, outFile);
 
     return EXIT_SUCCESS;
 }

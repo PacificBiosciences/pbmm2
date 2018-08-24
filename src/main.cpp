@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
     tools.insert(
         std::make_pair("align",
             Tool{"pbmm2_align",
-                 "Align subreads or ccs reads to a reference",
+                 "Align PacBio reads to a reference",
                  "movie.subreadset.xml ref.referenceset.xml ref.movie.alignmentset.xml",
                  PacBio::minimap2::AlignSettings::CreateCLI(),
                  &PacBio::minimap2::AlignWorkflow::Runner}));

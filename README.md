@@ -29,7 +29,7 @@ _pbmm2_ is a wrapper for [minimap2](https://github.com/lh3/minimap2).
 Its purpose is to support native PacBio BAM in- and output and provide sets of
 recommended parameters. Extensive testing is yet to be performed before _pbmm2_
 becomes an officially recommended PacBio aligner; until then, please use BLASR
-if you need ISO compliant tools and official PacBio support.
+if you need ISO compliant tools and official PacBio support.:
 
 ## Usage
 _pbmm2_ offers following tools
@@ -37,7 +37,7 @@ _pbmm2_ offers following tools
 ```
 Tools:
     index      Index reference and store as .mmi file
-    align      Align subreads or ccs reads to a reference
+    align      Align PacBio reads to a reference
 ```
 
 ### Index
@@ -45,6 +45,11 @@ Indexing is optional, but recommended it you use the same reference multiple tim
 ```
 Usage: pbmm2 index [options] <ref.fa|xml> <out.mmi>
 ```
+
+**Notes:**
+ - If you use an index file, you can't override parameters `-k` and `-w` in `pbmm2 align`!
+ - Minimap2 parameter `-H` (homopolymer-compressed k-mer) is always on.
+ - You can also use existing minimap2 `.mmi` files in `pbmm2 align`.
 
 ### Align
 The output argument is optional. If not provided, BAM output is streamed to stdout.
@@ -61,41 +66,52 @@ Usage: pbmm2 align [options] <in.subreads.bam|xml> <ref.fa|xml|mmi> [out.aligned
 Do not forget to provide `samtools sort` sufficient number of threads and memory
 per thread.
 
-### What seeding and alignment parameters does _pbmm2_ use?
-The current default mode uses following options:
+### What are parameter sets and how can I override them?
+Per default, _pbmm2_ uses recommended parameter sets to simplify the plethora
+of possible combinations. For this, we currently offer:
+
 ```
--x map-pb -a --eqx -L -O 5,56 -E 4,1 -B 5 --secondary=no -z 400,50 -r 2k -Y
+  --preset  Set alignment mode:
+             - "SUBREAD" -k 19 -w 10 -d 5 -D 4 -i 56 -I 1 -A 2 -B 5 -z 400 -Z 50 -r 2000
+            Default ["SUBREAD"]
 ```
 
-Explained:
-* `-x map-pb` provides preset seeding parameters optimized for PacBio reads `-H -k 19 -w 10`
-* `-a` produces SAM output, converted to BAM internally
-* `--eqx` uses `X`/`=` extended CIGAR strings
-* `-L` supports long alignments
-* `-O 5,56 -E 4,1 -B 5` approximates the convex gap costs of `ngmlr`
-* `--secondary=no` outputs only primary and supplementary alignments
-* `-z 400,50` enables alignment of short inversions
-* `-r 2k` increases alignment bandwidth to span large insertions and deletions
-* `-Y` prevents hard clipping (**required** for `pbsv`)
+Prime examples for other parameter sets are
+`ISOFORM` or `CCS` mapping; work in progress.
 
-### Can I override seeding parameters for the index?
-If you want to use different seeding parameters `-k` and `-w`, please create
-a `.mmi` index with
-```sh
-> minimap2 -d ref.mmi ref.fasta -H -k X -w Y
+If you want to override any of the parameters of your chosen set,
+please use the respective options:
+
 ```
-and provide that
-index to `pbmm2 align`.
+  -k   k-mer size (no larger than 28). [-1]
+  -w   Minizer window size. [-1]
+  -A   Matching score. [-1]
+  -B   Mismatch penalty. [-1]
+  -d   Deletion gap open penalty. [-1]
+  -i   Insertion gap open penalty. [-1]
+  -D   Deletion gap extension penalty. [-1]
+  -I   Insertion gap extension penalty. [-1]
+  -z   Z-drop score. [-1]
+  -Z   Z-drop inversion score. [-1]
+  -r   Bandwidth used in chaining and DP-based alignment. [-1]
+```
 
-### Can I override alignment parameters?
-No. If you want to experiment with different parameter sets, please use
-_minimap2_ in combination with [_pbbamify_](https://github.com/PacificBiosciences/pbbam/wiki/pbbamify) (`conda install pbbam`).
-We are open to parameter set suggestions.
+If you have suggestions for our default parameters or ideas for a new
+parameter set, please open a GitHub issue!
 
-### Are more parameter sets planned?
-Yes. The current set has been tested for diploid genome mapping.
-A prime example for another parameter set is isoform mapping.
-This is work in progress.
+### What about secondary alignments?
+We currently only provide primary and supplementary alignments. If you have an
+use-case that absolutely needs secondary alignments, please open a GitHub issue!
+
+### I can't find large SVs!
+The `--min-accuracy` option, whereas accuracy is defined as
+
+```
+    1.0 - (#Deletions + #Insertions + #Mismatches) / MappedReferenceSpan
+```
+
+will remove alignments with more unmapped than mapped bases.
+You can deactivate this filter with `--min-accuracy 0`.
 
 ### Why is the output different from BLASR?
 As for any two alignments of the same data with different mappers, alignments

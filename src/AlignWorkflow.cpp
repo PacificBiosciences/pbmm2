@@ -81,6 +81,8 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
     std::string reference;
     if (boost::algorithm::ends_with(referenceFiles, ".mmi")) {
         reference = referenceFiles;
+        PBLOG_WARN
+            << "Reference input is an index file. Index parameter override options are disabled!";
     } else {
         BAM::DataSet dsRef(referenceFiles);
         switch (dsRef.Type()) {
@@ -124,8 +126,7 @@ std::unique_ptr<BAM::internal::IQuery> BamQuery(const BAM::DataSet& ds)
     return query;
 }
 
-void CreateDataSet(const BAM::DataSet& originalInputDataset, const std::string& outputFile,
-                   const AlignSettings& settings)
+void CreateDataSet(const BAM::DataSet& originalInputDataset, const std::string& outputFile)
 {
     using BAM::DataSet;
     std::string metatype;
@@ -158,14 +159,7 @@ void CreateDataSet(const BAM::DataSet& originalInputDataset, const std::string& 
         fileName = splits.back();
     }
     BAM::ExternalResource resource(metatype, fileName + ".bam");
-
-    if (settings.Pbi) {
-        BAM::FileIndex pbi("PacBio.Index.PacBioIndex", fileName + ".bam.pbi");
-        resource.FileIndices().Add(pbi);
-    }
-
     ds.ExternalResources().Add(resource);
-
     ds.Name(fileName);
     ds.TimeStampedName(fileName + "-" + BAM::CurrentTimestamp());
     std::ofstream dsOut(outputFile + "." + outputType + ".xml");
@@ -238,13 +232,16 @@ int AlignWorkflow::Runner(const CLI::Results& options)
 
     const FilterFunc filter = [&settings](const BAM::BamRecord& aln) {
         const int32_t span = aln.ReferenceEnd() - aln.ReferenceStart();
-        const int32_t nErr = aln.NumDeletedBases() + aln.NumInsertedBases() + aln.NumMismatches();
         if (span <= 0 || span < settings.MinAlignmentLength) return false;
+
+        if (settings.MinAccuracy <= 0) return true;
+
+        const int32_t nErr = aln.NumDeletedBases() + aln.NumInsertedBases() + aln.NumMismatches();
         if (1.0 - 1.0 * nErr / span < settings.MinAccuracy) return false;
         return true;
     };
 
-    MM2Helper mm2helper(refFile, settings.NumThreads);
+    MM2Helper mm2helper(refFile, settings);
 
     Summary s;
 
@@ -326,13 +323,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     PBLOG_INFO << "Mean Concordance (mapped) : "
                << std::round(1000.0 * s.Similarity / s.NumAlns) / 10.0 << "%";
 
-    if (settings.Pbi) {
-        BAM::BamFile validationBam(alnFile);
-        BAM::PbiFile::CreateFrom(validationBam,
-                                 BAM::PbiBuilder::CompressionLevel::CompressionLevel_1,
-                                 settings.NumThreads);
-    }
-    if (outputIsXML) CreateDataSet(qryFile, outputFilePrefix, settings);
+    if (outputIsXML) CreateDataSet(qryFile, outputFilePrefix);
 
     return EXIT_SUCCESS;
 }

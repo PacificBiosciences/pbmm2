@@ -29,13 +29,23 @@ PacBio::BAM::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const i
 }
 }  // namespace
 
-MM2Helper::MM2Helper(const std::string& refs, const int32_t nthreads, const std::string& outputMmi)
-    : NumThreads{nthreads}
+MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
+                     const std::string& outputMmi)
+    : NumThreads{settings.NumThreads}
 {
     mm_idxopt_init(&IdxOpts);
+    switch (settings.AlignMode) {
+        case AlignmentMode::SUBREADS:
+            IdxOpts.k = 19;
+            IdxOpts.w = 10;
+            break;
+        default:
+            PBLOG_FATAL << "No AlignmentMode --preset selected!";
+            std::exit(EXIT_FAILURE);
+    }
     IdxOpts.flag |= MM_I_HPC;
-    IdxOpts.k = 19;
-    IdxOpts.w = 10;
+    if (settings.Kmer > 0) IdxOpts.k = settings.Kmer;
+    if (settings.MinimizerWindowSize > 0) IdxOpts.w = settings.MinimizerWindowSize;
     IdxOpts.batch_size = 0x7fffffffffffffffL;  // always build a uni-part index
 
     mm_mapopt_init(&MapOpts);
@@ -44,17 +54,47 @@ MM2Helper::MM2Helper(const std::string& refs, const int32_t nthreads, const std:
     MapOpts.flag |= MM_F_LONG_CIGAR;
     MapOpts.flag |= MM_F_EQX;
     MapOpts.flag |= MM_F_NO_PRINT_2ND;
-    MapOpts.q = 5;
-    MapOpts.q2 = 56;
-    MapOpts.e = 4;
-    MapOpts.e2 = 1;
-    MapOpts.b = 5;
-    MapOpts.zdrop = 400;
-    MapOpts.zdrop_inv = 50;
-    MapOpts.bw = 2000;
+    switch (settings.AlignMode) {
+        case AlignmentMode::SUBREADS:
+            MapOpts.a = 2;
+            MapOpts.q = 5;
+            MapOpts.q2 = 56;
+            MapOpts.e = 4;
+            MapOpts.e2 = 1;
+            MapOpts.b = 5;
+            MapOpts.zdrop = 400;
+            MapOpts.zdrop_inv = 50;
+            MapOpts.bw = 2000;
+            break;
+        default:
+            PBLOG_FATAL << "No AlignmentMode --preset selected!";
+            std::exit(EXIT_FAILURE);
+    }
+    if (settings.GapOpenDelete > 0) MapOpts.q = settings.GapOpenDelete;
+    if (settings.GapOpenInsert > 0) MapOpts.q2 = settings.GapOpenInsert;
+    if (settings.GapExtensionDelete > 0) MapOpts.e = settings.GapExtensionDelete;
+    if (settings.GapExtensionInsert > 0) MapOpts.e2 = settings.GapExtensionInsert;
+    if (settings.MatchScore > 0) MapOpts.a = settings.MatchScore;
+    if (settings.MismatchPenalty > 0) MapOpts.b = settings.MismatchPenalty;
+    if (settings.Zdrop > 0) MapOpts.zdrop = settings.Zdrop;
+    if (settings.ZdropInv > 0) MapOpts.zdrop_inv = settings.ZdropInv;
+    if (settings.Bandwidth > 0) MapOpts.bw = settings.Bandwidth;
 
     Idx = std::make_unique<Index>(refs, IdxOpts, NumThreads, outputMmi);
     mm_mapopt_update(&MapOpts, Idx->idx_);
+    PBLOG_DEBUG << "Minimap2 parameters";
+    PBLOG_DEBUG << "Kmer size              : " << Idx->idx_->k;
+    PBLOG_DEBUG << "Minimizer window size  : " << Idx->idx_->w;
+    PBLOG_DEBUG << "Homopolymer compressed : " << (Idx->idx_->flag & MM_I_HPC);
+    PBLOG_DEBUG << "Deletion gap open      : " << MapOpts.q;
+    PBLOG_DEBUG << "Insertion gap open     : " << MapOpts.q2;
+    PBLOG_DEBUG << "Deletion gap extension : " << MapOpts.e;
+    PBLOG_DEBUG << "Insertion gap extension: " << MapOpts.e2;
+    PBLOG_DEBUG << "Match score            : " << MapOpts.a;
+    PBLOG_DEBUG << "Mismatch penalty       : " << MapOpts.b;
+    PBLOG_DEBUG << "Z-drop                 : " << MapOpts.zdrop;
+    PBLOG_DEBUG << "Z-drop inv             : " << MapOpts.zdrop_inv;
+    PBLOG_DEBUG << "Bandwidth              : " << MapOpts.bw;
 }
 
 RecordsType MM2Helper::Align(const RecordsType& records, const FilterFunc& filter) const
@@ -70,7 +110,6 @@ RecordsType MM2Helper::Align(const RecordsType& records, const FilterFunc& filte
         const auto seq = record.Sequence();
         const int qlen = seq.length();
         auto alns = mm_map(Idx->idx_, qlen, seq.c_str(), &numAlns, tbuf.tbuf_, &MapOpts, nullptr);
-        int numSecondary = 0;
         for (int i = 0; i < numAlns; ++i) {
             auto aln = alns[i];
             // if no alignment, continue
@@ -81,12 +120,7 @@ RecordsType MM2Helper::Align(const RecordsType& records, const FilterFunc& filte
             const Cigar cigar = RenderCigar(&aln, qlen, MapOpts.flag);
             const uint8_t mapq = aln.mapq;
             auto mapped = BamRecord::Mapped(record, refId, refStart, strand, cigar, mapq);
-            if (filter(mapped)) {
-                if (numSecondary++ < 5)
-                    result->emplace_back(std::move(mapped));
-                else
-                    break;
-            }
+            if (filter(mapped)) result->emplace_back(std::move(mapped));
         }
         // cleanup
         for (int i = 0; i < numAlns; ++i)

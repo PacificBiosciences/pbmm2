@@ -7,17 +7,17 @@
 
 #include <pbcopper/cli/CLI.h>
 
-#include "AlignmentMode.h"
 #include "PlainOption.h"
+
+#include "MM2Settings.h"
 
 namespace PacBio {
 namespace minimap2 {
 /// Contains user provided CLI configuration
-struct AlignSettings
+struct AlignSettings : MM2Settings
 {
     const std::string CLI;
     const std::vector<std::string> InputFiles;
-    int32_t NumThreads;
 
     // alignment output filters
     float MinAccuracy;
@@ -29,7 +29,6 @@ struct AlignSettings
     Logging::LogLevel LogLevel;
 
     const std::string SampleName;
-    AlignmentMode AlignMode;
     int32_t BestN;
     int32_t ChunkSize;
 
