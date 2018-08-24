@@ -55,7 +55,8 @@ public:
               const std::string& outputMmi = "");
 
 public:
-    RecordsType Align(const RecordsType& records, const FilterFunc& filter) const;
+    RecordsType Align(const RecordsType& records, const FilterFunc& filter,
+                      int32_t* alignedReads) const;
     std::vector<PacBio::BAM::SequenceInfo> SequenceInfos() const;
 
 private:

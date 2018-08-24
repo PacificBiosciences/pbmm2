@@ -244,6 +244,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     MM2Helper mm2helper(refFile, settings);
 
     Summary s;
+    int64_t alignedReads = 0;
 
     {
         auto qryRdr = BamQuery(qryFile);
@@ -279,9 +280,11 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         int64_t alignedRecords = 0;
         std::atomic_int waiting{0};
         auto Submit = [&](const std::unique_ptr<std::vector<BAM::BamRecord>>& recs) {
-            auto output = mm2helper.Align(recs, filter);
+            int32_t aligned = 0;
+            auto output = mm2helper.Align(recs, filter, &aligned);
             if (output) {
                 std::lock_guard<std::mutex> lock(outputMutex);
+                alignedReads += aligned;
                 for (const auto& aln : *output) {
                     const int32_t span = aln.ReferenceEnd() - aln.ReferenceStart();
                     const int32_t nErr =
@@ -291,7 +294,8 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                     ++s.NumAlns;
                     out.Write(aln);
                     if (++alignedRecords % 1000 == 0) {
-                        PBLOG_INFO << "Number of Alignments: " << alignedRecords;
+                        PBLOG_DEBUG << "#Reads, #Alignments: " << alignedReads << ", "
+                                    << alignedRecords;
                     }
                 }
             }
@@ -318,6 +322,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         while (waiting)
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
+    PBLOG_INFO << "Number of Aligned Reads: " << alignedReads;
     PBLOG_INFO << "Number of Alignments: " << s.NumAlns;
     PBLOG_INFO << "Number of Bases: " << s.Bases;
     PBLOG_INFO << "Mean Concordance (mapped) : "

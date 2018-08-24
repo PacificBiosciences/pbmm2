@@ -97,7 +97,8 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
     PBLOG_DEBUG << "Bandwidth              : " << MapOpts.bw;
 }
 
-RecordsType MM2Helper::Align(const RecordsType& records, const FilterFunc& filter) const
+RecordsType MM2Helper::Align(const RecordsType& records, const FilterFunc& filter,
+                             int32_t* alignedReads) const
 {
     using namespace PacBio::BAM;
 
@@ -110,10 +111,15 @@ RecordsType MM2Helper::Align(const RecordsType& records, const FilterFunc& filte
         const auto seq = record.Sequence();
         const int qlen = seq.length();
         auto alns = mm_map(Idx->idx_, qlen, seq.c_str(), &numAlns, tbuf.tbuf_, &MapOpts, nullptr);
+        bool aligned = false;
         for (int i = 0; i < numAlns; ++i) {
             auto aln = alns[i];
             // if no alignment, continue
             if (aln.p == nullptr) continue;
+            // secondary alignment
+            if (aln.id != aln.parent) continue;
+
+            aligned = true;
             const int32_t refId = aln.rid;
             const Position refStart = aln.rs;
             const Strand strand = aln.rev ? Strand::REVERSE : Strand::FORWARD;
@@ -122,6 +128,7 @@ RecordsType MM2Helper::Align(const RecordsType& records, const FilterFunc& filte
             auto mapped = BamRecord::Mapped(record, refId, refStart, strand, cigar, mapq);
             if (filter(mapped)) result->emplace_back(std::move(mapped));
         }
+        *alignedReads += aligned;
         // cleanup
         for (int i = 0; i < numAlns; ++i)
             if (alns[i].p) free(alns[i].p);
