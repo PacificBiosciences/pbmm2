@@ -166,7 +166,8 @@ std::vector<PacBio::BAM::SequenceInfo> Index::SequenceInfos() const
     for (unsigned i = 0; i < idx_->n_seq; ++i) {
         const std::string name = idx_->seq[i].name;
         const std::string len = std::to_string(idx_->seq[i].len);
-        result.emplace_back(PacBio::BAM::SequenceInfo(name, len));
+        result.emplace_back(
+            PacBio::BAM::SequenceInfo(name, len).Checksum("FAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKE"));
     }
     return result;
 }
