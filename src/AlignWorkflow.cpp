@@ -266,8 +266,8 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         const auto version = PacBio::Pbmm2Version() + " (commit " + PacBio::Pbmm2GitSha1() + ")";
         for (const auto& si : mm2helper.SequenceInfos())
             hdr.AddSequence(si);
-        hdr.AddProgram(
-            BAM::ProgramInfo("pbmm2").Name("pbmm2").Version(version).CommandLine(settings.CLI));
+        hdr.AddProgram(BAM::ProgramInfo("pbmm2").Name("pbmm2").Version(version).CommandLine(
+            "pbmm2 " + settings.CLI));
 
         PacBio::Parallel::FireAndForget faf(settings.NumThreads, 3);
         BAM::BamWriter out(alnFile, hdr);
