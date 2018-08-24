@@ -29,7 +29,6 @@ struct AlignSettings : MM2Settings
     Logging::LogLevel LogLevel;
 
     const std::string SampleName;
-    int32_t BestN;
     int32_t ChunkSize;
 
     /// Parses the provided CLI::Results and retrieves a defined set of options.

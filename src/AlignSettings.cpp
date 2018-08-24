@@ -72,13 +72,6 @@ const PlainOption AlignModeOpt{
     CLI::Option::StringType("SUBREAD"),
     {"SUBREAD", "ISOSEQ"}
 };
-const PlainOption BestN{
-    "bestn",
-    { "bestn" },
-    "Max alignments",
-    "Retain at most N alignments.",
-    CLI::Option::IntType(5)
-};
 const PlainOption ChunkSize{
     "chunk_size",
     { "chunk-size" },
@@ -174,7 +167,6 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     , LogFile{options[OptionNames::LogFile].get<decltype(LogFile)>()}
     , LogLevel{options.LogLevel()}
     , SampleName{options[OptionNames::SampleName].get<decltype(SampleName)>()}
-    , BestN(options[OptionNames::BestN])
     , ChunkSize(options[OptionNames::ChunkSize])
 {
     MM2Settings::Kmer = options[OptionNames::Kmer];
@@ -250,7 +242,6 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     i.AddGroup("Filter Options", {
         OptionNames::MinAccuracy,
         OptionNames::MinAlignmentLength,
-        OptionNames::BestN
     });
 
     i.AddPositionalArguments({
