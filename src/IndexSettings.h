@@ -7,22 +7,20 @@
 
 #include <pbcopper/cli/CLI.h>
 
-#include "AlignmentMode.h"
+#include "MM2Settings.h"
 #include "PlainOption.h"
 
 namespace PacBio {
 namespace minimap2 {
 /// Contains user provided CLI configuration
-struct IndexSettings
+struct IndexSettings : MM2Settings
 {
     const std::string CLI;
     const std::vector<std::string> InputFiles;
-    int32_t NumThreads;
 
     std::string LogFile;
     Logging::LogLevel LogLevel;
 
-    AlignmentMode AlignMode;
     int32_t BestN;
 
     /// Parses the provided CLI::Results and retrieves a defined set of options.

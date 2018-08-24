@@ -47,9 +47,23 @@ const PlainOption AlignModeOpt{
     "align_mode",
     { "preset" },
     "Alignment mode",
-    R"(Set alignment mode: "SUBREAD".)",
+    "Set alignment mode:\n  - \"SUBREAD\" -k 19 -w 10\n  - \"ISOSEQ\"  -k 15 -w 10\nDefault",
     CLI::Option::StringType("SUBREAD"),
-    {"SUBREAD"}
+    {"SUBREAD", "ISOSEQ"}
+};
+const PlainOption Kmer{
+    "kmer_size",
+    { "k" },
+    "K-mer Size",
+    "k-mer size (no larger than 28).",
+    CLI::Option::IntType(-1)
+};
+const PlainOption MinimizerWindowSize{
+    "minimizer_window_size",
+    { "w" },
+    "Minizer Window Size",
+    "Minizer window size.",
+    CLI::Option::IntType(-1)
 };
 // clang-format on
 }  // namespace OptionNames
@@ -60,16 +74,19 @@ IndexSettings::IndexSettings(const PacBio::CLI::Results& options)
     , LogFile{options[OptionNames::LogFile].get<decltype(LogFile)>()}
     , LogLevel{options.LogLevel()}
 {
+    MM2Settings::Kmer = options[OptionNames::Kmer];
+    MM2Settings::MinimizerWindowSize = options[OptionNames::MinimizerWindowSize];
+
     int32_t requestedNThreads;
     if (options.IsFromRTC()) {
         requestedNThreads = options.NumProcessors();
     } else {
         requestedNThreads = options[OptionNames::NumThreads];
     }
-    NumThreads = ThreadCount(requestedNThreads);
+    MM2Settings::NumThreads = ThreadCount(requestedNThreads);
 
     const std::map<std::string, AlignmentMode> alignModeMap{{"SUBREAD", AlignmentMode::SUBREADS}};
-    AlignMode = alignModeMap.at(options[OptionNames::AlignModeOpt].get<std::string>());
+    MM2Settings::AlignMode = alignModeMap.at(options[OptionNames::AlignModeOpt].get<std::string>());
 }
 
 int32_t IndexSettings::ThreadCount(int32_t n)
@@ -92,11 +109,16 @@ PacBio::CLI::Interface IndexSettings::CreateCLI()
         OptionNames::VersionOption,
         OptionNames::LogFile,
         OptionNames::LogLevelOption,
-        OptionNames::NumThreads
+        OptionNames::NumThreads,
     });
 
-    i.AddGroup("Index Options", {
-        OptionNames::AlignModeOpt
+    i.AddGroup("Parameter Set Option", {
+        OptionNames::AlignModeOpt,
+    });
+
+    i.AddGroup("Parameter Override Options", {
+        OptionNames::Kmer,
+        OptionNames::MinimizerWindowSize
     });
 
     i.AddPositionalArguments({

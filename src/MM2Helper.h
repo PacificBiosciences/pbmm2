@@ -16,6 +16,8 @@
 #include <pbcopper/PbcopperMakeUnique.h>
 #include <pbcopper/logging/Logging.h>
 
+#include "MM2Settings.h"
+
 #include <minimap.h>
 
 extern "C" void mm_idxopt_init(mm_idxopt_t*);
@@ -49,11 +51,12 @@ struct ThreadBuffer
 class MM2Helper
 {
 public:
-    MM2Helper(const std::string& refs, const int32_t nthreads = 3,
+    MM2Helper(const std::string& refs, const MM2Settings& settings,
               const std::string& outputMmi = "");
 
 public:
-    RecordsType Align(const RecordsType& records, const FilterFunc& filter) const;
+    RecordsType Align(const RecordsType& records, const FilterFunc& filter,
+                      int32_t* alignedReads) const;
     std::vector<PacBio::BAM::SequenceInfo> SequenceInfos() const;
 
 private:
