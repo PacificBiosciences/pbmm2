@@ -126,6 +126,7 @@ RecordsType MM2Helper::Align(const RecordsType& records, const FilterFunc& filte
             const Cigar cigar = RenderCigar(&aln, qlen, MapOpts.flag);
             const uint8_t mapq = aln.mapq;
             auto mapped = BamRecord::Mapped(record, refId, refStart, strand, cigar, mapq);
+            mapped.Impl().SetSupplementaryAlignment(aln.sam_pri == 0);
             if (filter(mapped)) result->emplace_back(std::move(mapped));
         }
         *alignedReads += aligned;
