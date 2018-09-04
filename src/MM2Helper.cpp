@@ -102,7 +102,7 @@ RecordsType MM2Helper::Align(const RecordsType& records, const FilterFunc& filte
 {
     using namespace PacBio::BAM;
 
-    thread_local ThreadBuffer tbuf;
+    ThreadBuffer tbuf;
     auto result = std::make_unique<std::vector<BamRecord>>();
     result->reserve(records->size());
 
