@@ -6,7 +6,8 @@
   <img src="img/lima.png" alt="Logo of Lima" width="150px"/>
 </p>
 
-## Scope
+***
+
 *Lima*, the PacBio barcode demultiplexer, is the standard tool to identify
 barcode sequences in PacBio single-molecule sequencing data.
 Starting in SMRT Link v5.1.0, it is the tool that powers the
@@ -17,17 +18,10 @@ This new tool provides a better end-to-end user experience for analysis
 of multiplexed samples.
 
 ## Availability
-The latest pre-release linux binary can be found under
-[releases](https://github.com/PacificBiosciences/barcoding/releases) or
-installed via [bioconda](https://bioconda.github.io/):
+Latest version can be installed via bioconda package `lima`.
 
-    conda install lima
-
-Official support is only provided for official and stable SMRT Link builds
-provided by PacBio.
-
-Unofficial support for binary pre-releases is provided via github issues,
-not via mail to developers.
+Please refer to our [official pbbioconda page](https://github.com/PacificBiosciences/pbbioconda)
+for information on Installation, Support, License, Copyright, and Disclaimer.
 
 ## Background
 *Lima* can demultiplex samples that have a unique per-sample barcode pair and
