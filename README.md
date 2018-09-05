@@ -5,31 +5,22 @@ native PacBio BAM in ⇨ native PacBio BAM out.</p>
 
 ***
 
-## Availability
-The latest pre-release, unstable, experts-only linux/mac binaries can be installed via [bioconda](https://bioconda.github.io/).
-
-    conda install pbmm2
-
-These binaries are not ISO compliant.
-For research only.
-Not for use in diagnostics procedures.
-
-No support for source builds.
-No support via mail to developers.
-Please *do not* contact a PacBio Field Applications Scientist or PacBio Customer Service for assistance.
-Please file GitHub issues for problems and questions!
+_pbmm2_ is a wrapper for [minimap2](https://github.com/lh3/minimap2).
+Its purpose is to support native PacBio BAM in- and output and provide sets of
+recommended parameters. Extensive testing is yet to be performed before _pbmm2_
+becomes an officially recommended PacBio aligner; until then, please use BLASR
+if you need ISO compliant tools and official PacBio support.
 
 **This is an early beta!** Expect extreme changes and different output between
 versions until release of the first stable release.
 Furthermore, the command-line options are not stable yet,
 and can change at any point, do not rely on it yet.
 
-## Scope
-_pbmm2_ is a wrapper for [minimap2](https://github.com/lh3/minimap2).
-Its purpose is to support native PacBio BAM in- and output and provide sets of
-recommended parameters. Extensive testing is yet to be performed before _pbmm2_
-becomes an officially recommended PacBio aligner; until then, please use BLASR
-if you need ISO compliant tools and official PacBio support.:
+## Availability
+Latest version can be installed via bioconda package `pbmm2`.
+
+Please refer to our [official pbbioconda page](https://github.com/PacificBiosciences/pbbioconda)
+for information on Installation, Support, License, Copyright, and Disclaimer.
 
 ## Usage
 _pbmm2_ offers following tools
