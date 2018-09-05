@@ -66,24 +66,6 @@ bool CheckPositionalArgs(const std::vector<std::string>& args)
 
     return true;
 }
-
-std::string OutputFilePrefix(const std::string& outputFile)
-{
-    // Check if output type is a dataset
-    const std::string outputExt = Utility::FileExtension(outputFile);
-    std::string prefix = outputFile;
-    if (outputExt == "xml") {
-        boost::ireplace_last(prefix, ".consensusalignmentset.xml", "");
-        boost::ireplace_last(prefix, ".alignmentset.xml", "");
-    } else if (outputExt == "bam") {
-        boost::ireplace_last(prefix, ".bam", "");
-        boost::ireplace_last(prefix, ".subreads", "");
-    } else {
-        PBLOG_FATAL << "Unknown file extension for output file: " << outputFile;
-        std::exit(EXIT_FAILURE);
-    }
-    return prefix;
-}
 }  // namespace
 
 int IndexWorkflow::Runner(const CLI::Results& options)

@@ -64,11 +64,9 @@ of possible combinations. For this, we currently offer:
 ```
   --preset  Set alignment mode:
              - "SUBREAD" -k 19 -w 10 -d 5 -D 4 -i 56 -I 1 -A 2 -B 5 -z 400 -Z 50 -r 2000
+             - "ISOSEQ" -k 15 -w 5 -d 2 -i 32 -D 1 -I 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000
             Default ["SUBREAD"]
 ```
-
-Prime examples for other parameter sets are
-`ISOFORM` or `CCS` mapping; work in progress.
 
 If you want to override any of the parameters of your chosen set,
 please use the respective options:
@@ -86,6 +84,14 @@ please use the respective options:
   -Z   Z-drop inversion score. [-1]
   -r   Bandwidth used in chaining and DP-based alignment. [-1]
 ```
+
+For `ISOSEQ`, you can override additional parameters:
+
+```
+  -G                  Max intron length (changes -r). [-1]
+  -C                  Cost for a non-canonical GT-AG splicing. [-1]
+  --no-splice-flank   Do not prefer splice flanks GT-AG.
+  ```
 
 If you have suggestions for our default parameters or ideas for a new
 parameter set, please open a GitHub issue!

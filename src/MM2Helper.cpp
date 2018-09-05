@@ -39,6 +39,10 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
             IdxOpts.k = 19;
             IdxOpts.w = 10;
             break;
+        case AlignmentMode::ISOSEQ:
+            IdxOpts.k = 15;
+            IdxOpts.w = 5;
+            break;
         default:
             PBLOG_FATAL << "No AlignmentMode --preset selected!";
             std::exit(EXIT_FAILURE);
@@ -66,6 +70,21 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
             MapOpts.zdrop_inv = 50;
             MapOpts.bw = 2000;
             break;
+        case AlignmentMode::ISOSEQ:
+            MapOpts.flag |= MM_F_SPLICE | MM_F_SPLICE_FOR | MM_F_SPLICE_FLANK;
+            MapOpts.max_gap = 2000;
+            MapOpts.max_gap_ref = 200000;
+            MapOpts.bw = 200000;
+            MapOpts.a = 1;
+            MapOpts.b = 2;
+            MapOpts.q = 2;
+            MapOpts.e = 1;
+            MapOpts.q2 = 32;
+            MapOpts.e2 = 0;
+            MapOpts.zdrop = 200;
+            MapOpts.zdrop_inv = 100;
+            MapOpts.noncan = 5;
+            break;
         default:
             PBLOG_FATAL << "No AlignmentMode --preset selected!";
             std::exit(EXIT_FAILURE);
@@ -78,7 +97,10 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
     if (settings.MismatchPenalty > 0) MapOpts.b = settings.MismatchPenalty;
     if (settings.Zdrop > 0) MapOpts.zdrop = settings.Zdrop;
     if (settings.ZdropInv > 0) MapOpts.zdrop_inv = settings.ZdropInv;
+    if (settings.NonCanon > 0) MapOpts.noncan = settings.NonCanon;
+    if (settings.MaxIntronLength > 0) mm_mapopt_max_intron_len(&MapOpts, settings.MaxIntronLength);
     if (settings.Bandwidth > 0) MapOpts.bw = settings.Bandwidth;
+    if (settings.NoSpliceFlank) MapOpts.flag &= ~MM_F_SPLICE_FLANK;
 
     Idx = std::make_unique<Index>(refs, IdxOpts, NumThreads, outputMmi);
     mm_mapopt_update(&MapOpts, Idx->idx_);
@@ -95,15 +117,19 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
     PBLOG_DEBUG << "Z-drop                 : " << MapOpts.zdrop;
     PBLOG_DEBUG << "Z-drop inv             : " << MapOpts.zdrop_inv;
     PBLOG_DEBUG << "Bandwidth              : " << MapOpts.bw;
+    if (settings.AlignMode == AlignmentMode::ISOSEQ) {
+        PBLOG_DEBUG << "Max ref intron length  : " << MapOpts.max_gap_ref;
+        PBLOG_DEBUG << "Prefer splice flanks   : " << (!settings.NoSpliceFlank ? "yes" : "no");
+    }
 }
 
-RecordsType MM2Helper::Align(const RecordsType& records, const FilterFunc& filter,
-                             int32_t* alignedReads) const
+std::unique_ptr<std::vector<AlignedRecord>> MM2Helper::Align(
+    const std::unique_ptr<std::vector<BAM::BamRecord>>& records, const FilterFunc& filter,
+    int32_t* alignedReads) const
 {
     using namespace PacBio::BAM;
-
     ThreadBuffer tbuf;
-    auto result = std::make_unique<std::vector<BamRecord>>();
+    auto result = std::make_unique<std::vector<AlignedRecord>>();
     result->reserve(records->size());
 
     for (const auto& record : *records) {
@@ -127,7 +153,8 @@ RecordsType MM2Helper::Align(const RecordsType& records, const FilterFunc& filte
             const uint8_t mapq = aln.mapq;
             auto mapped = BamRecord::Mapped(record, refId, refStart, strand, cigar, mapq);
             mapped.Impl().SetSupplementaryAlignment(aln.sam_pri == 0);
-            if (filter(mapped)) result->emplace_back(std::move(mapped));
+            AlignedRecord alnRec{std::move(mapped)};
+            if (filter(alnRec)) result->emplace_back(std::move(alnRec));
         }
         *alignedReads += aligned;
         // cleanup
@@ -148,14 +175,14 @@ Index::Index(const std::string& fname, const mm_idxopt_t& opts, const int32_t& n
              const std::string& outputMmi)
     : idx_{nullptr}
 {
-    PBLOG_INFO << "Start reading and indexing references";
+    PBLOG_INFO << "Start reading/building index";
     auto rdr =
         mm_idx_reader_open(fname.c_str(), &opts, outputMmi.empty() ? nullptr : outputMmi.c_str());
     if (!rdr) throw std::runtime_error("unable to load reference for indexing!");
     idx_ = mm_idx_reader_read(rdr, numThreads);
     if (!idx_) throw std::runtime_error("unable to index reference!");
     mm_idx_reader_close(rdr);
-    PBLOG_INFO << "Finished reading and indexing references";
+    PBLOG_INFO << "Finished reading/building index";
 }
 
 Index::~Index() { mm_idx_destroy(idx_); }
@@ -170,6 +197,54 @@ std::vector<PacBio::BAM::SequenceInfo> Index::SequenceInfos() const
             PacBio::BAM::SequenceInfo(name, len).Checksum("FAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKE"));
     }
     return result;
+}
+
+AlignedRecord::AlignedRecord(BAM::BamRecord record) : Record(std::move(record))
+{
+    ComputeAccuracyBases();
+}
+
+void AlignedRecord::ComputeAccuracyBases()
+{
+    int32_t ins = 0;
+    int32_t del = 0;
+    int32_t mismatch = 0;
+    int32_t n = 0;
+    int32_t match = 0;
+    for (const auto& cigar : Record.CigarData()) {
+        int32_t len = cigar.Length();
+        switch (cigar.Type()) {
+            case BAM::CigarOperationType::INSERTION:
+                ins += len;
+                break;
+            case BAM::CigarOperationType::DELETION:
+                del += len;
+                break;
+            case BAM::CigarOperationType::SEQUENCE_MISMATCH:
+                mismatch += len;
+                break;
+            case BAM::CigarOperationType::REFERENCE_SKIP:
+                n += len;
+                break;
+            case BAM::CigarOperationType::SEQUENCE_MATCH:
+            case BAM::CigarOperationType::ALIGNMENT_MATCH:
+                match += len;
+                break;
+            case BAM::CigarOperationType::PADDING:
+            case BAM::CigarOperationType::SOFT_CLIP:
+            case BAM::CigarOperationType::HARD_CLIP:
+                break;
+            case BAM::CigarOperationType::UNKNOWN_OP:
+            default:
+                PBLOG_FATAL << "UNKNOWN OP";
+                std::exit(EXIT_FAILURE);
+                break;
+        }
+    }
+    Span = Record.ReferenceEnd() - Record.ReferenceStart() - n;
+    const int32_t nErr = ins + del + mismatch;
+    NumAlignedBases = match + ins + mismatch;
+    Similarity = 1.0 - 1.0 * nErr / Span;
 }
 
 }  // namespace minimap2

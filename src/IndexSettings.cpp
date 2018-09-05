@@ -47,7 +47,7 @@ const PlainOption AlignModeOpt{
     "align_mode",
     { "preset" },
     "Alignment mode",
-    "Set alignment mode:\n  - \"SUBREAD\" -k 19 -w 10\n  - \"ISOSEQ\"  -k 15 -w 10\nDefault",
+    "Set alignment mode:\n  - \"SUBREAD\" -k 19 -w 10\n  - \"ISOSEQ\"  -k 15 -w 5\nDefault",
     CLI::Option::StringType("SUBREAD"),
     {"SUBREAD", "ISOSEQ"}
 };
@@ -85,7 +85,8 @@ IndexSettings::IndexSettings(const PacBio::CLI::Results& options)
     }
     MM2Settings::NumThreads = ThreadCount(requestedNThreads);
 
-    const std::map<std::string, AlignmentMode> alignModeMap{{"SUBREAD", AlignmentMode::SUBREADS}};
+    const std::map<std::string, AlignmentMode> alignModeMap{{"SUBREAD", AlignmentMode::SUBREADS},
+                                                            {"ISOSEQ", AlignmentMode::ISOSEQ}};
     MM2Settings::AlignMode = alignModeMap.at(options[OptionNames::AlignModeOpt].get<std::string>());
 }
 

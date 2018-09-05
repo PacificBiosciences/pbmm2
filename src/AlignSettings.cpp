@@ -47,7 +47,7 @@ const PlainOption MinAccuracy{
     "minaccuracy",
     { "min-accuracy" },
     "Minimum Alignment Accuracy",
-    "Minimum alignment accuracy.",
+    "Minimum alignment accuracy (not effective in ISOSEQ preset).",
     CLI::Option::FloatType(0.75f)
 };
 const PlainOption MinAlignmentLength{
@@ -68,7 +68,9 @@ const PlainOption AlignModeOpt{
     "align_mode",
     { "preset" },
     "Alignment mode",
-    "Set alignment mode:\n  - \"SUBREAD\" -k 19 -w 10 -d 5 -i 56 -D 4 -I 1 -A 2 -B 5 -z 400 -Z 50 -r 2000\nDefault",
+    "Set alignment mode:\n  - \"SUBREAD\" -k 19 -w 10 -d 5 -i 56 -D 4 -I 1 -A 2 -B 5 -z 400 -Z 50 -r 2000\n"
+    "  - \"ISOSEQ\" -k 15 -w 5 -d 2 -i 32 -D 1 -I 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000\n"
+    "Default",
     CLI::Option::StringType("SUBREAD"),
     {"SUBREAD", "ISOSEQ"}
 };
@@ -156,6 +158,27 @@ const PlainOption Bandwidth{
     "Bandwidth used in chaining and DP-based alignment.",
     CLI::Option::IntType(-1)
 };
+const PlainOption MaxIntronLength{
+    "max_intron_length",
+    { "G" },
+    "Max Intron Length (effective in ISOSEQ mode; changing bandwidth)",
+    "Max intron length (changes -r).",
+    CLI::Option::IntType(-1)
+};
+const PlainOption NonCanon{
+    "non_canon",
+    { "C" },
+    "Cost For a Non-Canonical GT-AG Splicing (effective in ISOSEQ mode)",
+    "Cost for a non-canonical GT-AG splicing.",
+    CLI::Option::IntType(-1)
+};
+const PlainOption NoSpliceFlank{
+    "no_splice_flank",
+    { "no-splice-flank" },
+    "Do Not Prefer Splice Flanks GT-AG (effective in ISOSEQ mode)",
+    "Do not prefer splice flanks GT-AG.",
+    CLI::Option::BoolType(false)
+};
 // clang-format on
 }  // namespace OptionNames
 
@@ -180,6 +203,9 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     MM2Settings::Zdrop = options[OptionNames::Zdrop];
     MM2Settings::ZdropInv = options[OptionNames::ZdropInv];
     MM2Settings::Bandwidth = options[OptionNames::Bandwidth];
+    MM2Settings::MaxIntronLength = options[OptionNames::MaxIntronLength];
+    MM2Settings::NonCanon = options[OptionNames::NonCanon];
+    MM2Settings::NoSpliceFlank = options[OptionNames::NoSpliceFlank];
 
     int32_t requestedNThreads;
     if (options.IsFromRTC()) {
@@ -189,7 +215,8 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     }
     MM2Settings::NumThreads = ThreadCount(requestedNThreads);
 
-    const std::map<std::string, AlignmentMode> alignModeMap{{"SUBREAD", AlignmentMode::SUBREADS}};
+    const std::map<std::string, AlignmentMode> alignModeMap{{"SUBREAD", AlignmentMode::SUBREADS},
+                                                            {"ISOSEQ", AlignmentMode::ISOSEQ}};
     MM2Settings::AlignMode = alignModeMap.at(options[OptionNames::AlignModeOpt].get<std::string>());
 }
 
@@ -221,7 +248,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         OptionNames::AlignModeOpt,
     });
 
-    i.AddGroup("Parameter Override Options", {
+    i.AddGroup("General Parameter Override Options", {
         OptionNames::Kmer,
         OptionNames::MinimizerWindowSize,
         OptionNames::MatchScore,
@@ -233,6 +260,12 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         OptionNames::Zdrop,
         OptionNames::ZdropInv,
         OptionNames::Bandwidth,
+    });
+
+    i.AddGroup("IsoSeq Parameter Override Options", {
+        OptionNames::MaxIntronLength,
+        OptionNames::NonCanon,
+        OptionNames::NoSpliceFlank,
     });
 
     i.AddGroup("Read Group Options", {

@@ -35,8 +35,6 @@
 namespace PacBio {
 namespace minimap2 {
 namespace {
-using FilterFunc = std::function<bool(const BAM::BamRecord&)>;
-
 struct Summary
 {
     int32_t NumAlns = 0;
@@ -62,6 +60,7 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
     switch (dsInput.Type()) {
         case BAM::DataSet::TypeEnum::SUBREAD:
         case BAM::DataSet::TypeEnum::CONSENSUS_READ:
+        case BAM::DataSet::TypeEnum::TRANSCRIPT:
             break;
         case BAM::DataSet::TypeEnum::ALIGNMENT:
         case BAM::DataSet::TypeEnum::CONSENSUS_ALIGNMENT:
@@ -230,14 +229,10 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             PBLOG_WARN << "Warning: Overwriting existing output file: " << outFile;
     }
 
-    const FilterFunc filter = [&settings](const BAM::BamRecord& aln) {
-        const int32_t span = aln.ReferenceEnd() - aln.ReferenceStart();
-        if (span <= 0 || span < settings.MinAlignmentLength) return false;
-
+    const FilterFunc filter = [&settings](const AlignedRecord& aln) {
+        if (aln.Span <= 0 || aln.Span < settings.MinAlignmentLength) return false;
         if (settings.MinAccuracy <= 0) return true;
-
-        const int32_t nErr = aln.NumDeletedBases() + aln.NumInsertedBases() + aln.NumMismatches();
-        if (1.0 - 1.0 * nErr / span < settings.MinAccuracy) return false;
+        if (aln.Similarity < settings.MinAccuracy) return false;
         return true;
     };
 
@@ -286,13 +281,10 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                 std::lock_guard<std::mutex> lock(outputMutex);
                 alignedReads += aligned;
                 for (const auto& aln : *output) {
-                    const int32_t span = aln.ReferenceEnd() - aln.ReferenceStart();
-                    const int32_t nErr =
-                        aln.NumDeletedBases() + aln.NumInsertedBases() + aln.NumMismatches();
-                    s.Bases += span;
-                    s.Similarity += 1.0 - 1.0 * nErr / span;
+                    s.Bases += aln.NumAlignedBases;
+                    s.Similarity += aln.Similarity;
                     ++s.NumAlns;
-                    out.Write(aln);
+                    out.Write(aln.Record);
                     if (++alignedRecords % 1000 == 0) {
                         PBLOG_DEBUG << "#Reads, #Alignments: " << alignedReads << ", "
                                     << alignedRecords;
@@ -319,8 +311,9 @@ int AlignWorkflow::Runner(const CLI::Results& options)
 
         faf.Finalize();
 
-        while (waiting)
+        while (waiting) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
     }
     PBLOG_INFO << "Number of Aligned Reads: " << alignedReads;
     PBLOG_INFO << "Number of Alignments: " << s.NumAlns;
@@ -331,6 +324,6 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     if (outputIsXML) CreateDataSet(qryFile, outputFilePrefix);
 
     return EXIT_SUCCESS;
-}
+}  // namespace minimap2
 }  // namespace minimap2
 }  // namespace PacBio
