@@ -1,10 +1,6 @@
-<h1 align="center">
-    <i>lima</i> - The PacBio Barcode Demultiplexer
-</h1>
-
-<p align="center">
-  <img src="img/lima.png" alt="Logo of Lima" width="150px"/>
-</p>
+<h1 align="center"><img src="img/lima.png" alt="Logo of Lima" width="150px"/></h1>
+<h1 align="center">lima</h1>
+<p align="center">The PacBio Barcode Demultiplexer</p>
 
 ***
 
