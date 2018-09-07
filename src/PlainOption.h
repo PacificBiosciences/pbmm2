@@ -9,35 +9,39 @@
 
 namespace PacBio {
 namespace minimap2 {
-struct PlainOption
+class PlainOption
 {
-    std::string id;
-    std::vector<std::string> cliOptions;
-    std::string name;
-    std::string description;
-    JSON::Json defaultValue;
-    JSON::Json choices = JSON::Json(nullptr);
-    CLI::OptionFlags flags;
-
-    PlainOption(const std::string id, const std::vector<std::string> cliOptions,
-                const std::string name, const std::string description,
-                const JSON::Json defaultValue, const JSON::Json choices = JSON::Json(nullptr),
-                const CLI::OptionFlags flags = CLI::OptionFlags::DEFAULT)
-        : id(std::move(id))
-        , cliOptions(std::move(cliOptions))
-        , name(std::move(name))
-        , description(std::move(description))
-        , defaultValue(std::move(defaultValue))
-        , choices(std::move(choices))
-        , flags(std::move(flags))
+public:
+    PlainOption(std::string id, std::vector<std::string> cliOptions, std::string name,
+                std::string description, JSON::Json defaultValue,
+                JSON::Json choices = JSON::Json(nullptr),
+                CLI::OptionFlags flags = CLI::OptionFlags::DEFAULT)
+        : id_(std::move(id))
+        , cliOptions_(std::move(cliOptions))
+        , name_(std::move(name))
+        , description_(std::move(description))
+        , defaultValue_(std::move(defaultValue))
+        , choices_(std::move(choices))
+        , flags_(std::move(flags))
     {}
 
     operator CLI::Option() const
     {
-        return {id, cliOptions, description, defaultValue, choices, flags};
+        return {id_, cliOptions_, description_, defaultValue_, choices_, flags_};
     }
-    operator std::pair<std::string, std::string>() const { return std::make_pair(id, name); }
-    operator std::string() const { return id; }
+    operator std::pair<std::string, std::string>() const { return std::make_pair(id_, name_); }
+    operator std::string() const { return id_; }
+
+    const JSON::Json& GetDefaultValue() const { return defaultValue_; }
+
+private:
+    std::string id_;
+    std::vector<std::string> cliOptions_;
+    std::string name_;
+    std::string description_;
+    JSON::Json defaultValue_;
+    JSON::Json choices_ = JSON::Json(nullptr);
+    CLI::OptionFlags flags_;
 };
 }  // namespace minimap2
 }  // namespace PacBio
