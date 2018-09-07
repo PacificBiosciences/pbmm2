@@ -80,7 +80,7 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
     std::string reference;
     if (boost::algorithm::ends_with(referenceFiles, ".mmi")) {
         reference = referenceFiles;
-        PBLOG_WARN
+        PBLOG_INFO
             << "Reference input is an index file. Index parameter override options are disabled!";
     } else {
         BAM::DataSet dsRef(referenceFiles);
