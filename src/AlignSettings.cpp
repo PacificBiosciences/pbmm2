@@ -179,6 +179,13 @@ const PlainOption NoSpliceFlank{
     "Do not prefer splice flanks GT-AG.",
     CLI::Option::BoolType(false)
 };
+const PlainOption MedianFilter{
+    "median_filter",
+    { "median-filter" },
+    "Pick One Read per ZMW of Median Length",
+    "Pick one read per ZMW of median length.",
+    CLI::Option::BoolType(false)
+};
 // clang-format on
 }  // namespace OptionNames
 
@@ -191,6 +198,7 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     , LogLevel{options.LogLevel()}
     , SampleName{options[OptionNames::SampleName].get<decltype(SampleName)>()}
     , ChunkSize(options[OptionNames::ChunkSize])
+    , MedianFilter(options[OptionNames::MedianFilter])
 {
     MM2Settings::Kmer = options[OptionNames::Kmer];
     MM2Settings::MinimizerWindowSize = options[OptionNames::MinimizerWindowSize];
@@ -232,7 +240,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     using Task = PacBio::CLI::ToolContract::Task;
 
     const auto version = PacBio::Pbmm2Version() + " (commit " + PacBio::Pbmm2GitSha1() + ")";
-    PacBio::CLI::Interface i{"pbmm2_align", "Align PacBio reads to a reference", version};
+    PacBio::CLI::Interface i{"pbmm2_align", "Align PacBio reads to reference sequences", version};
 
     // clang-format off
     i.AddGroup("Basic Options", {
@@ -275,10 +283,11 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     i.AddGroup("Filter Options", {
         OptionNames::MinAccuracy,
         OptionNames::MinAlignmentLength,
+        OptionNames::MedianFilter,
     });
 
     i.AddPositionalArguments({
-        { "in.subreads.bam|xml", "Input BAM or DataSet XML", "<in.subreads.bam|xml>" },
+        { "in.bam|xml", "Input BAM or DataSet XML", "<in.bam|xml>" },
         { "ref.fa|xml|mmi", "Reference FASTA, ReferenceSet XML, or Reference Index", "<ref.fa|xml|mmi>" },
         { "out.aligned.bam|xml", "Output BAM or DataSet XML", "[out.aligned.bam|xml]" }
     });

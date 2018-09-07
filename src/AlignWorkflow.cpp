@@ -187,10 +187,10 @@ std::string OutputFilePrefix(const std::string& outputFile)
 int AlignWorkflow::Runner(const CLI::Results& options)
 {
     std::ofstream logStream;
+    const Logging::LogLevel logLevel(options.IsFromRTC() ? options.LogLevel()
+                                                         : options["log_level"].get<std::string>());
     {
         const std::string logFile = options["log_file"];
-        const Logging::LogLevel logLevel(
-            options.IsFromRTC() ? options.LogLevel() : options["log_level"].get<std::string>());
 
         using Logger = PacBio::Logging::Logger;
 
@@ -294,12 +294,95 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             waiting--;
         };
 
-        while (qryRdr->GetNext((*records)[i++])) {
-            if (i >= chunkSize) {
-                waiting++;
-                faf.ProduceWith(Submit, std::move(records));
-                records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
-                i = 0;
+        if (settings.MedianFilter) {
+            struct RecordAnnotated
+            {
+                RecordAnnotated(BAM::BamRecord record)
+                    : Record(std::move(record)), Length(Record.Sequence().size())
+                {
+                    if (Record.HasLocalContextFlags()) {
+                        const auto flags = Record.LocalContextFlags();
+                        if (flags & BAM::ADAPTER_BEFORE && flags & BAM::ADAPTER_AFTER) {
+                            FullLength = true;
+                        }
+                    }
+                }
+
+                BAM::BamRecord Record;
+                int32_t Length;
+                bool FullLength = false;
+            };
+
+            std::string movieName;
+            int32_t holeNumber = -1;
+
+            const auto PickMedian = [&](std::vector<RecordAnnotated> tmp) {
+                bool hasFullLength = false;
+                for (const auto& ra : tmp) {
+                    if (ra.FullLength) {
+                        hasFullLength = true;
+                        break;
+                    }
+                }
+                if (hasFullLength) {
+                    std::vector<RecordAnnotated> fullLengths;
+                    fullLengths.reserve(tmp.size());
+                    for (auto&& ra : tmp)
+                        if (ra.FullLength) fullLengths.emplace_back(std::move(ra));
+                    tmp.swap(fullLengths);
+                }
+
+                std::stable_sort(tmp.begin(), tmp.end(),
+                                 [&](const RecordAnnotated& l, const RecordAnnotated& r) {
+                                     return std::tie(l.FullLength, l.Length) <=
+                                            std::tie(r.FullLength, r.Length);
+                                 });
+                size_t mid = tmp.size() / 2;
+                if (logLevel == Logging::LogLevel::DEBUG) {
+                    std::ostringstream ss;
+                    for (size_t x = 0; x < tmp.size(); ++x) {
+                        const auto& ra = tmp[x];
+                        if (x == mid) ss << '[';
+                        ss << ra.Length << (ra.FullLength ? 'F' : 'S');
+                        if (x == mid) ss << ']';
+                        ss << ' ';
+                    }
+                    PBLOG_DEBUG << "Median filter " << tmp.at(mid).Record.MovieName() << '/'
+                                << tmp.at(mid).Record.HoleNumber() << ": " << ss.str();
+                }
+                return tmp.at(mid).Record;
+            };
+
+            std::vector<RecordAnnotated> ras;
+            const auto Flush = [&]() {
+                if (!ras.empty()) (*records)[i++] = PickMedian(std::move(ras));
+            };
+            for (auto& record : *qryRdr) {
+                const auto nextHoleNumber = record.HoleNumber();
+                const auto nextMovieName = record.MovieName();
+                if (holeNumber != nextHoleNumber || movieName != nextMovieName) {
+                    Flush();
+                    holeNumber = nextHoleNumber;
+                    movieName = nextMovieName;
+                    ras = std::vector<RecordAnnotated>();
+                }
+                if (i >= chunkSize) {
+                    waiting++;
+                    faf.ProduceWith(Submit, std::move(records));
+                    records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
+                    i = 0;
+                }
+                ras.emplace_back(record);
+            }
+            Flush();
+        } else {
+            while (qryRdr->GetNext((*records)[i++])) {
+                if (i >= chunkSize) {
+                    waiting++;
+                    faf.ProduceWith(Submit, std::move(records));
+                    records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
+                    i = 0;
+                }
             }
         }
         // terminal records, if they exist

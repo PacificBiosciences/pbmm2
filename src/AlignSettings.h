@@ -31,6 +31,8 @@ struct AlignSettings : MM2Settings
     const std::string SampleName;
     int32_t ChunkSize;
 
+    bool MedianFilter;
+
     /// Parses the provided CLI::Results and retrieves a defined set of options.
     AlignSettings(const PacBio::CLI::Results& options);
 
