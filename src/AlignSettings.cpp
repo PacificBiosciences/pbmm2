@@ -322,7 +322,9 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         }
     });
 
-    CLI::ToolContract::Config tcConfig(tcTask);
+    CLI::ToolContract::Driver driver;
+    driver.Exe("pbmm2 align --resolved-tool-contract");
+    CLI::ToolContract::Config tcConfig(tcTask, driver);
     i.EnableToolContract(tcConfig);
     // clang-format on
 
