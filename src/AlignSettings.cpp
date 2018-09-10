@@ -47,7 +47,7 @@ const PlainOption MinAccuracy{
     "minaccuracy",
     { "min-accuracy" },
     "Minimum Alignment Accuracy",
-    "Minimum alignment accuracy (not effective in ISOSEQ preset).",
+    "Minimum alignment accuracy.",
     CLI::Option::FloatType(0.75f)
 };
 const PlainOption MinAlignmentLength{
@@ -295,6 +295,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     const std::string id = "mapping.tasks.pbmm2_align";
     Task tcTask(id);
     tcTask.NumProcessors(Task::MAX_NPROC);
+    tcTask.AddOption(OptionNames::AlignModeOpt);
 
     tcTask.InputFileTypes({
         {
