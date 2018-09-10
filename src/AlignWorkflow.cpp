@@ -179,7 +179,7 @@ void CreateDataSet(const BAM::DataSet& originalInputDataset, const std::string& 
         default:
             throw std::runtime_error("Unsupported input type");
     }
-    DataSet ds(type);
+    DataSet ds(BAM::DataSet::TypeEnum::ALIGNMENT);
     ds.Attribute("xmlns:pbdm") = "http://pacificbiosciences.com/PacBioDataModel.xsd";
     ds.Attribute("xmlns:pbmeta") = "http://pacificbiosciences.com/PacBioCollectionMetadata.xsd";
     ds.Attribute("xmlns:pbpn") = "http://pacificbiosciences.com/PacBioPartNumbers.xsd";
