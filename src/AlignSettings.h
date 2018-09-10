@@ -18,6 +18,7 @@ struct AlignSettings : MM2Settings
 {
     const std::string CLI;
     const std::vector<std::string> InputFiles;
+    bool IsFromRTC;
 
     // alignment output filters
     float MinAccuracy;

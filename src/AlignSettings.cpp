@@ -192,6 +192,7 @@ const PlainOption MedianFilter{
 AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     : CLI(options.InputCommandLine())
     , InputFiles(options.PositionalArguments())
+    , IsFromRTC(options.IsFromRTC())
     , MinAccuracy(options[OptionNames::MinAccuracy])
     , MinAlignmentLength(options[OptionNames::MinAlignmentLength])
     , LogFile{options[OptionNames::LogFile].get<decltype(LogFile)>()}
@@ -216,7 +217,7 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     MM2Settings::NoSpliceFlank = options[OptionNames::NoSpliceFlank];
 
     int32_t requestedNThreads;
-    if (options.IsFromRTC()) {
+    if (IsFromRTC) {
         requestedNThreads = options.NumProcessors();
     } else {
         requestedNThreads = options[OptionNames::NumThreads];
@@ -295,14 +296,15 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     const std::string id = "mapping.tasks.pbmm2_align";
     Task tcTask(id);
     tcTask.NumProcessors(Task::MAX_NPROC);
-    tcTask.AddOption(OptionNames::AlignModeOpt);
+    tcTask.AddOption(OptionNames::MinAccuracy);
+    tcTask.AddOption(OptionNames::MinAlignmentLength);
 
     tcTask.InputFileTypes({
         {
-            "subread_set",
-            "SubreadSet",
-            "Subread DataSet or .bam file",
-            "PacBio.DataSet.SubreadSet"
+            "datastore_input",
+            "Datastore",
+            "Datastore containing ONE dataset",
+            "PacBio.FileTypes.json"
         },
         {
             "reference_set",

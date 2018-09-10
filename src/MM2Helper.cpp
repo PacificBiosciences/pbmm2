@@ -36,6 +36,7 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
     mm_idxopt_init(&IdxOpts);
     switch (settings.AlignMode) {
         case AlignmentMode::SUBREADS:
+        case AlignmentMode::CCS:
             IdxOpts.k = 19;
             IdxOpts.w = 10;
             break;
@@ -60,6 +61,7 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
     MapOpts.flag |= MM_F_NO_PRINT_2ND;
     switch (settings.AlignMode) {
         case AlignmentMode::SUBREADS:
+        case AlignmentMode::CCS:
             MapOpts.a = 2;
             MapOpts.q = 5;
             MapOpts.q2 = 56;

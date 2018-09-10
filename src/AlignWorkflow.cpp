@@ -43,7 +43,7 @@ struct Summary
 };
 
 std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
-    const std::vector<std::string>& args)
+    const std::vector<std::string>& args, AlignSettings* settings)
 {
     if (args.size() < 2) {
         PBLOG_FATAL << "Please provide at least the input arguments: input reference output!";
@@ -51,17 +51,53 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
         std::exit(EXIT_FAILURE);
     }
 
-    const auto inputFile = args[0];
+    auto inputFile = args[0];
     if (!Utility::FileExists(inputFile)) {
         PBLOG_FATAL << "Input data file does not exist: " << inputFile;
         std::exit(EXIT_FAILURE);
     }
+    bool isFromJson = Utility::FileExtension(inputFile) == "json";
+    if (isFromJson) {
+        std::ifstream ifs(inputFile);
+        JSON::Json j;
+        ifs >> j;
+        const auto panic = [](const std::string& error) {
+            PBLOG_FATAL << "JSON Datastore: " << error;
+            std::exit(EXIT_FAILURE);
+        };
+        if (j.empty()) panic("Empty file!");
+        if (j.count("files") == 0) panic("Could not find files element!");
+        if (j.count("files") > 1) panic("More than ONE files element!");
+        if (j["files"].empty()) panic("files element is empty!");
+        if (j["files"].size() > 1) panic("files element contains more than ONE entry!");
+        for (const auto& file : j["files"]) {
+            if (file.count("path") == 0) panic("Could not find path element!");
+            inputFile = file["path"].get<std::string>();
+        }
+    }
     BAM::DataSet dsInput(inputFile);
     switch (dsInput.Type()) {
-        case BAM::DataSet::TypeEnum::SUBREAD:
-        case BAM::DataSet::TypeEnum::CONSENSUS_READ:
-        case BAM::DataSet::TypeEnum::TRANSCRIPT:
+        case BAM::DataSet::TypeEnum::SUBREAD: {
+            if (isFromJson) {
+                settings->AlignMode = AlignmentMode::SUBREADS;
+                PBLOG_INFO << "Setting to SUBREAD preset";
+            }
             break;
+        }
+        case BAM::DataSet::TypeEnum::CONSENSUS_READ: {
+            if (isFromJson) {
+                settings->AlignMode = AlignmentMode::CCS;
+                PBLOG_INFO << "Setting to CCS preset";
+            }
+            break;
+        }
+        case BAM::DataSet::TypeEnum::TRANSCRIPT: {
+            if (isFromJson) {
+                settings->AlignMode = AlignmentMode::ISOSEQ;
+                PBLOG_INFO << "Setting to ISOSEQ preset";
+            }
+            break;
+        } break;
         case BAM::DataSet::TypeEnum::ALIGNMENT:
         case BAM::DataSet::TypeEnum::CONSENSUS_ALIGNMENT:
         case BAM::DataSet::TypeEnum::BARCODE:
@@ -211,7 +247,8 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     std::string outFile;
     std::string alnFile{"-"};
 
-    std::tie(qryFile, refFile, outFile) = CheckPositionalArgs(options.PositionalArguments());
+    std::tie(qryFile, refFile, outFile) =
+        CheckPositionalArgs(options.PositionalArguments(), &settings);
 
     std::string outputFilePrefix;
     bool outputIsXML = false;
