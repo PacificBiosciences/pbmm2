@@ -22,13 +22,16 @@ Latest version can be installed via bioconda package `pbmm2`.
 Please refer to our [official pbbioconda page](https://github.com/PacificBiosciences/pbbioconda)
 for information on Installation, Support, License, Copyright, and Disclaimer.
 
+## Changelog
+Version **0.9.0**: Add `--sort`, `--preset ISOSEQ`, `--median-filter`
+
 ## Usage
 _pbmm2_ offers following tools
 
 ```
 Tools:
     index      Index reference and store as .mmi file
-    align      Align PacBio reads to a reference
+    align      Align PacBio reads to reference sequences
 ```
 
 ### Index
@@ -45,17 +48,37 @@ Usage: pbmm2 index [options] <ref.fa|xml> <out.mmi>
 ### Align
 The output argument is optional. If not provided, BAM output is streamed to stdout.
 ```
-Usage: pbmm2 align [options] <in.subreads.bam|xml> <ref.fa|xml|mmi> [out.aligned.bam|xml]
+Usage: pbmm2 align [options] <in.bam|xml> <ref.fa|xml|mmi> [out.aligned.bam|xml]
+```
+
+#### Following datasets combinations are allowed:
+
+SubreadSet ⟶ AlignmentSet
+
+```
+pbmm2 align movie.subreadset.xml hg38.referenceset.xml movie.hg38.alignmentset.xml
+```
+
+ConsensusReadSet ⟶ ConsensusAlignmentSet
+
+```
+pbmm2 align movie.consensusreadset.xml hg38.referenceset.xml movie.hg38.consensusalignmentset.xml
+```
+
+TranscriptSet ⟶ TranscriptAlignmentSet
+
+```
+pbmm2 align movie.transcriptset.xml hg38.referenceset.xml movie.hg38.transcriptalignmentset.xml
 ```
 
 ## FAQ
 ### How can I get sorted alignments for polishing?
 ```sh
-> pbmm2 align movie1.subreadset.xml hg38.mmi | samtools sort > hg38.movie1.sorted.bam
-> pbindex hg38.movie1.sorted.bam
+> pbmm2 align movie1.subreadset.xml hg38.mmi hg38.movie1.alignmentset.xml --sort
 ```
-Do not forget to provide `samtools sort` sufficient number of threads and memory
-per thread.
+
+### When are `pbi` files created?
+Whenever the output is of type `xml`, a `pbi` file is being generated.
 
 ### What are parameter sets and how can I override them?
 Per default, _pbmm2_ uses recommended parameter sets to simplify the plethora
@@ -100,11 +123,11 @@ parameter set, please open a GitHub issue!
 We currently only provide primary and supplementary alignments. If you have an
 use-case that absolutely needs secondary alignments, please open a GitHub issue!
 
-### I can't find large SVs!
+### How do you define mapped accuracy?
 The `--min-accuracy` option, whereas accuracy is defined as
 
 ```
-    1.0 - (#Deletions + #Insertions + #Mismatches) / MappedReferenceSpan
+    1.0 - (#Deletions + #Insertions + #Mismatches) / (MappedReferenceSpan - #N)
 ```
 
 will remove alignments with more unmapped than mapped bases.
