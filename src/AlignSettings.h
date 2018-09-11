@@ -24,8 +24,6 @@ struct AlignSettings : MM2Settings
     float MinAccuracy;
     int32_t MinAlignmentLength;
 
-    bool Pbi;
-
     std::string LogFile;
     Logging::LogLevel LogLevel;
 
@@ -33,6 +31,8 @@ struct AlignSettings : MM2Settings
     int32_t ChunkSize;
 
     bool MedianFilter;
+
+    bool Sort;
 
     /// Parses the provided CLI::Results and retrieves a defined set of options.
     AlignSettings(const PacBio::CLI::Results& options);

@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <cstdio>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -16,19 +17,25 @@
 #include <pbbam/BamReader.h>
 #include <pbbam/BamWriter.h>
 
+#include <pbbam/BamFile.h>
 #include <pbbam/DataSet.h>
 #include <pbbam/DataSetTypes.h>
 #include <pbbam/EntireFileQuery.h>
+#include <pbbam/PbiFile.h>
 #include <pbbam/PbiFilter.h>
 #include <pbbam/PbiFilterQuery.h>
 
 #include <pbcopper/parallel/FireAndForget.h>
 #include <pbcopper/parallel/WorkQueue.h>
 
+#include <boost/uuid/random_generator.hpp>
+#include <boost/uuid/uuid_io.hpp>
+
 #include <Pbmm2Version.h>
 
 #include "AlignSettings.h"
 #include "MM2Helper.h"
+#include "bam_sort.h"
 
 #include "AlignWorkflow.h"
 
@@ -43,7 +50,8 @@ struct Summary
 };
 
 std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
-    const std::vector<std::string>& args, AlignSettings* settings)
+    const std::vector<std::string>& args, AlignSettings* settings, bool* isFromJson,
+    bool* isFromXML, BAM::DataSet::TypeEnum* inputType)
 {
     if (args.size() < 2) {
         PBLOG_FATAL << "Please provide at least the input arguments: input reference output!";
@@ -56,8 +64,8 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
         PBLOG_FATAL << "Input data file does not exist: " << inputFile;
         std::exit(EXIT_FAILURE);
     }
-    bool isFromJson = Utility::FileExtension(inputFile) == "json";
-    if (isFromJson) {
+    *isFromJson = Utility::FileExtension(inputFile) == "json";
+    if (*isFromJson) {
         std::ifstream ifs(inputFile);
         JSON::Json j;
         ifs >> j;
@@ -75,24 +83,26 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
             inputFile = file["path"].get<std::string>();
         }
     }
+    *isFromXML = Utility::FileExtension(inputFile) == "xml";
     BAM::DataSet dsInput(inputFile);
-    switch (dsInput.Type()) {
+    *inputType = dsInput.Type();
+    switch (*inputType) {
         case BAM::DataSet::TypeEnum::SUBREAD: {
-            if (isFromJson) {
+            if (*isFromJson) {
                 settings->AlignMode = AlignmentMode::SUBREADS;
                 PBLOG_INFO << "Setting to SUBREAD preset";
             }
             break;
         }
         case BAM::DataSet::TypeEnum::CONSENSUS_READ: {
-            if (isFromJson) {
+            if (*isFromJson) {
                 settings->AlignMode = AlignmentMode::CCS;
                 PBLOG_INFO << "Setting to CCS preset";
             }
             break;
         }
         case BAM::DataSet::TypeEnum::TRANSCRIPT: {
-            if (isFromJson) {
+            if (*isFromJson) {
                 settings->AlignMode = AlignmentMode::ISOSEQ;
                 PBLOG_INFO << "Setting to ISOSEQ preset";
             }
@@ -161,25 +171,35 @@ std::unique_ptr<BAM::internal::IQuery> BamQuery(const BAM::DataSet& ds)
     return query;
 }
 
-void CreateDataSet(const BAM::DataSet& originalInputDataset, const std::string& outputFile)
+std::string CreateDataSet(const BAM::DataSet::TypeEnum& inputType, const bool isFromXML,
+                          const std::string& outputFile, std::string* id)
 {
     using BAM::DataSet;
-    std::string metatype;
-    std::string outputType;
-    const auto type = originalInputDataset.Type();
-    switch (type) {
-        case BAM::DataSet::TypeEnum::SUBREAD:
-            metatype = "PacBio.AlignmentFile.AlignmentBamFile";
-            outputType = "alignmentset";
-            break;
-        case BAM::DataSet::TypeEnum::CONSENSUS_READ:
-            metatype = "PacBio.AlignmentFile.ConsensusAlignmentBamFile";
-            outputType = "consensusalignmentset";
-            break;
-        default:
-            throw std::runtime_error("Unsupported input type");
+    std::string metatype = "PacBio.AlignmentFile.AlignmentBamFile";
+    std::string outputType = "alignmentset";
+    BAM::DataSet::TypeEnum outputEnum = BAM::DataSet::TypeEnum::ALIGNMENT;
+    if (isFromXML) {
+        switch (inputType) {
+            case BAM::DataSet::TypeEnum::SUBREAD:
+                metatype = "PacBio.AlignmentFile.AlignmentBamFile";
+                outputType = "alignmentset";
+                outputEnum = BAM::DataSet::TypeEnum::ALIGNMENT;
+                break;
+            case BAM::DataSet::TypeEnum::CONSENSUS_READ:
+                metatype = "PacBio.AlignmentFile.ConsensusAlignmentBamFile";
+                outputType = "consensusalignmentset";
+                outputEnum = BAM::DataSet::TypeEnum::CONSENSUS_ALIGNMENT;
+                break;
+            case BAM::DataSet::TypeEnum::TRANSCRIPT:
+                metatype = "PacBio.AlignmentFile.ConsensusAlignmentBamFile";
+                outputType = "transcriptalignmentset";
+                outputEnum = BAM::DataSet::TypeEnum::CONSENSUS_ALIGNMENT;
+                break;
+            default:
+                throw std::runtime_error("Unsupported input type");
+        }
     }
-    DataSet ds(BAM::DataSet::TypeEnum::ALIGNMENT);
+    DataSet ds(outputEnum);
     ds.Attribute("xmlns:pbdm") = "http://pacificbiosciences.com/PacBioDataModel.xsd";
     ds.Attribute("xmlns:pbmeta") = "http://pacificbiosciences.com/PacBioCollectionMetadata.xsd";
     ds.Attribute("xmlns:pbpn") = "http://pacificbiosciences.com/PacBioPartNumbers.xsd";
@@ -194,11 +214,16 @@ void CreateDataSet(const BAM::DataSet& originalInputDataset, const std::string& 
         fileName = splits.back();
     }
     BAM::ExternalResource resource(metatype, fileName + ".bam");
+    BAM::FileIndex pbi("PacBio.Index.PacBioIndex", fileName + ".bam.pbi");
+    resource.FileIndices().Add(pbi);
     ds.ExternalResources().Add(resource);
     ds.Name(fileName);
     ds.TimeStampedName(fileName + "-" + BAM::CurrentTimestamp());
-    std::ofstream dsOut(outputFile + "." + outputType + ".xml");
+    std::string outputDSFileName = outputFile + "." + outputType + ".xml";
+    std::ofstream dsOut(outputDSFileName);
+    *id = ds.UniqueId();
     ds.SaveToStream(dsOut);
+    return outputDSFileName;
 }
 
 std::string OutputFilePrefix(const std::string& outputFile)
@@ -212,6 +237,8 @@ std::string OutputFilePrefix(const std::string& outputFile)
     } else if (outputExt == "bam") {
         boost::ireplace_last(prefix, ".bam", "");
         boost::ireplace_last(prefix, ".subreads", "");
+    } else if (outputExt == "json") {
+        boost::ireplace_last(prefix, ".json", "");
     } else {
         PBLOG_FATAL << "Unknown file extension for output file: " << outputFile;
         std::exit(EXIT_FAILURE);
@@ -246,16 +273,23 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     std::string refFile;
     std::string outFile;
     std::string alnFile{"-"};
+    bool isFromJson;
+    bool isFromXML;
+    BAM::DataSet::TypeEnum inputType;
 
-    std::tie(qryFile, refFile, outFile) =
-        CheckPositionalArgs(options.PositionalArguments(), &settings);
+    std::tie(qryFile, refFile, outFile) = CheckPositionalArgs(
+        options.PositionalArguments(), &settings, &isFromJson, &isFromXML, &inputType);
 
     std::string outputFilePrefix;
     bool outputIsXML = false;
+    bool outputIsJson = false;
+    bool outputIsSortedStream = false;
     if (outFile != "-") {
         outputFilePrefix = OutputFilePrefix(outFile);
-        outputIsXML = Utility::FileExtension(outFile) == "xml";
-        if (outputIsXML)
+        const auto ext = Utility::FileExtension(outFile);
+        outputIsXML = ext == "xml";
+        outputIsJson = ext == "json";
+        if (outputIsXML || outputIsJson)
             alnFile = outputFilePrefix + ".bam";
         else
             alnFile = outFile;
@@ -264,6 +298,8 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             PBLOG_WARN << "Warning: Overwriting existing output file: " << alnFile;
         if (alnFile != outFile && Utility::FileExists(outFile))
             PBLOG_WARN << "Warning: Overwriting existing output file: " << outFile;
+    } else if (settings.Sort) {
+        outputIsSortedStream = true;
     }
 
     const FilterFunc filter = [&settings](const AlignedRecord& aln) {
@@ -302,7 +338,8 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             "pbmm2 " + settings.CLI));
 
         PacBio::Parallel::FireAndForget faf(settings.NumThreads, 3);
-        BAM::BamWriter out(alnFile, hdr);
+
+        BAM::BamWriter out(settings.Sort ? "unsorted.bam" : alnFile, hdr);
 
         int32_t i = 0;
         const int32_t chunkSize = settings.ChunkSize;
@@ -435,13 +472,58 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     }
+
     PBLOG_INFO << "Number of Aligned Reads: " << alignedReads;
     PBLOG_INFO << "Number of Alignments: " << s.NumAlns;
     PBLOG_INFO << "Number of Bases: " << s.Bases;
     PBLOG_INFO << "Mean Concordance (mapped) : "
                << std::round(1000.0 * s.Similarity / s.NumAlns) / 10.0 << "%";
 
-    if (outputIsXML) CreateDataSet(qryFile, outputFilePrefix);
+    if (settings.Sort) {
+        bam_sort(outputIsSortedStream ? "-" : alnFile.c_str());
+        std::remove("unsorted.bam");
+    }
+
+    if (outputIsXML || outputIsJson) {
+        BAM::BamFile validationBam(alnFile);
+        BAM::PbiFile::CreateFrom(validationBam);
+
+        std::string id;
+        const auto xmlName = CreateDataSet(inputType, isFromXML, outputFilePrefix, &id);
+
+        if (outputIsJson) {
+            JSON::Json datastore;
+            datastore["createdAt"] = BAM::ToIso8601(std::chrono::system_clock::now());
+            datastore["updatedAt"] = BAM::ToIso8601(std::chrono::system_clock::now());
+            datastore["version"] = "0.2.2";
+            JSON::Json datastoreFile;
+            datastoreFile["createdAt"] = BAM::ToIso8601(std::chrono::system_clock::now());
+            datastoreFile["description"] = "Aligned and sorted reads as BAM";
+            std::ifstream file(alnFile, std::ios::binary | std::ios::ate);
+            datastoreFile["fileSize"] = static_cast<int>(file.tellg());
+            switch (settings.AlignMode) {
+                case AlignmentMode::SUBREADS:
+                    datastoreFile["fileTypeId"] = "PacBio.DataSet.AlignmentSet";
+                    break;
+                case AlignmentMode::ISOSEQ:
+                case AlignmentMode::CCS:
+                    datastoreFile["fileTypeId"] = "PacBio.DataSet.ConsensusAlignmentSet";
+                    break;
+                default:
+                    throw std::runtime_error("Unsupported input type");
+            }
+            datastoreFile["isChunked"] = false;
+            datastoreFile["modifiedAt"] = BAM::ToIso8601(std::chrono::system_clock::now());
+            datastoreFile["name"] = "Aligned reads";
+            datastoreFile["path"] = xmlName;
+            datastoreFile["sourceId"] = "mapping.tasks.pbmm2_align-out-1";
+            boost::uuids::random_generator gen;
+            datastoreFile["uniqueId"] = id;
+            datastore["files"] = std::vector<JSON::Json>{datastoreFile};
+            std::ofstream datastoreStream(outputFilePrefix + ".json");
+            datastoreStream << datastore.dump(2);
+        }
+    }
 
     return EXIT_SUCCESS;
 }  // namespace minimap2

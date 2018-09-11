@@ -24,6 +24,7 @@ pbmm2_version_sources = [
 pbmm2_src_include_directories = include_directories('.')
 
 pbmm2_cpp_sources = files([
+  'bam_sort.c',
   'MM2Helper.cpp',
   'AlignSettings.cpp',
   'AlignWorkflow.cpp',

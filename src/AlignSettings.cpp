@@ -186,6 +186,20 @@ const PlainOption MedianFilter{
     "Pick one read per ZMW of median length.",
     CLI::Option::BoolType(false)
 };
+const PlainOption Sort{
+    "sort",
+    { "sort" },
+    "Generate sorted BAM file",
+    "Generate sorted BAM file.",
+    CLI::Option::BoolType(false)
+};
+const PlainOption Pbi{
+    "pbi",
+    { "pbi" },
+    "Generate PBI file",
+    "Generate PBI file, only works with --sort.",
+    CLI::Option::BoolType(false)
+};
 // clang-format on
 }  // namespace OptionNames
 
@@ -200,6 +214,7 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     , SampleName{options[OptionNames::SampleName].get<decltype(SampleName)>()}
     , ChunkSize(options[OptionNames::ChunkSize])
     , MedianFilter(options[OptionNames::MedianFilter])
+    , Sort(options[OptionNames::Sort])
 {
     MM2Settings::Kmer = options[OptionNames::Kmer];
     MM2Settings::MinimizerWindowSize = options[OptionNames::MinimizerWindowSize];
@@ -219,6 +234,7 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     int32_t requestedNThreads;
     if (IsFromRTC) {
         requestedNThreads = options.NumProcessors();
+        Sort = true;
     } else {
         requestedNThreads = options[OptionNames::NumThreads];
     }
@@ -287,6 +303,10 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         OptionNames::MedianFilter,
     });
 
+    i.AddGroup("Output Options", {
+        OptionNames::Sort
+    });
+
     i.AddPositionalArguments({
         { "in.bam|xml", "Input BAM or DataSet XML", "<in.bam|xml>" },
         { "ref.fa|xml|mmi", "Reference FASTA, ReferenceSet XML, or Reference Index", "<ref.fa|xml|mmi>" },
@@ -320,7 +340,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
             "AlignmentSet",
             "AlignmentSet for output .bam file",
             "PacBio.DataSet.AlignmentSet",
-            "pbmm2_output"
+            "out"
         }
     });
 
