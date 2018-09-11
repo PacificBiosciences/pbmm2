@@ -336,12 +336,12 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
 
     tcTask.OutputFileTypes({
         {
-            "aligned_bam_output",
-            "AlignmentSet",
-            "AlignmentSet for output .bam file",
-            "PacBio.DataSet.AlignmentSet",
+            "datastore_output",
+            "Datastore",
+            "Datastore containing one dataset",
+            "PacBio.FileTypes.json",
             "out"
-        }
+        },
     });
 
     CLI::ToolContract::Driver driver;

@@ -171,15 +171,36 @@ std::unique_ptr<BAM::internal::IQuery> BamQuery(const BAM::DataSet& ds)
     return query;
 }
 
-std::string CreateDataSet(const BAM::DataSet::TypeEnum& inputType, const bool isFromXML,
-                          const std::string& outputFile, std::string* id)
+std::string CreateDataSet(const BAM::DataSet& dsIn, const bool isFromXML,
+                          const std::string& outputFile, const std::string& origOutputFile,
+                          std::string* id, size_t numAlignments, size_t numBases)
 {
     using BAM::DataSet;
+    using DataSetElement = PacBio::BAM::internal::DataSetElement;
+    // Input dataset
+    const auto GetCollection = [&dsIn](std::string* const name,
+                                       std::unique_ptr<DataSetElement>* const collection,
+                                       std::string* const tags) {
+        *name = dsIn.Name();
+        *tags = dsIn.Tags();
+        const auto md = dsIn.Metadata();
+        if (!md.HasChild("Collections")) return false;
+        *collection = std::unique_ptr<DataSetElement>(
+            new DataSetElement(std::move(md.Child<DataSetElement>("Collections"))));
+        return true;
+    };
+
+    std::string datasetName;
+    std::string tags;
+    std::unique_ptr<DataSetElement> collection;
+    const bool hasCollection = GetCollection(&datasetName, &collection, &tags);
+    const bool hasName = !datasetName.empty();
+
     std::string metatype = "PacBio.AlignmentFile.AlignmentBamFile";
     std::string outputType = "alignmentset";
     BAM::DataSet::TypeEnum outputEnum = BAM::DataSet::TypeEnum::ALIGNMENT;
     if (isFromXML) {
-        switch (inputType) {
+        switch (dsIn.Type()) {
             case BAM::DataSet::TypeEnum::SUBREAD:
                 metatype = "PacBio.AlignmentFile.AlignmentBamFile";
                 outputType = "alignmentset";
@@ -191,12 +212,30 @@ std::string CreateDataSet(const BAM::DataSet::TypeEnum& inputType, const bool is
                 outputEnum = BAM::DataSet::TypeEnum::CONSENSUS_ALIGNMENT;
                 break;
             case BAM::DataSet::TypeEnum::TRANSCRIPT:
-                metatype = "PacBio.AlignmentFile.ConsensusAlignmentBamFile";
+                metatype = "PacBio.AlignmentFile.TranscriptAlignmentBamFile";
                 outputType = "transcriptalignmentset";
-                outputEnum = BAM::DataSet::TypeEnum::CONSENSUS_ALIGNMENT;
+                outputEnum = BAM::DataSet::TypeEnum::TRANSCRIPT_ALIGNMENT;
                 break;
             default:
                 throw std::runtime_error("Unsupported input type");
+        }
+    } else {
+        if (boost::algorithm::ends_with(origOutputFile, "consensusalignmentset.xml")) {
+            metatype = "PacBio.AlignmentFile.ConsensusAlignmentBamFile";
+            outputType = "consensusalignmentset";
+            outputEnum = BAM::DataSet::TypeEnum::CONSENSUS_ALIGNMENT;
+        } else if (boost::algorithm::ends_with(origOutputFile, "transcriptalignmentset.xml")) {
+            metatype = "PacBio.AlignmentFile.TranscriptAlignmentBamFile";
+            outputType = "transcriptalignmentset";
+            outputEnum = BAM::DataSet::TypeEnum::TRANSCRIPT_ALIGNMENT;
+        } else if (boost::algorithm::ends_with(origOutputFile, "alignmentset.xml")) {
+            metatype = "PacBio.AlignmentFile.AlignmentBamFile";
+            outputType = "alignmentset";
+            outputEnum = BAM::DataSet::TypeEnum::ALIGNMENT;
+        } else {
+            PBLOG_FATAL << "Unknown file ending. Please use alignmentset.xml, "
+                           "consensusalignmentset.xml, or transcriptalignmentset.xml!";
+            std::exit(EXIT_FAILURE);
         }
     }
     DataSet ds(outputEnum);
@@ -217,8 +256,20 @@ std::string CreateDataSet(const BAM::DataSet::TypeEnum& inputType, const bool is
     BAM::FileIndex pbi("PacBio.Index.PacBioIndex", fileName + ".bam.pbi");
     resource.FileIndices().Add(pbi);
     ds.ExternalResources().Add(resource);
-    ds.Name(fileName);
-    ds.TimeStampedName(fileName + "-" + BAM::CurrentTimestamp());
+    std::string name;
+    if (hasName)
+        name = datasetName;
+    else
+        name = fileName;
+
+    name += " (aligned)";
+    ds.Name(name);
+    ds.TimeStampedName(name + "-" + PacBio::BAM::CurrentTimestamp());
+
+    PacBio::BAM::DataSetMetadata metadata(std::to_string(numAlignments), std::to_string(numBases));
+    if (hasCollection) metadata.AddChild(*collection.get());
+    ds.Metadata(metadata);
+
     std::string outputDSFileName = outputFile + "." + outputType + ".xml";
     std::ofstream dsOut(outputDSFileName);
     *id = ds.UniqueId();
@@ -232,8 +283,10 @@ std::string OutputFilePrefix(const std::string& outputFile)
     const std::string outputExt = Utility::FileExtension(outputFile);
     std::string prefix = outputFile;
     if (outputExt == "xml") {
-        boost::ireplace_last(prefix, ".consensusalignmentset.xml", "");
-        boost::ireplace_last(prefix, ".alignmentset.xml", "");
+        boost::ireplace_last(prefix, ".xml", "");
+        boost::ireplace_last(prefix, ".consensusalignmentset", "");
+        boost::ireplace_last(prefix, ".alignmentset", "");
+        boost::ireplace_last(prefix, ".transcriptalignmentset", "");
     } else if (outputExt == "bam") {
         boost::ireplace_last(prefix, ".bam", "");
         boost::ireplace_last(prefix, ".subreads", "");
@@ -489,7 +542,8 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         BAM::PbiFile::CreateFrom(validationBam);
 
         std::string id;
-        const auto xmlName = CreateDataSet(inputType, isFromXML, outputFilePrefix, &id);
+        const auto xmlName =
+            CreateDataSet(qryFile, isFromXML, outputFilePrefix, outFile, &id, s.NumAlns, s.Bases);
 
         if (outputIsJson) {
             JSON::Json datastore;
