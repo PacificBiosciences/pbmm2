@@ -86,12 +86,16 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
     *isFromXML = Utility::FileExtension(inputFile) == "xml";
     BAM::DataSet dsInput(inputFile);
     *inputType = dsInput.Type();
+    bool fromSubreadset = false;
+    bool fromConsensuReadSet = false;
+    bool fromTranscriptSet = false;
     switch (*inputType) {
         case BAM::DataSet::TypeEnum::SUBREAD: {
             if (*isFromJson) {
                 settings->AlignMode = AlignmentMode::SUBREADS;
                 PBLOG_INFO << "Setting to SUBREAD preset";
             }
+            fromSubreadset = true;
             break;
         }
         case BAM::DataSet::TypeEnum::CONSENSUS_READ: {
@@ -99,6 +103,7 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
                 settings->AlignMode = AlignmentMode::CCS;
                 PBLOG_INFO << "Setting to CCS preset";
             }
+            fromConsensuReadSet = true;
             break;
         }
         case BAM::DataSet::TypeEnum::TRANSCRIPT: {
@@ -106,6 +111,7 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
                 settings->AlignMode = AlignmentMode::ISOSEQ;
                 PBLOG_INFO << "Setting to ISOSEQ preset";
             }
+            fromTranscriptSet = true;
             break;
         } break;
         case BAM::DataSet::TypeEnum::ALIGNMENT:
@@ -157,6 +163,65 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
     else
         out = "-";
 
+    if (args.size() == 3) {
+        std::string outlc = boost::algorithm::to_lower_copy(out);
+        bool isToXML = Utility::FileExtension(outlc) == "xml";
+
+        if (isToXML && (boost::algorithm::ends_with(outlc, ".subreadset.xml") ||
+                        boost::algorithm::ends_with(outlc, ".consensusreadset.xml") ||
+                        boost::algorithm::ends_with(outlc, ".transcriptset.xml"))) {
+            PBLOG_FATAL << "Output has to be an alignment dataset! Please use alignmentset.xml, "
+                           "consensusalignmentset.xml, or transcriptalignmentset.xml!";
+            std::exit(EXIT_FAILURE);
+        }
+
+        bool toAlignmentSet = boost::algorithm::ends_with(outlc, ".alignmentset.xml");
+        bool toConsensusAlignmentSet =
+            boost::algorithm::ends_with(outlc, ".consensusalignmentset.xml");
+        bool toTranscriptAlignmentSet =
+            boost::algorithm::ends_with(outlc, ".transcriptalignmentset.xml");
+
+        if (isToXML && !toAlignmentSet && !toConsensusAlignmentSet && !toTranscriptAlignmentSet) {
+            PBLOG_FATAL << "Output is XML, but of unknown type! Please use alignmentset.xml, "
+                           "consensusalignmentset.xml, or transcriptalignmentset.xml";
+            std::exit(EXIT_FAILURE);
+        }
+
+        if (*isFromXML && isToXML) {
+            std::string outputTypeProvided;
+            if (toAlignmentSet)
+                outputTypeProvided = "AlignmentSet";
+            else if (toConsensusAlignmentSet)
+                outputTypeProvided = "ConsensusReadSet";
+            else if (toTranscriptAlignmentSet)
+                outputTypeProvided = "TranscriptSet";
+
+            if (fromSubreadset && !toAlignmentSet) {
+                PBLOG_FATAL << "Unsupported dataset combination! Input SubreadSet with output "
+                            << outputTypeProvided
+                            << "! Please use AlignmentSet as output XML type!";
+                std::exit(EXIT_FAILURE);
+            }
+            if (fromConsensuReadSet && !toConsensusAlignmentSet) {
+                PBLOG_FATAL
+                    << "Unsupported dataset combination! Input ConsensusReadSet with output "
+                    << outputTypeProvided
+                    << "! Please use ConsensusAlignmentSet as output XML type!";
+                std::exit(EXIT_FAILURE);
+            }
+            if (fromTranscriptSet && !toTranscriptAlignmentSet) {
+                PBLOG_FATAL << "Unsupported dataset combination! Input TranscriptSet with output "
+                            << outputTypeProvided
+                            << "! Please use TranscriptAlignmentSet as output XML type!";
+                std::exit(EXIT_FAILURE);
+            }
+        }
+
+        if (isToXML && !*isFromXML)
+            PBLOG_WARN << "Input is not a dataset, but output is. Please use dataset input for "
+                          "full SMRT Link compatibility!";
+    }
+
     return std::tuple<std::string, std::string, std::string>{inputFile, reference, out};
 }
 
@@ -199,39 +264,52 @@ std::string CreateDataSet(const BAM::DataSet& dsIn, const bool isFromXML,
     std::string metatype = "PacBio.AlignmentFile.AlignmentBamFile";
     std::string outputType = "alignmentset";
     BAM::DataSet::TypeEnum outputEnum = BAM::DataSet::TypeEnum::ALIGNMENT;
-    if (isFromXML) {
+
+    const auto SetOutputAlignment = [&]() {
+        metatype = "PacBio.AlignmentFile.AlignmentBamFile";
+        outputType = "alignmentset";
+        outputEnum = BAM::DataSet::TypeEnum::ALIGNMENT;
+    };
+
+    const auto SetOutputConsensus = [&]() {
+        metatype = "PacBio.AlignmentFile.ConsensusAlignmentBamFile";
+        outputType = "consensusalignmentset";
+        outputEnum = BAM::DataSet::TypeEnum::CONSENSUS_ALIGNMENT;
+    };
+
+    const auto SetOutputTranscript = [&]() {
+        metatype = "PacBio.AlignmentFile.TranscriptAlignmentBamFile";
+        outputType = "transcriptalignmentset";
+        outputEnum = BAM::DataSet::TypeEnum::TRANSCRIPT_ALIGNMENT;
+    };
+
+    const auto SetFromDatasetInput = [&]() {
         switch (dsIn.Type()) {
             case BAM::DataSet::TypeEnum::SUBREAD:
-                metatype = "PacBio.AlignmentFile.AlignmentBamFile";
-                outputType = "alignmentset";
-                outputEnum = BAM::DataSet::TypeEnum::ALIGNMENT;
+                SetOutputAlignment();
                 break;
             case BAM::DataSet::TypeEnum::CONSENSUS_READ:
-                metatype = "PacBio.AlignmentFile.ConsensusAlignmentBamFile";
-                outputType = "consensusalignmentset";
-                outputEnum = BAM::DataSet::TypeEnum::CONSENSUS_ALIGNMENT;
+                SetOutputConsensus();
                 break;
             case BAM::DataSet::TypeEnum::TRANSCRIPT:
-                metatype = "PacBio.AlignmentFile.TranscriptAlignmentBamFile";
-                outputType = "transcriptalignmentset";
-                outputEnum = BAM::DataSet::TypeEnum::TRANSCRIPT_ALIGNMENT;
+                SetOutputTranscript();
                 break;
             default:
                 throw std::runtime_error("Unsupported input type");
         }
+    };
+
+    if (isFromXML) {
+        SetFromDatasetInput();
     } else {
-        if (boost::algorithm::ends_with(origOutputFile, "consensusalignmentset.xml")) {
-            metatype = "PacBio.AlignmentFile.ConsensusAlignmentBamFile";
-            outputType = "consensusalignmentset";
-            outputEnum = BAM::DataSet::TypeEnum::CONSENSUS_ALIGNMENT;
-        } else if (boost::algorithm::ends_with(origOutputFile, "transcriptalignmentset.xml")) {
-            metatype = "PacBio.AlignmentFile.TranscriptAlignmentBamFile";
-            outputType = "transcriptalignmentset";
-            outputEnum = BAM::DataSet::TypeEnum::TRANSCRIPT_ALIGNMENT;
-        } else if (boost::algorithm::ends_with(origOutputFile, "alignmentset.xml")) {
-            metatype = "PacBio.AlignmentFile.AlignmentBamFile";
-            outputType = "alignmentset";
-            outputEnum = BAM::DataSet::TypeEnum::ALIGNMENT;
+        if (boost::algorithm::ends_with(origOutputFile, ".alignmentset.xml")) {
+            SetOutputAlignment();
+        } else if (boost::algorithm::ends_with(origOutputFile, ".consensusalignmentset.xml")) {
+            SetOutputConsensus();
+        } else if (boost::algorithm::ends_with(origOutputFile, ".transcriptalignmentset.xml")) {
+            SetOutputTranscript();
+        } else if (boost::algorithm::ends_with(origOutputFile, ".json")) {
+            SetFromDatasetInput();
         } else {
             PBLOG_FATAL << "Unknown file ending. Please use alignmentset.xml, "
                            "consensusalignmentset.xml, or transcriptalignmentset.xml!";
@@ -282,15 +360,16 @@ std::string OutputFilePrefix(const std::string& outputFile)
     // Check if output type is a dataset
     const std::string outputExt = Utility::FileExtension(outputFile);
     std::string prefix = outputFile;
-    if (outputExt == "xml") {
+
+    const std::string outputExtLc = boost::algorithm::to_lower_copy(outputExt);
+    if (outputExtLc == "xml") {
         boost::ireplace_last(prefix, ".xml", "");
         boost::ireplace_last(prefix, ".consensusalignmentset", "");
         boost::ireplace_last(prefix, ".alignmentset", "");
         boost::ireplace_last(prefix, ".transcriptalignmentset", "");
-    } else if (outputExt == "bam") {
+    } else if (outputExtLc == "bam") {
         boost::ireplace_last(prefix, ".bam", "");
-        boost::ireplace_last(prefix, ".subreads", "");
-    } else if (outputExt == "json") {
+    } else if (outputExtLc == "json") {
         boost::ireplace_last(prefix, ".json", "");
     } else {
         PBLOG_FATAL << "Unknown file extension for output file: " << outputFile;
@@ -555,17 +634,21 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             datastoreFile["description"] = "Aligned and sorted reads as BAM";
             std::ifstream file(alnFile, std::ios::binary | std::ios::ate);
             datastoreFile["fileSize"] = static_cast<int>(file.tellg());
-            switch (settings.AlignMode) {
-                case AlignmentMode::SUBREADS:
+
+            switch (qryFile.Type()) {
+                case BAM::DataSet::TypeEnum::SUBREAD:
                     datastoreFile["fileTypeId"] = "PacBio.DataSet.AlignmentSet";
                     break;
-                case AlignmentMode::ISOSEQ:
-                case AlignmentMode::CCS:
+                case BAM::DataSet::TypeEnum::CONSENSUS_READ:
                     datastoreFile["fileTypeId"] = "PacBio.DataSet.ConsensusAlignmentSet";
+                    break;
+                case BAM::DataSet::TypeEnum::TRANSCRIPT:
+                    datastoreFile["fileTypeId"] = "PacBio.DataSet.TranscriptAlignmentSet";
                     break;
                 default:
                     throw std::runtime_error("Unsupported input type");
             }
+
             datastoreFile["isChunked"] = false;
             datastoreFile["modifiedAt"] = BAM::ToIso8601(std::chrono::system_clock::now());
             datastoreFile["name"] = "Aligned reads";

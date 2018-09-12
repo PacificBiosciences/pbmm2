@@ -22,7 +22,9 @@
   $ ls -alh $CRAMTMP/ji_sorted.json 2> /dev/null | wc -l | sed 's/ //g'
   0
 
-  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/ji_unsortedds.alignmentset.xml
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/ji_unsortedds.alignmentset.xml 2> $CRAMTMP/ji_unsortedds.err || echo $?
+  $ cut -f 8 -d '|' < $CRAMTMP/ji_unsortedds.err
+  - Input is not a dataset, but output is. Please use dataset input for full SMRT Link compatibility!
   $ samtools view -H $CRAMTMP/ji_unsortedds.bam | grep "@HD" | grep "unknown" | wc -l | sed 's/ //g'
   1
   $ ls -alh $CRAMTMP/ji_unsortedds.bam.pbi 2> /dev/null | wc -l | sed 's/ //g'
@@ -32,7 +34,9 @@
   $ ls -alh $CRAMTMP/ji_unsortedds.json 2> /dev/null | wc -l | sed 's/ //g'
   0
 
-  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/ji_sortedds.alignmentset.xml --sort
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/ji_sortedds.alignmentset.xml --sort 2> $CRAMTMP/ji_sortedds.err || echo $?
+  $ cut -f 8 -d '|' < $CRAMTMP/ji_sortedds.err
+  - Input is not a dataset, but output is. Please use dataset input for full SMRT Link compatibility!
   $ samtools view -H $CRAMTMP/ji_sortedds.bam | grep "@HD" | grep "coordinate" | wc -l | sed 's/ //g'
   1
   $ ls -alh $CRAMTMP/ji_sortedds.bam.pbi 2> /dev/null | wc -l | sed 's/ //g'
