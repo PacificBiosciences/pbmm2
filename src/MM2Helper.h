@@ -77,7 +77,7 @@ public:
     BAM::BamRecord Record;
     int32_t NumAlignedBases;
     int32_t Span;
-    double Similarity;
+    double Concordance;
 
 private:
     void ComputeAccuracyBases();

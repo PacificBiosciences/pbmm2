@@ -246,7 +246,7 @@ void AlignedRecord::ComputeAccuracyBases()
     Span = Record.ReferenceEnd() - Record.ReferenceStart() - n;
     const int32_t nErr = ins + del + mismatch;
     NumAlignedBases = match + ins + mismatch;
-    Similarity = 1.0 - 1.0 * nErr / Span;
+    Concordance = 100 * (1.0 - 1.0 * nErr / Span);
 }
 
 }  // namespace minimap2

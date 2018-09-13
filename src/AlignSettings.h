@@ -21,7 +21,7 @@ struct AlignSettings : MM2Settings
     bool IsFromRTC;
 
     // alignment output filters
-    float MinAccuracy;
+    float MinPercConcordance;
     int32_t MinAlignmentLength;
 
     std::string LogFile;

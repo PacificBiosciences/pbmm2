@@ -47,7 +47,7 @@ struct Summary
 {
     int32_t NumAlns = 0;
     int64_t Bases = 0;
-    double Similarity = 0;
+    double Concordance = 0;
 };
 
 std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
@@ -437,8 +437,8 @@ int AlignWorkflow::Runner(const CLI::Results& options)
 
     const FilterFunc filter = [&settings](const AlignedRecord& aln) {
         if (aln.Span <= 0 || aln.Span < settings.MinAlignmentLength) return false;
-        if (settings.MinAccuracy <= 0) return true;
-        if (aln.Similarity < settings.MinAccuracy) return false;
+        if (settings.MinPercConcordance <= 0) return true;
+        if (aln.Concordance < settings.MinPercConcordance) return false;
         return true;
     };
 
@@ -567,7 +567,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                 alignedReads += aligned;
                 for (const auto& aln : *output) {
                     s.Bases += aln.NumAlignedBases;
-                    s.Similarity += aln.Similarity;
+                    s.Concordance += aln.Concordance;
                     ++s.NumAlns;
                     out.Write(aln.Record);
                     if (++alignedRecords % 1000 == 0) {
@@ -693,7 +693,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     PBLOG_INFO << "Number of Alignments: " << s.NumAlns;
     PBLOG_INFO << "Number of Bases: " << s.Bases;
     PBLOG_INFO << "Mean Concordance (mapped) : "
-               << std::round(1000.0 * s.Similarity / s.NumAlns) / 10.0 << "%";
+               << std::round(10.0 * s.Concordance / s.NumAlns) / 10.0 << "%";
 
     if (outputIsXML || outputIsJson) {
         BAM::BamFile validationBam(alnFile);

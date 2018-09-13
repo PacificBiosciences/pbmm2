@@ -43,16 +43,16 @@ const PlainOption NumThreads{
     "Number of threads used for alignment, 0 means autodetection.",
     CLI::Option::IntType(0)
 };
-const PlainOption MinAccuracy{
-    "minaccuracy",
-    { "min-accuracy" },
-    "Minimum Alignment Accuracy",
-    "Minimum alignment accuracy.",
-    CLI::Option::FloatType(0.75f)
+const PlainOption MinPercConcordance{
+    "min_perc_concordance",
+    { "c", "min-perc-concordance" },
+    "Minimum Alignment Concordance (%)",
+    "Minimum alignment concordance in percent.",
+    CLI::Option::FloatType(75)
 };
 const PlainOption MinAlignmentLength{
     "minalnlength",
-    { "min-length" },
+    { "l", "min-length" },
     "Minimum Alignment Length",
     "Minimum alignment length.",
     CLI::Option::IntType(50)
@@ -221,7 +221,7 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     : CLI(options.InputCommandLine())
     , InputFiles(options.PositionalArguments())
     , IsFromRTC(options.IsFromRTC())
-    , MinAccuracy(options[OptionNames::MinAccuracy])
+    , MinPercConcordance(options[OptionNames::MinPercConcordance])
     , MinAlignmentLength(options[OptionNames::MinAlignmentLength])
     , LogFile{options[OptionNames::LogFile].get<decltype(LogFile)>()}
     , LogLevel{options.LogLevel()}
@@ -320,7 +320,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     });
 
     i.AddGroup("Filter Options", {
-        OptionNames::MinAccuracy,
+        OptionNames::MinPercConcordance,
         OptionNames::MinAlignmentLength,
         OptionNames::MedianFilter,
     });
@@ -334,7 +334,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     const std::string id = "mapping.tasks.pbmm2_align";
     Task tcTask(id);
     tcTask.NumProcessors(Task::MAX_NPROC);
-    tcTask.AddOption(OptionNames::MinAccuracy);
+    tcTask.AddOption(OptionNames::MinPercConcordance);
     tcTask.AddOption(OptionNames::MinAlignmentLength);
     tcTask.AddOption(OptionNames::Sort);
     tcTask.AddOption(OptionNames::SortThreads);
