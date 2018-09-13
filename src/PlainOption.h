@@ -12,6 +12,34 @@ namespace minimap2 {
 class PlainOption
 {
 public:
+    static int SizeStringToInt(const std::string& s)
+    {
+        if (isalpha(s[s.size() - 1])) {
+            int size = std::stoi(s.substr(0, s.size() - 1));
+            switch (s[s.size() - 1]) {
+                case 'k':
+                case 'K':
+                    size <<= 10;
+                    break;
+                case 'm':
+                case 'M':
+                    size <<= 20;
+                    break;
+                case 'g':
+                case 'G':
+                    size <<= 30;
+                    break;
+                default:
+                    PBLOG_FATAL << "Unknown size multiplier " << s[s.size() - 1];
+                    std::exit(EXIT_FAILURE);
+            }
+            return size;
+        } else {
+            return std::stoi(s);
+        }
+    }
+
+public:
     PlainOption(std::string id, std::vector<std::string> cliOptions, std::string name,
                 std::string description, JSON::Json defaultValue,
                 JSON::Json choices = JSON::Json(nullptr),

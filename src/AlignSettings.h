@@ -33,6 +33,8 @@ struct AlignSettings : MM2Settings
     bool MedianFilter;
 
     bool Sort;
+    int SortThreads;
+    int SortMemory;
 
     /// Parses the provided CLI::Results and retrieves a defined set of options.
     AlignSettings(const PacBio::CLI::Results& options);

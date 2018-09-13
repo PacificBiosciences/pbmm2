@@ -39,8 +39,8 @@ const PlainOption LogFile{
 const PlainOption NumThreads{
     "numthreads",
     { "j", "num-threads" },
-    "Number of Threads",
-    "Number of threads to use, 0 means autodetection.",
+    "Number of Threads for Alignment",
+    "Number of threads used for alignment, 0 means autodetection.",
     CLI::Option::IntType(0)
 };
 const PlainOption MinAccuracy{
@@ -200,6 +200,20 @@ const PlainOption Pbi{
     "Generate PBI file, only works with --sort.",
     CLI::Option::BoolType(false)
 };
+const PlainOption SortThreads{
+    "sort_threads",
+    { "sort-threads" },
+    "Number of threads used for sorting",
+    "Number of threads used for sorting.",
+    CLI::Option::IntType(2)
+};
+const PlainOption SortMemory{
+    "sort_memory",
+    { "sort-memory" },
+    "Memory per thread for sorting",
+    "Memory per thread for sorting.",
+    CLI::Option::StringType("768M")
+};
 // clang-format on
 }  // namespace OptionNames
 
@@ -215,6 +229,8 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     , ChunkSize(options[OptionNames::ChunkSize])
     , MedianFilter(options[OptionNames::MedianFilter])
     , Sort(options[OptionNames::Sort])
+    , SortThreads(options[OptionNames::SortThreads])
+    , SortMemory(PlainOption::SizeStringToInt(options[OptionNames::SortMemory].get<std::string>()))
 {
     MM2Settings::Kmer = options[OptionNames::Kmer];
     MM2Settings::MinimizerWindowSize = options[OptionNames::MinimizerWindowSize];
@@ -269,6 +285,12 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         OptionNames::ChunkSize,
     });
 
+    i.AddGroup("Sorting Options", {
+        OptionNames::Sort,
+        OptionNames::SortThreads,
+        OptionNames::SortMemory,
+    });
+
     i.AddGroup("Parameter Set Options", {
         OptionNames::AlignModeOpt,
     });
@@ -303,10 +325,6 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         OptionNames::MedianFilter,
     });
 
-    i.AddGroup("Output Options", {
-        OptionNames::Sort
-    });
-
     i.AddPositionalArguments({
         { "in.bam|xml", "Input BAM or DataSet XML", "<in.bam|xml>" },
         { "ref.fa|xml|mmi", "Reference FASTA, ReferenceSet XML, or Reference Index", "<ref.fa|xml|mmi>" },
@@ -318,6 +336,9 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     tcTask.NumProcessors(Task::MAX_NPROC);
     tcTask.AddOption(OptionNames::MinAccuracy);
     tcTask.AddOption(OptionNames::MinAlignmentLength);
+    tcTask.AddOption(OptionNames::Sort);
+    tcTask.AddOption(OptionNames::SortThreads);
+    tcTask.AddOption(OptionNames::SortMemory);
 
     tcTask.InputFileTypes({
         {

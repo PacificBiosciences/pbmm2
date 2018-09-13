@@ -2047,7 +2047,8 @@ static int sort_blocks(int n_files, size_t k, bam1_tag *buf, const char *prefix,
  */
 int bam_sort_core_ext(int is_by_qname, char *sort_by_tag, const char *fn, const char *prefix,
                       const char *fnout, const char *modeout, size_t _max_mem, int n_threads,
-                      const htsFormat *in_fmt, const htsFormat *out_fmt)
+                      const htsFormat *in_fmt, const htsFormat *out_fmt, int *numFiles,
+                      int *numBlocks)
 {
     int ret = -1, res, i, n_files = 0;
     size_t max_k, k, max_mem, bam_mem_offset;
@@ -2177,14 +2178,16 @@ int bam_sort_core_ext(int is_by_qname, char *sort_by_tag, const char *fn, const 
     }
 
     // write the final output
+    *numFiles = n_files;
+    *numBlocks = num_in_mem;
     if (n_files == 0 && num_in_mem < 2) {  // a single block
         if (write_buffer(fnout, modeout, k, buf, header, n_threads, out_fmt) != 0) {
             print_error_errno("sort", "failed to create \"%s\"", fnout);
             goto err;
         }
     } else {  // then merge
-        fprintf(stderr, "[bam_sort_core] merging from %d files and %d in-memory blocks...\n",
-                n_files, num_in_mem);
+        // fprintf(stderr, "[bam_sort_core] merging from %d files and %d in-memory blocks...\n",
+        //         n_files, num_in_mem);
         fns = (char **)calloc(n_files, sizeof(char *));
         if (!fns) goto err;
         for (i = 0; i < n_files; ++i) {
@@ -2284,9 +2287,10 @@ void sam_global_args_free(sam_global_args *ga)
     if (ga->reference) free(ga->reference);
 }
 
-int bam_sort(const char *outputName)
+int bam_sort(const char *inputName, const char *outputName, int numThreads, int memory,
+             int *numFiles, int *numBlocks)
 {
-    size_t max_mem = SORT_DEFAULT_MEGS_PER_THREAD << 20;
+    size_t max_mem = memory;
     int is_by_qname = 0;
     int ret;
     int o_seen = 1;
@@ -2319,8 +2323,8 @@ int bam_sort(const char *outputName)
         ksprintf(&tmpprefix, "samtools.%d.%u.tmp", (int)getpid(), t % 10000);
     }
 
-    ret = bam_sort_core_ext(is_by_qname, sort_tag, "unsorted.bam", tmpprefix.s, outputName, modeout,
-                            max_mem, ga.nthreads, &ga.in, &ga.out);
+    ret = bam_sort_core_ext(is_by_qname, sort_tag, inputName, tmpprefix.s, outputName, modeout,
+                            max_mem, numThreads, &ga.in, &ga.out, numFiles, numBlocks);
     if (ret >= 0)
         ret = EXIT_SUCCESS;
     else

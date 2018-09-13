@@ -1,5 +1,6 @@
 // Author: Armin Töpfer
 
+#include <sys/stat.h>
 #include <atomic>
 #include <chrono>
 #include <cstdio>
@@ -446,6 +447,75 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     Summary s;
     int64_t alignedReads = 0;
 
+    std::unique_ptr<std::thread> sortThread;
+    std::string pipeName;
+    if (settings.Sort) {
+        pipeName = outFile + ".pipe";
+        int pipe = mkfifo(pipeName.c_str(), 0666);
+        if (pipe == -1) {
+            PBLOG_FATAL << "Could not open pipe! File name: " << pipeName << errno;
+            if (errno == EACCES) {
+                PBLOG_FATAL
+                    << "Pipe error: "
+                    << "A component of the path prefix denies search permission, or write "
+                       "permission is denied on the parent directory of the FIFO to be created.";
+            }
+            if (errno == EEXIST) {
+                PBLOG_FATAL << "Pipe error: "
+                            << "The named file already exists. Please remove file!";
+            }
+            if (errno == ELOOP) {
+                PBLOG_FATAL << "Pipe error: "
+                            << "A loop exists in symbolic links encountered during resolution of "
+                               "the path argument.";
+            }
+            if (errno == ENAMETOOLONG) {
+                PBLOG_FATAL << "Pipe error: "
+                            << "The length of the path argument exceeds {PATH_MAX} or a pathname "
+                               "component is longer than {NAME_MAX}.";
+            }
+            if (errno == ENOENT) {
+                PBLOG_FATAL << "Pipe error: "
+                            << "A component of the path prefix specified by path does not name an "
+                               "existing directory or path is an empty string.";
+            }
+            if (errno == ENOSPC) {
+                PBLOG_FATAL << "Pipe error: "
+                            << "The directory that would contain the new file cannot be extended "
+                               "or the file system is out of file-allocation resources.";
+            }
+            if (errno == ENOTDIR) {
+                PBLOG_FATAL << "Pipe error: "
+                            << "A component of the path prefix is not a directory.";
+            }
+            if (errno == EROFS) {
+                PBLOG_FATAL << "Pipe error: "
+                            << "The named file resides on a read-only file system.";
+            }
+            if (errno == ELOOP) {
+                PBLOG_FATAL << "Pipe error: "
+                            << "More than {SYMLOOP_MAX} symbolic links were encountered during "
+                               "resolution of the path argument.";
+            }
+            if (errno == ENAMETOOLONG) {
+                PBLOG_FATAL << "Pipe error: "
+                            << "As a result of encountering a symbolic link in resolution of the "
+                               "path argument, the length of the substituted pathname string "
+                               "exceeded {PATH_MAX}";
+            }
+            std::exit(EXIT_FAILURE);
+        }
+
+        sortThread = std::make_unique<std::thread>([&]() {
+            int numFiles = 0;
+            int numBlocks = 0;
+            bam_sort(pipeName.c_str(), outputIsSortedStream ? "-" : alnFile.c_str(),
+                     settings.SortThreads, settings.SortMemory, &numFiles, &numBlocks);
+            PBLOG_INFO << "Merged sorted output from " << numFiles << " files and " << numBlocks
+                       << " in-memory blocks";
+        });
+    }
+
     {
         auto qryRdr = BamQuery(qryFile);
 
@@ -471,7 +541,16 @@ int AlignWorkflow::Runner(const CLI::Results& options)
 
         PacBio::Parallel::FireAndForget faf(settings.NumThreads, 3);
 
-        BAM::BamWriter out(settings.Sort ? "unsorted.bam" : alnFile, hdr);
+        BAM::BamWriter::Config bamWriterConfig;
+        std::string bamOutputFileName;
+        if (settings.Sort) {
+            bamOutputFileName = pipeName;
+            bamWriterConfig.useTempFile = false;
+        } else {
+            bamOutputFileName = alnFile;
+            bamWriterConfig.useTempFile = true;
+        }
+        BAM::BamWriter out(bamOutputFileName, hdr, bamWriterConfig);
 
         int32_t i = 0;
         const int32_t chunkSize = settings.ChunkSize;
@@ -605,16 +684,16 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         }
     }
 
+    if (settings.Sort) {
+        unlink(pipeName.c_str());
+        sortThread->join();
+    }
+
     PBLOG_INFO << "Number of Aligned Reads: " << alignedReads;
     PBLOG_INFO << "Number of Alignments: " << s.NumAlns;
     PBLOG_INFO << "Number of Bases: " << s.Bases;
     PBLOG_INFO << "Mean Concordance (mapped) : "
                << std::round(1000.0 * s.Similarity / s.NumAlns) / 10.0 << "%";
-
-    if (settings.Sort) {
-        bam_sort(outputIsSortedStream ? "-" : alnFile.c_str());
-        std::remove("unsorted.bam");
-    }
 
     if (outputIsXML || outputIsJson) {
         BAM::BamFile validationBam(alnFile);
