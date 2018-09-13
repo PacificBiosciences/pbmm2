@@ -5,11 +5,12 @@ native PacBio BAM in ⇨ native PacBio BAM out.</p>
 
 ***
 
-_pbmm2_ is a wrapper for [minimap2](https://github.com/lh3/minimap2).
-Its purpose is to support native PacBio BAM in- and output and provide sets of
-recommended parameters. Extensive testing is yet to be performed before _pbmm2_
-becomes an officially recommended PacBio aligner; until then, please use BLASR
-if you need ISO compliant tools and official PacBio support.
+_pbmm2_ is a SMRT wrapper for [minimap2](https://github.com/lh3/minimap2).
+Its purpose is to support native PacBio BAM in- and output, provide sets of
+recommended parameters, and generate sorted output on-the-fly.
+Extensive testing is yet to be performed before _pbmm2_ becomes an officially
+recommended PacBio aligner; until then, please use BLASR if you need
+ISO compliant tools and official PacBio support.
 
 **This is an early beta!** Expect extreme changes and different output between
 versions until release of the first stable release.
@@ -51,6 +52,11 @@ The output argument is optional. If not provided, BAM output is streamed to stdo
 Usage: pbmm2 align [options] <in.bam|xml> <ref.fa|xml|mmi> [out.aligned.bam|xml]
 ```
 
+#### Sorting
+Sorted output can be generated using `--sort`.
+In addition, `--sort-threads` defines the number of threads used for sorting and
+`--sort-memory` sets the memory used per sorting thread, accepting suffixed `K,M,G`.
+
 #### Following datasets combinations are allowed:
 
 SubreadSet ⟶ AlignmentSet
@@ -72,10 +78,6 @@ pbmm2 align movie.transcriptset.xml hg38.referenceset.xml movie.hg38.transcripta
 ```
 
 ## FAQ
-### How can I get sorted alignments for polishing?
-```sh
-> pbmm2 align movie1.subreadset.xml hg38.mmi hg38.movie1.alignmentset.xml --sort
-```
 
 ### When are `pbi` files created?
 Whenever the output is of type `xml`, a `pbi` file is being generated.
@@ -123,14 +125,14 @@ parameter set, please open a GitHub issue!
 We currently only provide primary and supplementary alignments. If you have an
 use-case that absolutely needs secondary alignments, please open a GitHub issue!
 
-### How do you define mapped accuracy?
-The `--min-accuracy` option, whereas accuracy is defined as
+### How do you define mapped concordance?
+The `--min-identity` option, whereas identity is defined as
 
 ```
-    1.0 - (#Deletions + #Insertions + #Mismatches) / (MappedReferenceSpan - #N)
+    100 - 100 * (#Deletions + #Insertions + #Mismatches) / (MappedReferenceSpan - #N)
 ```
 
-will remove alignments with more unmapped than mapped bases.
+will remove alignments that do not pass provided threshold [0-100]
 You can deactivate this filter with `--min-accuracy 0`.
 
 ### Why is the output different from BLASR?
