@@ -244,6 +244,11 @@ That is:
 ### Can I align FASTA or FASTQ files?
 No. Please use [minimap2](https://github.com/lh3/minimap2) for that.
 
+### Can I perform unrolled alignment?
+If you are interested in unrolled alignments that is, align the full-length
+ZMW read or the HQ region of a ZMW against an unrolled template, please use
+`--zmw` or `--hqregion`. This is beta feature and still in development.
+
 ### How does _pbmm2_ get invoked in pbsmrtpipe?
 The goal was to simplify the interface of _pbmm2_ with pbsmrtpipe.
 The input is polymorphic and the input dataset has to be wrapped into a JSON datastore.

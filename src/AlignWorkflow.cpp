@@ -26,6 +26,7 @@
 #include <pbbam/PbiFile.h>
 #include <pbbam/PbiFilter.h>
 #include <pbbam/PbiFilterQuery.h>
+#include <pbbam/virtual/ZmwReadStitcher.h>
 
 #include <pbcopper/parallel/FireAndForget.h>
 #include <pbcopper/parallel/WorkQueue.h>
@@ -52,6 +53,7 @@ struct Summary
     int32_t NumAlns = 0;
     int64_t Bases = 0;
     double Concordance = 0;
+    std::vector<int32_t> Lengths;
 };
 
 std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
@@ -410,7 +412,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
 
     AlignSettings settings(options);
 
-    BAM::DataSet qryFile;
+    BAM::DataSet inFile;
     std::string refFile;
     std::string outFile;
     std::string alnFile{"-"};
@@ -418,8 +420,14 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     bool isFromXML;
     BAM::DataSet::TypeEnum inputType;
 
-    std::tie(qryFile, refFile, outFile) = CheckPositionalArgs(
+    std::tie(inFile, refFile, outFile) = CheckPositionalArgs(
         options.PositionalArguments(), &settings, &isFromJson, &isFromXML, &inputType);
+
+    if (settings.ZMW && inputType != BAM::DataSet::TypeEnum::SUBREAD) {
+        PBLOG_FATAL << "Option --zmw can only be used with a subreadset.xml containing subread + "
+                       "scraps BAM files.";
+        std::exit(EXIT_FAILURE);
+    }
 
     std::string outputFilePrefix;
     bool outputIsXML = false;
@@ -529,7 +537,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     }
 
     {
-        auto qryRdr = BamQuery(qryFile);
+        auto qryRdr = BamQuery(inFile);
 
         static const std::string fallbackSampleName{"UnnamedSample"};
         const auto SanitizeSampleName = [](const std::string& in) {
@@ -548,7 +556,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         };
 
         std::map<std::string, std::string> movieNameToSampleName;
-        const auto md = qryFile.Metadata();
+        const auto md = inFile.Metadata();
         if (md.HasChild("Collections")) {
             using DataSetElement = PacBio::BAM::internal::DataSetElement;
 
@@ -582,7 +590,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             }
         }
 
-        const auto bamFiles = qryFile.BamFiles();
+        const auto bamFiles = inFile.BamFiles();
         auto hdr = bamFiles.front().Header();
         for (size_t i = 1; i < bamFiles.size(); ++i)
             hdr += bamFiles.at(i).Header();
@@ -643,11 +651,12 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                 std::lock_guard<std::mutex> lock(outputMutex);
                 alignedReads += aligned;
                 for (const auto& aln : *output) {
+                    s.Lengths.emplace_back(aln.NumAlignedBases);
                     s.Bases += aln.NumAlignedBases;
                     s.Concordance += aln.Concordance;
                     ++s.NumAlns;
                     out.Write(aln.Record);
-                    if (++alignedRecords % 1000 == 0) {
+                    if (++alignedRecords % settings.ChunkSize == 0) {
                         const auto now = std::chrono::steady_clock::now();
                         auto elapsedSecs =
                             std::chrono::duration_cast<std::chrono::seconds>(now - lastTime)
@@ -731,7 +740,8 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             const auto Flush = [&]() {
                 if (!ras.empty()) (*records)[i++] = PickMedian(std::move(ras));
             };
-            for (auto& record : *qryRdr) {
+            auto reader = BamQuery(inFile);
+            for (auto& record : *reader) {
                 const auto nextHoleNumber = record.HoleNumber();
                 const auto nextMovieName = record.MovieName();
                 if (holeNumber != nextHoleNumber || movieName != nextMovieName) {
@@ -749,8 +759,43 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                 ras.emplace_back(record);
             }
             Flush();
+        } else if (settings.HQRegion) {
+            BAM::ZmwReadStitcher reader(inFile);
+            while (reader.HasNext()) {
+                auto r = reader.Next();
+                if (r.HasVirtualRegionType(BAM::VirtualRegionType::HQREGION)) {
+                    auto hqs = r.VirtualRegionsTable(BAM::VirtualRegionType::HQREGION);
+                    if (hqs.empty()) {
+                        PBLOG_WARN << "Skipping ZMW record " << r.FullName()
+                                   << " missing HQ region";
+                    } else if (hqs.size() > 1) {
+                        PBLOG_WARN << "ZMW record " << r.FullName()
+                                   << " has more than one HQ region, will use first";
+                    }
+                    r.Clip(BAM::ClipType::CLIP_TO_QUERY, hqs.at(0).beginPos, hqs.at(0).endPos);
+                }
+                (*records)[i++] = std::move(r);
+                if (i >= chunkSize) {
+                    waiting++;
+                    faf.ProduceWith(Submit, std::move(records));
+                    records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
+                    i = 0;
+                }
+            }
+        } else if (settings.ZMW) {
+            BAM::ZmwReadStitcher reader(inFile);
+            while (reader.HasNext()) {
+                (*records)[i++] = reader.Next();
+                if (i >= chunkSize) {
+                    waiting++;
+                    faf.ProduceWith(Submit, std::move(records));
+                    records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
+                    i = 0;
+                }
+            }
         } else {
-            while (qryRdr->GetNext((*records)[i++])) {
+            auto reader = BamQuery(inFile);
+            while (reader->GetNext((*records)[i++])) {
                 if (i >= chunkSize) {
                     waiting++;
                     faf.ProduceWith(Submit, std::move(records));
@@ -785,6 +830,10 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         sortTiming = sortTime.ElapsedTime();
     }
 
+    int32_t maxMappedLength = 0;
+    for (const auto& l : s.Lengths) {
+        maxMappedLength = std::max(maxMappedLength, l);
+    }
     double meanMappedConcordance = 1.0 * s.Concordance / s.NumAlns;
     if (settings.IsFromRTC) {
         JSON::Json root;
@@ -804,7 +853,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         pbiTiming = pbiTimer.ElapsedTime();
 
         std::string id;
-        const auto xmlName = CreateDataSet(qryFile, refFile, isFromXML, outputFilePrefix, outFile,
+        const auto xmlName = CreateDataSet(inFile, refFile, isFromXML, outputFilePrefix, outFile,
                                            &id, s.NumAlns, s.Bases);
 
         if (outputIsJson) {
@@ -818,7 +867,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             std::ifstream file(alnFile, std::ios::binary | std::ios::ate);
             datastoreFile["fileSize"] = static_cast<int>(file.tellg());
 
-            switch (qryFile.Type()) {
+            switch (inFile.Type()) {
                 case BAM::DataSet::TypeEnum::SUBREAD:
                     datastoreFile["fileTypeId"] = "PacBio.DataSet.AlignmentSet";
                     break;
@@ -849,6 +898,8 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     PBLOG_INFO << "Number of Alignments: " << s.NumAlns;
     PBLOG_INFO << "Number of Bases: " << s.Bases;
     PBLOG_INFO << "Mean Concordance (mapped): " << meanMappedConcordance << "%";
+    PBLOG_INFO << "Max mapped read length : " << maxMappedLength;
+    PBLOG_INFO << "Mean mapped read length : " << (1.0 * s.Bases / s.NumAlns);
 
     PBLOG_INFO << "Index Build/Read Time: " << indexTime.ElapsedTime();
     PBLOG_INFO << "Alignment Time: " << alignmentTime.ElapsedTime();

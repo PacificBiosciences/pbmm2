@@ -31,7 +31,7 @@ PacBio::BAM::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const i
 
 MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
                      const std::string& outputMmi)
-    : NumThreads{settings.NumThreads}
+    : NumThreads{settings.NumThreads}, alnMode_(settings.AlignMode)
 {
     mm_idxopt_init(&IdxOpts);
     switch (settings.AlignMode) {
@@ -47,6 +47,10 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
         case AlignmentMode::ISOSEQ:
             IdxOpts.k = 15;
             IdxOpts.w = 5;
+            break;
+        case AlignmentMode::UNROLLED:
+            IdxOpts.k = 15;
+            IdxOpts.w = 15;
             break;
         default:
             PBLOG_FATAL << "No AlignmentMode --preset selected!";
@@ -102,6 +106,23 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
             MapOpts.zdrop = 200;
             MapOpts.zdrop_inv = 100;
             MapOpts.noncan = 5;
+            break;
+        case AlignmentMode::UNROLLED:
+            MapOpts.flag |= MM_F_SPLICE | MM_F_SPLICE_FOR;
+            MapOpts.max_gap = 10000;
+            MapOpts.max_gap_ref = 2000;
+            MapOpts.bw = 2000;
+            MapOpts.a = 1;
+            MapOpts.b = 2;
+            MapOpts.q = 2;
+            MapOpts.e = 1;
+            MapOpts.q2 = 32;
+            MapOpts.e2 = 0;
+            MapOpts.zdrop = 200;
+            MapOpts.zdrop_inv = 100;
+            MapOpts.min_mid_occ = 100;
+            MapOpts.min_dp_max = 200;
+            MapOpts.noncan = 0;
             break;
         default:
             PBLOG_FATAL << "No AlignmentMode --preset selected!";
@@ -174,7 +195,10 @@ std::unique_ptr<std::vector<AlignedRecord>> MM2Helper::Align(
             auto mapped = BamRecord::Mapped(record, refId, refStart, strand, cigar, mapq);
             mapped.Impl().SetSupplementaryAlignment(aln.sam_pri == 0);
             AlignedRecord alnRec{std::move(mapped)};
-            if (filter(alnRec)) result->emplace_back(std::move(alnRec));
+            if (filter(alnRec)) {
+                result->emplace_back(std::move(alnRec));
+                if (alnMode_ == AlignmentMode::UNROLLED) break;
+            }
         }
         *alignedReads += aligned;
         // cleanup
