@@ -80,5 +80,9 @@ pbmm2_lib_deps = [
 subdir('src')
 
 # tests
-pbmm2_cram_script = find_program('cram', required : true)
-subdir('tests')
+if not meson.is_subproject()
+  if get_option('tests')
+    pbmm2_cram_script = find_program('cram', required : true)
+    subdir('tests')
+  endif
+endif
