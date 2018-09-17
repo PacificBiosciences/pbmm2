@@ -38,9 +38,9 @@ const PlainOption LogFile{
 };
 const PlainOption NumThreads{
     "numthreads",
-    { "j", "num-threads" },
-    "Number of Threads for Alignment",
-    "Number of threads used for alignment, 0 means autodetection.",
+    { "j", "total-threads" },
+    "Number of Threads",
+    "Total number of threads for alignment and sorting, 0 means autodetection (>1 with --sort).",
     CLI::Option::IntType(0)
 };
 const PlainOption MinPercConcordance{
@@ -202,10 +202,10 @@ const PlainOption Pbi{
 };
 const PlainOption SortThreads{
     "sort_threads",
-    { "sort-threads" },
-    "Number of threads used for sorting",
-    "Number of threads used for sorting.",
-    CLI::Option::IntType(2)
+    { "sort-threads-perc" },
+    "Percentage of threads used for sorting",
+    "Percentage of threads used exclusively for sorting (between 0-50).",
+    CLI::Option::IntType(25)
 };
 const PlainOption SortMemory{
     "sort_memory",
@@ -229,7 +229,6 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     , ChunkSize(options[OptionNames::ChunkSize])
     , MedianFilter(options[OptionNames::MedianFilter])
     , Sort(options[OptionNames::Sort])
-    , SortThreads(options[OptionNames::SortThreads])
     , SortMemory(PlainOption::SizeStringToInt(options[OptionNames::SortMemory].get<std::string>()))
 {
     MM2Settings::Kmer = options[OptionNames::Kmer];
@@ -259,6 +258,25 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     const std::map<std::string, AlignmentMode> alignModeMap{{"SUBREAD", AlignmentMode::SUBREADS},
                                                             {"ISOSEQ", AlignmentMode::ISOSEQ}};
     MM2Settings::AlignMode = alignModeMap.at(options[OptionNames::AlignModeOpt].get<std::string>());
+
+    if (Sort) {
+        int sortThreadPerc = options[OptionNames::SortThreads];
+        if (sortThreadPerc > 50)
+            PBLOG_WARN
+                << "Please allocate less than 50% of threads for sorting. Currently allocated: "
+                << sortThreadPerc << "%!";
+
+        if (MM2Settings::NumThreads < 2) {
+            PBLOG_WARN << "Please allocate more than 2 threads in total. Enforcing to 2 threads!";
+            MM2Settings::NumThreads = 2;
+        }
+
+        SortThreads = std::max(
+            static_cast<int>(std::floor(MM2Settings::NumThreads * sortThreadPerc / 100.0)), 1);
+        MM2Settings::NumThreads = std::max(MM2Settings::NumThreads - SortThreads, 1);
+        PBLOG_INFO << "Using " << MM2Settings::NumThreads << " threads for alignments and "
+                   << SortThreads << " threads for sorting.";
+    }
 }
 
 int32_t AlignSettings::ThreadCount(int32_t n)
@@ -281,14 +299,17 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         OptionNames::VersionOption,
         OptionNames::LogFile,
         OptionNames::LogLevelOption,
-        OptionNames::NumThreads,
         OptionNames::ChunkSize,
     });
 
     i.AddGroup("Sorting Options", {
         OptionNames::Sort,
-        OptionNames::SortThreads,
         OptionNames::SortMemory,
+    });
+
+    i.AddGroup("Threading Options", {
+        OptionNames::NumThreads,
+        OptionNames::SortThreads,
     });
 
     i.AddGroup("Parameter Set Options", {

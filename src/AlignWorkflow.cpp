@@ -510,7 +510,8 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             int numFiles = 0;
             int numBlocks = 0;
             bam_sort(pipeName.c_str(), outputIsSortedStream ? "-" : alnFile.c_str(),
-                     settings.SortThreads, settings.SortMemory, &numFiles, &numBlocks);
+                     settings.SortThreads, settings.SortThreads + settings.NumThreads,
+                     settings.SortMemory, &numFiles, &numBlocks);
             PBLOG_INFO << "Merged sorted output from " << numFiles << " files and " << numBlocks
                        << " in-memory blocks";
         });
@@ -682,6 +683,8 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         while (waiting) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
+        PBLOG_DEBUG << "Alignment finished, merging sorted chunks using "
+                    << (settings.NumThreads + settings.SortThreads) << " threads.";
     }
 
     if (settings.Sort) {
