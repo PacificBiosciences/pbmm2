@@ -560,6 +560,8 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         std::mutex outputMutex;
         int64_t alignedRecords = 0;
         std::atomic_int waiting{0};
+        const auto firstTime = std::chrono::steady_clock::now();
+        auto lastTime = std::chrono::steady_clock::now();
         auto Submit = [&](const std::unique_ptr<std::vector<BAM::BamRecord>>& recs) {
             int32_t aligned = 0;
             auto output = mm2helper.Align(recs, filter, &aligned);
@@ -572,8 +574,20 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                     ++s.NumAlns;
                     out.Write(aln.Record);
                     if (++alignedRecords % 1000 == 0) {
-                        PBLOG_DEBUG << "#Reads, #Alignments: " << alignedReads << ", "
-                                    << alignedRecords;
+                        const auto now = std::chrono::steady_clock::now();
+                        auto elapsedSecs =
+                            std::chrono::duration_cast<std::chrono::seconds>(now - lastTime)
+                                .count();
+                        if (elapsedSecs > 5) {
+                            lastTime = now;
+                            auto elapsedSecTotal =
+                                std::chrono::duration_cast<std::chrono::seconds>(now - firstTime)
+                                    .count() /
+                                60.0;
+                            auto alnsPerMin = std::round(alignedReads / elapsedSecTotal);
+                            PBLOG_DEBUG << "#Reads, #Aln, #RPM: " << alignedReads << ", "
+                                        << alignedRecords << ", " << alnsPerMin;
+                        }
                     }
                 }
             }
