@@ -2,8 +2,15 @@
 
 #pragma once
 
+#ifdef __cplusplus
 extern "C"
 {
+#endif
+
     int bam_sort(const char *inputName, const char *outputName, int numThreads, int memory,
                  int *numFiles, int *numBlocks);
+
+#ifdef __cplusplus
 }
+#endif
+

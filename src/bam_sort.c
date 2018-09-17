@@ -36,13 +36,14 @@ DEALINGS IN THE SOFTWARE.  */
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
-#include "htslib/hts_os.h"
 #include "htslib/khash.h"
 #include "htslib/klist.h"
 #include "htslib/ksort.h"
 #include "htslib/kstring.h"
 #include "htslib/sam.h"
 #include "samtools.h"
+
+#include "bam_sort.h"
 
 static void vprint_error_core(const char *subcommand, const char *format, va_list args,
                               const char *extra)
