@@ -268,12 +268,22 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
 
         if (MM2Settings::NumThreads < 2) {
             PBLOG_WARN << "Please allocate more than 2 threads in total. Enforcing to 2 threads!";
-            MM2Settings::NumThreads = 2;
+            MM2Settings::NumThreads = 1;
+            SortThreads = 1;
+        } else {
+            int origThreads = MM2Settings::NumThreads;
+            SortThreads = std::max(
+                static_cast<int>(std::round(MM2Settings::NumThreads * sortThreadPerc / 100.0)), 1);
+            MM2Settings::NumThreads = std::max(MM2Settings::NumThreads - SortThreads, 1);
+            if (MM2Settings::NumThreads + SortThreads > origThreads) {
+                if (SortThreads > MM2Settings::NumThreads)
+                    --SortThreads;
+                else
+                    --MM2Settings::NumThreads;
+                MM2Settings::NumThreads = std::max(MM2Settings::NumThreads - SortThreads, 1);
+                SortThreads = std::max(SortThreads, 1);
+            }
         }
-
-        SortThreads = std::max(
-            static_cast<int>(std::floor(MM2Settings::NumThreads * sortThreadPerc / 100.0)), 1);
-        MM2Settings::NumThreads = std::max(MM2Settings::NumThreads - SortThreads, 1);
         PBLOG_INFO << "Using " << MM2Settings::NumThreads << " threads for alignments and "
                    << SortThreads << " threads for sorting.";
     }
