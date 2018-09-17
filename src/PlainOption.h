@@ -12,10 +12,10 @@ namespace minimap2 {
 class PlainOption
 {
 public:
-    static int SizeStringToInt(const std::string& s)
+    static int64_t SizeStringToInt(const std::string& s)
     {
         if (isalpha(s[s.size() - 1])) {
-            int size = std::stoi(s.substr(0, s.size() - 1));
+            int64_t size = std::stoll(s.substr(0, s.size() - 1));
             switch (s[s.size() - 1]) {
                 case 'k':
                 case 'K':
@@ -35,7 +35,7 @@ public:
             }
             return size;
         } else {
-            return std::stoi(s);
+            return std::stoll(s);
         }
     }
 

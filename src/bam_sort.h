@@ -8,9 +8,8 @@ extern "C"
 #endif
 
     int bam_sort(const char *inputName, const char *outputName, int numThreads, int merge_threads,
-                 int memory, int *numFiles, int *numBlocks);
+                 size_t memory, int *numFiles, int *numBlocks);
 
 #ifdef __cplusplus
 }
 #endif
-
