@@ -1,7 +1,7 @@
 project(
   'pbmm2',
   ['c', 'cpp'],
-  version : '0.8.2',
+  version : '0.9.0',
   default_options : [
     'buildtype=release',
     'warning_level=3',
@@ -10,10 +10,7 @@ project(
   license : 'BSD-3',
   meson_version : '>= 0.46.0')
 
-############
-# CXXFLAGS #
-############
-
+# CXXFLAGS
 pbmm2_flags = []
 cpp = meson.get_compiler('cpp')
 foreach cflag: [
@@ -51,26 +48,24 @@ if get_option('sse41')
   endif
 endif
 
-################
-# dependencies #
-################
+# dependencies
 
-# threads
+## threads
 pbmm2_thread_dep = dependency('threads', required : true)
 
-# boost
+## boost
 pbmm2_boost_dep = dependency('boost', required : true)
 
-# zlib
+## zlib
 pbmm2_zlib_dep = dependency('zlib', fallback : ['zlib', 'zlib_dep'])
 
-# pbbam
+## pbbam
 pbmm2_pbbam_dep = dependency('pbbam', fallback : ['pbbam', 'pbbam_dep'])
 
-# pbcopper
+## pbcopper
 pbmm2_pbcopper_dep = dependency('pbcopper', fallback : ['pbcopper', 'pbcopper_dep'])
 
-# minimap2
+## minimap2
 pbmm2_minimap2_dep = dependency('minimap2', fallback : ['minimap2', 'mm2_dep'])
 
 pbmm2_lib_deps = [
@@ -81,8 +76,13 @@ pbmm2_lib_deps = [
   pbmm2_pbcopper_dep,
   pbmm2_minimap2_dep]
 
-#####################
-# sources + library #
-#####################
-
+# sources
 subdir('src')
+
+# tests
+if not meson.is_subproject()
+  if get_option('tests')
+    pbmm2_cram_script = find_program('cram', required : true)
+    subdir('tests')
+  endif
+endif

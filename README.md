@@ -5,11 +5,12 @@ native PacBio BAM in ⇨ native PacBio BAM out.</p>
 
 ***
 
-_pbmm2_ is a wrapper for [minimap2](https://github.com/lh3/minimap2).
-Its purpose is to support native PacBio BAM in- and output and provide sets of
-recommended parameters. Extensive testing is yet to be performed before _pbmm2_
-becomes an officially recommended PacBio aligner; until then, please use BLASR
-if you need ISO compliant tools and official PacBio support.
+_pbmm2_ is a SMRT wrapper for [minimap2](https://github.com/lh3/minimap2).
+Its purpose is to support native PacBio BAM in- and output, provide sets of
+recommended parameters, and generate sorted output on-the-fly.
+Extensive testing is yet to be performed before _pbmm2_ becomes an officially
+recommended PacBio aligner; until then, please use BLASR if you need
+ISO compliant tools and official PacBio support.
 
 **This is an early beta!** Expect extreme changes and different output between
 versions until release of the first stable release.
@@ -22,13 +23,16 @@ Latest version can be installed via bioconda package `pbmm2`.
 Please refer to our [official pbbioconda page](https://github.com/PacificBiosciences/pbbioconda)
 for information on Installation, Support, License, Copyright, and Disclaimer.
 
+## Changelog
+Version **0.9.0**: Add `--sort`, `--preset ISOSEQ`, `--median-filter`
+
 ## Usage
 _pbmm2_ offers following tools
 
 ```
 Tools:
     index      Index reference and store as .mmi file
-    align      Align PacBio reads to a reference
+    align      Align PacBio reads to reference sequences
 ```
 
 ### Index
@@ -45,17 +49,38 @@ Usage: pbmm2 index [options] <ref.fa|xml> <out.mmi>
 ### Align
 The output argument is optional. If not provided, BAM output is streamed to stdout.
 ```
-Usage: pbmm2 align [options] <in.subreads.bam|xml> <ref.fa|xml|mmi> [out.aligned.bam|xml]
+Usage: pbmm2 align [options] <in.bam|xml> <ref.fa|xml|mmi> [out.aligned.bam|xml]
+```
+
+#### Sorting
+Sorted output can be generated using `--sort`.
+In addition, `--sort-threads` defines the number of threads used for sorting and
+`--sort-memory` sets the memory used per sorting thread, accepting suffixed `K,M,G`.
+
+#### Following datasets combinations are allowed:
+
+SubreadSet ⟶ AlignmentSet
+
+```
+pbmm2 align movie.subreadset.xml hg38.referenceset.xml movie.hg38.alignmentset.xml
+```
+
+ConsensusReadSet ⟶ ConsensusAlignmentSet
+
+```
+pbmm2 align movie.consensusreadset.xml hg38.referenceset.xml movie.hg38.consensusalignmentset.xml
+```
+
+TranscriptSet ⟶ TranscriptAlignmentSet
+
+```
+pbmm2 align movie.transcriptset.xml hg38.referenceset.xml movie.hg38.transcriptalignmentset.xml
 ```
 
 ## FAQ
-### How can I get sorted alignments for polishing?
-```sh
-> pbmm2 align movie1.subreadset.xml hg38.mmi | samtools sort > hg38.movie1.sorted.bam
-> pbindex hg38.movie1.sorted.bam
-```
-Do not forget to provide `samtools sort` sufficient number of threads and memory
-per thread.
+
+### When are `pbi` files created?
+Whenever the output is of type `xml`, a `pbi` file is being generated.
 
 ### What are parameter sets and how can I override them?
 Per default, _pbmm2_ uses recommended parameter sets to simplify the plethora
@@ -64,11 +89,9 @@ of possible combinations. For this, we currently offer:
 ```
   --preset  Set alignment mode:
              - "SUBREAD" -k 19 -w 10 -d 5 -D 4 -i 56 -I 1 -A 2 -B 5 -z 400 -Z 50 -r 2000
+             - "ISOSEQ" -k 15 -w 5 -d 2 -i 32 -D 1 -I 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000
             Default ["SUBREAD"]
 ```
-
-Prime examples for other parameter sets are
-`ISOFORM` or `CCS` mapping; work in progress.
 
 If you want to override any of the parameters of your chosen set,
 please use the respective options:
@@ -87,6 +110,14 @@ please use the respective options:
   -r   Bandwidth used in chaining and DP-based alignment. [-1]
 ```
 
+For `ISOSEQ`, you can override additional parameters:
+
+```
+  -G                  Max intron length (changes -r). [-1]
+  -C                  Cost for a non-canonical GT-AG splicing. [-1]
+  --no-splice-flank   Do not prefer splice flanks GT-AG.
+  ```
+
 If you have suggestions for our default parameters or ideas for a new
 parameter set, please open a GitHub issue!
 
@@ -94,14 +125,14 @@ parameter set, please open a GitHub issue!
 We currently only provide primary and supplementary alignments. If you have an
 use-case that absolutely needs secondary alignments, please open a GitHub issue!
 
-### I can't find large SVs!
-The `--min-accuracy` option, whereas accuracy is defined as
+### How do you define mapped concordance?
+The `--min-identity` option, whereas identity is defined as
 
 ```
-    1.0 - (#Deletions + #Insertions + #Mismatches) / MappedReferenceSpan
+    100 - 100 * (#Deletions + #Insertions + #Mismatches) / (MappedReferenceSpan - #N)
 ```
 
-will remove alignments with more unmapped than mapped bases.
+will remove alignments that do not pass provided threshold [0-100]
 You can deactivate this filter with `--min-accuracy 0`.
 
 ### Why is the output different from BLASR?

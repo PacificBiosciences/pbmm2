@@ -18,18 +18,23 @@ struct AlignSettings : MM2Settings
 {
     const std::string CLI;
     const std::vector<std::string> InputFiles;
+    bool IsFromRTC;
 
     // alignment output filters
-    float MinAccuracy;
+    float MinPercConcordance;
     int32_t MinAlignmentLength;
-
-    bool Pbi;
 
     std::string LogFile;
     Logging::LogLevel LogLevel;
 
     const std::string SampleName;
     int32_t ChunkSize;
+
+    bool MedianFilter;
+
+    bool Sort;
+    int SortThreads;
+    int64_t SortMemory;
 
     /// Parses the provided CLI::Results and retrieves a defined set of options.
     AlignSettings(const PacBio::CLI::Results& options);

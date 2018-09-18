@@ -24,8 +24,9 @@ extern "C" void mm_idxopt_init(mm_idxopt_t*);
 
 namespace PacBio {
 namespace minimap2 {
-typedef std::unique_ptr<std::vector<PacBio::BAM::BamRecord>> RecordsType;
-typedef std::function<bool(const PacBio::BAM::BamRecord&)> FilterFunc;
+
+class AlignedRecord;
+using FilterFunc = std::function<bool(const AlignedRecord&)>;
 
 struct Index
 {
@@ -55,8 +56,9 @@ public:
               const std::string& outputMmi = "");
 
 public:
-    RecordsType Align(const RecordsType& records, const FilterFunc& filter,
-                      int32_t* alignedReads) const;
+    std::unique_ptr<std::vector<AlignedRecord>> Align(
+        const std::unique_ptr<std::vector<BAM::BamRecord>>& records, const FilterFunc& filter,
+        int32_t* alignedReads) const;
     std::vector<PacBio::BAM::SequenceInfo> SequenceInfos() const;
 
 private:
@@ -64,6 +66,21 @@ private:
     mm_mapopt_t MapOpts;
     const int32_t NumThreads;
     std::unique_ptr<Index> Idx;
+};
+
+class AlignedRecord
+{
+public:
+    AlignedRecord(BAM::BamRecord record);
+
+public:
+    BAM::BamRecord Record;
+    int32_t NumAlignedBases;
+    int32_t Span;
+    double Concordance;
+
+private:
+    void ComputeAccuracyBases();
 };
 }  // namespace minimap2
 }  // namespace PacBio
