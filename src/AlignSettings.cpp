@@ -45,7 +45,7 @@ const PlainOption NumThreads{
 };
 const PlainOption MinPercConcordance{
     "min_perc_concordance",
-    { "c", "min-perc-concordance" },
+    { "c", "min-concordance-perc" },
     "Minimum Alignment Concordance (%)",
     "Minimum alignment concordance in percent.",
     CLI::Option::FloatType(75)

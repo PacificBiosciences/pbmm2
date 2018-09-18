@@ -697,8 +697,9 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         while (waiting) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
-        PBLOG_DEBUG << "Alignment finished, merging sorted chunks using "
-                    << (settings.NumThreads + settings.SortThreads) << " threads.";
+        if (settings.Sort)
+            PBLOG_DEBUG << "Alignment finished, merging sorted chunks using "
+                        << (settings.NumThreads + settings.SortThreads) << " threads.";
     }
 
     if (settings.Sort) {
