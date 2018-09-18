@@ -54,7 +54,7 @@ Usage: pbmm2 align [options] <in.bam|xml> <ref.fa|xml|mmi> [out.aligned.bam|xml]
 
 #### Sorting
 Sorted output can be generated using `--sort`.
-In addition, `--sort-threads` defines the number of threads used for sorting and
+In addition, `--sort-threads-perc` defines the percentage of threads used for sorting and
 `--sort-memory` sets the memory used per sorting thread, accepting suffixed `K,M,G`.
 
 #### Following datasets combinations are allowed:
@@ -126,19 +126,57 @@ We currently only provide primary and supplementary alignments. If you have an
 use-case that absolutely needs secondary alignments, please open a GitHub issue!
 
 ### How do you define mapped concordance?
-The `--min-identity` option, whereas identity is defined as
+The `--min-concordance-perc` option, whereas concordance is defined as
 
 ```
     100 - 100 * (#Deletions + #Insertions + #Mismatches) / (MappedReferenceSpan - #N)
 ```
 
-will remove alignments that do not pass provided threshold [0-100]
-You can deactivate this filter with `--min-accuracy 0`.
+will remove alignments that do not pass the provided threshold in percent.
+You can deactivate this filter with `--min-concordance-perc 0`.
 
 ### Why is the output different from BLASR?
 As for any two alignments of the same data with different mappers, alignments
 will differ. This is because of many reasons, but mainly a combination of
 different scoring functions and seeding techniques.
+
+### How does sorting work?
+We integrated `samtools sort` code into _pbmm2_ to use it as on-the-fly sorting.
+This allows _pbmm2_ to skip writing unaligned BAM as output and thus save
+one round-trip of writing and reading unaligned BAM to disk, minimizing disk IO
+pressure.
+
+### Isn't `pbmm2 unsorted` + `samtools sort` faster than `pbmm2 --sort`?
+Yes it is up to ~2x faster than on-the-fly sorting. If you have sufficient
+disk space and are not worried about disk IO pressure on your filesystem,
+feel free to sort on your own. Keep in mind, scalability is not only about
+runtime, but also disk IO.
+
+### Can I get alignment statistics?
+If you use `--log-level INFO`, after alignment is done, you get following
+alignment metrics:
+
+```
+Number of Aligned Reads: 1529671
+Number of Alignments: 3087717
+Number of Bases: 28020786811
+Mean Concordance (mapped) : 88.4%
+```
+
+### Can I get progress output?
+If you use `--log-level DEBUG`, you will following reports:
+
+```
+#Reads, #Aln, #RPM: 1462688, 2941000, 37393
+#Reads, #Aln, #RPM: 1465877, 2948000, 37379
+#Reads, #Aln, #RPM: 1469103, 2955000, 37350
+```
+
+That is:
+
+* number of reads processed,
+* number of alignments generated,
+* reads per minute processed.
 
 ## Acknowledgements
 Many thanks to Heng Li for a pleasant API experience and
