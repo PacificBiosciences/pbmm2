@@ -12,6 +12,7 @@
 #include <tuple>
 #include <vector>
 
+#include <pbcopper/json/JSON.h>
 #include <pbcopper/logging/Logging.h>
 #include <pbcopper/utility/FileUtils.h>
 
@@ -713,6 +714,15 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     double meanMappedConcordance = 1.0 * s.Concordance / s.NumAlns;
     PBLOG_INFO << "Mean Concordance (mapped) : " << meanMappedConcordance << "%";
 
+    if (settings.IsFromRTC) {
+        JSON::Json root;
+        root["mapped_concordance_percentage"] = meanMappedConcordance;
+        root["num_aligned_reads"] = alignedReads;
+        root["num_alignments"] = s.NumAlns;
+        root["num_aligned_bases"] = s.Bases;
+        std::ofstream out(".pbmm2_stats.json");
+        out << root.dump(2);
+    }
 
     if (outputIsXML || outputIsJson) {
         BAM::BamFile validationBam(alnFile);
