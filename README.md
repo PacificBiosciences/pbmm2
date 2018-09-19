@@ -555,9 +555,9 @@ as time to results is lower.
 Do not produce any reports. Useful if only the demultiplexed BAM is of interest.
 
 ## Quality Control
-For quality control, we offer three R scripts to help you troubleshoot your
-data. The first two are for low multiplex data.
-The third is for high plex data, easily showing 384 barcodes.
+For quality control, we offer two R scripts to help you troubleshoot your
+data. The first is for low multiplex data.
+The second is for high plex data, easily showing 384 barcodes.
 
 ### `report_detail.R`
 
@@ -647,22 +647,8 @@ Number of adapters:
 
 <img src="img/plots/detail_num_adapters.png" width="886px">
 
-### `counts_detail.R`
-
-The second is for multiple `counts` files: `scripts/r/counts_detail.R`.
-This script cannot be called from the CLI yet, to be implemented.
-
-#### ZMW Counts
-Single plot:
-
-<img src="img/plots/counts_nogroup.png" width="886px">
-
-Grouped by barcode into facets:
-
-<img src="img/plots/counts_group.png" width="886px">
-
 ### `report_summary.R`
-The third script is for high-plex data in one `lima.report` file:
+The second script is for high-plex data in one `lima.report` file:
 `scripts/r/report_summary.R`.
 
 Example:

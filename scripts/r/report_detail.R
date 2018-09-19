@@ -41,6 +41,8 @@ count_labeller <- function(value){
   sapply(value,function(x) { paste(x,  " / ZMWs ", reportCounts[reportCounts$BarcodePair==x,]$n,sep="")})
 }
 
+tryCatch({report$ScoresCombined = sapply(report$ScoresCombined,function(x) list(as.numeric(unlist(strsplit(x,",")))))},error=function(e){})
+names(report$ScoresCombined) = c()
 tryCatch({report$ReadLengths = sapply(report$ReadLengths,function(x) list(as.numeric(unlist(strsplit(x,",")))))},error=function(e){})
 names(report$ReadLengths) = c()
 report$HQLength = sapply(report$ReadLengths,sum)
@@ -77,6 +79,8 @@ titration_pass = report %>% filter(Barcoded, PassedFilters) %>% filter(BarcodePa
 titration_pass$Filter = "PASS"
 
 readLengthsUnnested = report %>% select(ReadLengths, Barcoded) %>% unnest(ReadLengths)
+scoresCombinedUnnested = report %>% select(ScoresCombined, PassedFilters, BarcodePair) %>% filter(BarcodePair %in% unique_bps$BarcodePair) %>% mutate(Filter = PassedFilters) %>% mutate(Filter=ifelse(Filter==0,"NONE","PASS")) %>% unnest(ScoresCombined)
+refSpans = report %>% select(NumBarcodedRegionsPassed, PassedFilters, BarcodePair) %>% filter(BarcodePair %in% unique_bps$BarcodePair) %>% mutate(Filter = PassedFilters) %>% mutate(Filter=ifelse(Filter==0,"NONE","PASS"))
 
 dpi = 150
 facetHeight = max(nrow(unique_bps)+1,4)/4*5+1
@@ -169,6 +173,22 @@ g = ggplot(reportFilteredADP, geom='none', aes(group = BarcodePair)) +
                                                    c(as.numeric(names(table(reportFilteredADP$NumAdapters))[1:length(names(table(reportFilteredADP$NumAdapters)))]))))+
   ylab("Number of ZMWs") + xlab("Mean Score")
 ggsave(paste0("detail_scores_per_adapter.",output),g,width=facetWidth,height=facetHeight,dpi=dpi,units="cm",limitsize = FALSE)
+
+g = ggplot(scoresCombinedUnnested, aes(group = BarcodePair)) +
+  facet_wrap(~BarcodePair,scales = "free_y",ncol=4)+
+  coord_cartesian(xlim=c(0,100))+
+  geom_histogram(binwidth=5,aes(ScoresCombined,group=Filter,fill=Filter),color="grey",alpha=.15)+
+  theme_light() +
+  ylab("Number of ZMWs") + xlab("Individual Scores")
+ggsave(paste0("detail_individual_scores.",output),g,width=facetWidth,height=facetHeight,dpi=dpi,units="cm",limitsize = FALSE)
+
+g = ggplot(refSpans, aes(group = BarcodePair)) +
+  facet_wrap(~BarcodePair,scales = "free_y",ncol=4)+
+  # coord_cartesian(xlim=c(0,100))+
+  geom_histogram(binwidth=1,aes(NumBarcodedRegionsPassed,group=Filter,fill=Filter),color="grey",alpha=.15)+
+  theme_light() +
+  ylab("Number of ZMWs") + xlab("Number of scoring barcode regions")
+ggsave(paste0("detail_scoring_regions.",output),g,width=facetWidth,height=facetHeight,dpi=dpi,units="cm",limitsize = FALSE)
 
 q = quantile(numadapters$NumAdapters,0.999)
 g = ggplot(numadapters, aes(group = BarcodePair, x = NumAdapters)) +
