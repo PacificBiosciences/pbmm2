@@ -77,7 +77,10 @@ The sort order is defined by the barcode indices, lowest first.
 
 ## Latest Version
 
-Version **1.7.1**: Fix rare-care PBI generation bug, included in SMRT Link 6.0.0
+Version **1.8.0**:
+  * Add clip lengths as `bx` tag
+  * Enable single-barcode samples
+  * Implicitly call `--dump-clips` in `--isoseq` mode
 
 [Full changelog here](#full-changelog)
 
@@ -954,6 +957,10 @@ false positives.
 
 ## Full Changelog
 
+ * 1.8.0:
+   * Add clip lengths as `bx` tag
+   * Enable single-barcode samples
+   * Implicitly call `--dump-clips` in `--isoseq` mode
  * 1.7.1: Fix rare-care PBI generation bug, included in SMRT Link 6.0.0
  * 1.7.0: Fix corner-case bug
  * 1.6.1: Fix `--min-end-score` in combination with `--isoseq`
