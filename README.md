@@ -129,7 +129,7 @@ use-case that absolutely needs secondary alignments, please open a GitHub issue!
 The `--min-concordance-perc` option, whereas concordance is defined as
 
 ```
-    100 - 100 * (#Deletions + #Insertions + #Mismatches) / (MappedReferenceSpan - #N)
+    100 - 100 * (#Deletions + #Insertions + #Mismatches) / (AlignEndInRead - AlignStartInRead)
 ```
 
 will remove alignments that do not pass the provided threshold in percent.
