@@ -146,11 +146,16 @@ This allows _pbmm2_ to skip writing unaligned BAM as output and thus save
 one round-trip of writing and reading unaligned BAM to disk, minimizing disk IO
 pressure.
 
-### Isn't `pbmm2 unsorted` + `samtools sort` faster than `pbmm2 --sort`?
-Yes it is up to ~2x faster than on-the-fly sorting. If you have sufficient
-disk space and are not worried about disk IO pressure on your filesystem,
-feel free to sort on your own. Keep in mind, scalability is not only about
-runtime, but also disk IO.
+### Is `pbmm2 unsorted` + `samtools sort` faster than `pbmm2 --sort`?
+This highly depends on your filesystem.
+Our tests are showing that there is no clear winner;
+runtimes differ up to 10% in either directions, depending on read length distribution,
+genome length and complexity, disk IO pressure, and possibly further unknown factors.
+For very small genomes post-alignment sorting is faster,
+but for larger genomes like rice or human on-the-fly sorting is faster.
+Keep in mind, scalability is not only about runtime, but also disk IO pressure.
+
+We recommend to use on-the-fly sorting via `pbmm2 align --sort`.
 
 ### Can I get alignment statistics?
 If you use `--log-level INFO`, after alignment is done, you get following
@@ -177,6 +182,10 @@ That is:
 * number of reads processed,
 * number of alignments generated,
 * reads per minute processed.
+
+## ToDo
+ - Write `SA` tag
+ - Offer `--prefix CCS`
 
 ## Acknowledgements
 Many thanks to Heng Li for a pleasant API experience and
