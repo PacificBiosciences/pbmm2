@@ -226,7 +226,6 @@ void AlignedRecord::ComputeAccuracyBases()
                 mismatch += len;
                 break;
             case BAM::CigarOperationType::REFERENCE_SKIP:
-                n += len;
                 break;
             case BAM::CigarOperationType::SEQUENCE_MATCH:
             case BAM::CigarOperationType::ALIGNMENT_MATCH:
@@ -243,7 +242,7 @@ void AlignedRecord::ComputeAccuracyBases()
                 break;
         }
     }
-    Span = Record.ReferenceEnd() - Record.ReferenceStart() - n;
+    Span = Record.AlignedEnd() - Record.AlignedStart();
     const int32_t nErr = ins + del + mismatch;
     NumAlignedBases = match + ins + mismatch;
     Concordance = 100 * (1.0 - 1.0 * nErr / Span);

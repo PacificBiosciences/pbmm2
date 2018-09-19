@@ -710,8 +710,9 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     PBLOG_INFO << "Number of Aligned Reads: " << alignedReads;
     PBLOG_INFO << "Number of Alignments: " << s.NumAlns;
     PBLOG_INFO << "Number of Bases: " << s.Bases;
-    PBLOG_INFO << "Mean Concordance (mapped) : "
-               << std::round(10.0 * s.Concordance / s.NumAlns) / 10.0 << "%";
+    double meanMappedConcordance = 1.0 * s.Concordance / s.NumAlns;
+    PBLOG_INFO << "Mean Concordance (mapped) : " << meanMappedConcordance << "%";
+
 
     if (outputIsXML || outputIsJson) {
         BAM::BamFile validationBam(alnFile);
