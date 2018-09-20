@@ -238,9 +238,10 @@ std::unique_ptr<BAM::internal::IQuery> BamQuery(const BAM::DataSet& ds)
     return query;
 }
 
-std::string CreateDataSet(const BAM::DataSet& dsIn, const bool isFromXML,
-                          const std::string& outputFile, const std::string& origOutputFile,
-                          std::string* id, size_t numAlignments, size_t numBases)
+std::string CreateDataSet(const BAM::DataSet& dsIn, const std::string& refFile,
+                          const bool isFromXML, const std::string& outputFile,
+                          const std::string& origOutputFile, std::string* id, size_t numAlignments,
+                          size_t numBases)
 {
     using BAM::DataSet;
     using DataSetElement = PacBio::BAM::internal::DataSetElement;
@@ -335,6 +336,8 @@ std::string CreateDataSet(const BAM::DataSet& dsIn, const bool isFromXML,
     BAM::ExternalResource resource(metatype, fileName + ".bam");
     BAM::FileIndex pbi("PacBio.Index.PacBioIndex", fileName + ".bam.pbi");
     resource.FileIndices().Add(pbi);
+    BAM::ExternalResource refResource("PacBio.ReferenceFile.ReferenceFastaFile", refFile);
+    resource.ExternalResources().Add(refResource);
     ds.ExternalResources().Add(resource);
     std::string name;
     if (hasName)
@@ -729,8 +732,8 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         BAM::PbiFile::CreateFrom(validationBam);
 
         std::string id;
-        const auto xmlName =
-            CreateDataSet(qryFile, isFromXML, outputFilePrefix, outFile, &id, s.NumAlns, s.Bases);
+        const auto xmlName = CreateDataSet(qryFile, refFile, isFromXML, outputFilePrefix, outFile,
+                                           &id, s.NumAlns, s.Bases);
 
         if (outputIsJson) {
             JSON::Json datastore;
