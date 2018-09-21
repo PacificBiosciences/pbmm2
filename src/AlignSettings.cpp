@@ -46,15 +46,15 @@ const PlainOption NumThreads{
 const PlainOption MinPercConcordance{
     "min_perc_concordance",
     { "c", "min-concordance-perc" },
-    "Minimum Alignment Concordance (%)",
+    "Minimum Concordance (%)",
     "Minimum alignment concordance in percent.",
-    CLI::Option::FloatType(75)
+    CLI::Option::IntType(70)
 };
 const PlainOption MinAlignmentLength{
     "minalnlength",
     { "l", "min-length" },
-    "Minimum Alignment Length",
-    "Minimum alignment length.",
+    "Minimum Length",
+    "Minimum mapped read length.",
     CLI::Option::IntType(50)
 };
 const PlainOption SampleName{
@@ -214,6 +214,15 @@ const PlainOption SortMemory{
     "Memory per thread for sorting.",
     CLI::Option::StringType("768M")
 };
+const PlainOption SortMemoryTC{
+    "sort_memory_tc",
+    { "sort-memory-tc" },
+    "Memory per thread for sorting",
+    "Memory per thread for sorting.",
+    CLI::Option::StringType("4G"),
+    JSON::Json(nullptr),
+    CLI::OptionFlags::HIDE_FROM_HELP
+};
 // clang-format on
 }  // namespace OptionNames
 
@@ -229,7 +238,6 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     , ChunkSize(options[OptionNames::ChunkSize])
     , MedianFilter(options[OptionNames::MedianFilter])
     , Sort(options[OptionNames::Sort])
-    , SortMemory(PlainOption::SizeStringToInt(options[OptionNames::SortMemory].get<std::string>()))
 {
     MM2Settings::Kmer = options[OptionNames::Kmer];
     MM2Settings::MinimizerWindowSize = options[OptionNames::MinimizerWindowSize];
@@ -250,8 +258,12 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     if (IsFromRTC) {
         requestedNThreads = options.NumProcessors();
         Sort = true;
+        SortMemory =
+            PlainOption::SizeStringToInt(options[OptionNames::SortMemoryTC].get<std::string>());
     } else {
         requestedNThreads = options[OptionNames::NumThreads];
+        SortMemory =
+            PlainOption::SizeStringToInt(options[OptionNames::SortMemory].get<std::string>());
     }
     MM2Settings::NumThreads = ThreadCount(requestedNThreads);
 
@@ -310,6 +322,9 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         OptionNames::LogFile,
         OptionNames::LogLevelOption,
         OptionNames::ChunkSize,
+
+        // hidden
+        OptionNames::SortMemoryTC,
     });
 
     i.AddGroup("Sorting Options", {
@@ -367,9 +382,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     tcTask.NumProcessors(Task::MAX_NPROC);
     tcTask.AddOption(OptionNames::MinPercConcordance);
     tcTask.AddOption(OptionNames::MinAlignmentLength);
-    tcTask.AddOption(OptionNames::Sort);
-    tcTask.AddOption(OptionNames::SortThreads);
-    tcTask.AddOption(OptionNames::SortMemory);
+    tcTask.AddOption(OptionNames::SortMemoryTC);
 
     tcTask.InputFileTypes({
         {
