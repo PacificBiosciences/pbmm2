@@ -531,18 +531,81 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     {
         auto qryRdr = BamQuery(qryFile);
 
+        static const std::string fallbackSampleName{"UnnamedSample"};
+        const auto SanitizeSampleName = [](const std::string& in) {
+            if (in.empty()) return fallbackSampleName;
+
+            auto trimmed = boost::algorithm::trim_copy(in);
+            if (trimmed.empty()) return fallbackSampleName;
+            std::string sanitizedName;
+            for (const char& c : trimmed) {
+                if (c < '!' || c > '~') {
+                    sanitizedName += '_';
+                } else
+                    sanitizedName += c;
+            }
+            return sanitizedName;
+        };
+
+        std::map<std::string, std::string> movieNameToSampleName;
+        const auto md = qryFile.Metadata();
+        if (md.HasChild("Collections")) {
+            using DataSetElement = PacBio::BAM::internal::DataSetElement;
+
+            DataSetElement collections = md.Child<DataSetElement>("Collections");
+            for (const auto& collectionMetaData : collections.Children()) {
+                if (!collectionMetaData.HasAttribute("Context")) {
+                    PBLOG_ERROR << "Cannot parse Context attribute of <CollectionMetadata> "
+                                   "element. Bailing on biosample parsing.";
+                    continue;
+                }
+                std::string movieName = collectionMetaData.Attribute("Context");
+                std::string wellSampleName;
+                std::string bioSampleName;
+                const auto wellSample = collectionMetaData.Child<DataSetElement>("WellSample");
+                if (wellSample.HasAttribute("Name")) wellSampleName = wellSample.Attribute("Name");
+                if (wellSample.HasChild("BioSamples")) {
+                    const auto bioSamples = wellSample.Child<DataSetElement>("BioSamples");
+                    if (bioSamples.HasChild("BioSample")) {
+                        const auto bioSample = bioSamples.Child<DataSetElement>("BioSample");
+                        if (bioSample.HasAttribute("Name"))
+                            bioSampleName = bioSample.Attribute("Name");
+                    }
+                }
+                std::string finalName;
+                if (!bioSampleName.empty())
+                    finalName = bioSampleName;
+                else if (!wellSampleName.empty())
+                    finalName = wellSampleName;
+
+                movieNameToSampleName[movieName] = SanitizeSampleName(finalName);
+            }
+        }
+
         const auto bamFiles = qryFile.BamFiles();
         auto hdr = bamFiles.front().Header();
         for (size_t i = 1; i < bamFiles.size(); ++i)
             hdr += bamFiles.at(i).Header();
 
-        if (!settings.SampleName.empty()) {
-            auto rgs = hdr.ReadGroups();
-            hdr.ClearReadGroups();
-            for (auto& rg : rgs) {
-                rg.Sample(settings.SampleName);
-                hdr.AddReadGroup(rg);
+        bool performOverrideSampleName = !settings.SampleName.empty();
+        std::string overridingSampleName = SanitizeSampleName(settings.SampleName);
+        auto rgs = hdr.ReadGroups();
+        hdr.ClearReadGroups();
+        for (auto& rg : rgs) {
+            if (performOverrideSampleName) {
+                rg.Sample(overridingSampleName);
+            } else if (isFromXML || isFromJson) {
+                if (movieNameToSampleName.find(rg.MovieName()) != movieNameToSampleName.cend()) {
+                    rg.Sample(movieNameToSampleName[rg.MovieName()]);
+                } else {
+                    PBLOG_INFO << "Cannot find biosample name for movie name " << rg.MovieName()
+                               << "! Will use fallback.";
+                    rg.Sample(SanitizeSampleName(""));
+                }
+            } else {
+                rg.Sample(SanitizeSampleName(""));
             }
+            hdr.AddReadGroup(rg);
         }
 
         const auto version = PacBio::Pbmm2Version() + " (commit " + PacBio::Pbmm2GitSha1() + ")";

@@ -62,7 +62,7 @@ const PlainOption SampleName{
     "biosample_name",
     { "sample-name" },
     "Sample Name",
-    "Add sample name to read groups.",
+    "Override sample name (SM field in RG tag) for all read groups. If not provided, sample names derive from the datasets with order of precedence: biosample name, well sample name, \"UnnamedSample\".",
     CLI::Option::StringType()
 };
 const PlainOption AlignModeOpt{
@@ -472,6 +472,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     tcTask.AddOption(OptionNames::MinPercConcordance);
     tcTask.AddOption(OptionNames::MinAlignmentLength);
     tcTask.AddOption(OptionNames::SortMemoryTC);
+    tcTask.AddOption(OptionNames::SampleName);
 
     tcTask.InputFileTypes({
         {
