@@ -26,6 +26,7 @@ struct MM2Settings
     int32_t MaxIntronLength = -1;
     int32_t NonCanon = -1;
     bool NoSpliceFlank = false;
+    bool DisableHPC = false;
 };
 }  // namespace minimap2
 }  // namespace PacBio

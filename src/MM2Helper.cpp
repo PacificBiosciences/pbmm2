@@ -36,6 +36,10 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
     mm_idxopt_init(&IdxOpts);
     switch (settings.AlignMode) {
         case AlignmentMode::SUBREADS:
+            IdxOpts.flag |= MM_I_HPC;
+            IdxOpts.k = 19;
+            IdxOpts.w = 10;
+            break;
         case AlignmentMode::CCS:
             IdxOpts.k = 19;
             IdxOpts.w = 10;
@@ -48,7 +52,7 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
             PBLOG_FATAL << "No AlignmentMode --preset selected!";
             std::exit(EXIT_FAILURE);
     }
-    IdxOpts.flag |= MM_I_HPC;
+    if (settings.DisableHPC && IdxOpts.flag & MM_I_HPC) IdxOpts.flag &= ~MM_I_HPC;
     if (settings.Kmer > 0) IdxOpts.k = settings.Kmer;
     if (settings.MinimizerWindowSize > 0) IdxOpts.w = settings.MinimizerWindowSize;
     IdxOpts.batch_size = 0x7fffffffffffffffL;  // always build a uni-part index
@@ -61,6 +65,16 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
     MapOpts.flag |= MM_F_NO_PRINT_2ND;
     switch (settings.AlignMode) {
         case AlignmentMode::SUBREADS:
+            MapOpts.a = 2;
+            MapOpts.q = 5;
+            MapOpts.q2 = 56;
+            MapOpts.e = 4;
+            MapOpts.e2 = 1;
+            MapOpts.b = 5;
+            MapOpts.zdrop = 400;
+            MapOpts.zdrop_inv = 50;
+            MapOpts.bw = 2000;
+            break;
         case AlignmentMode::CCS:
             MapOpts.a = 2;
             MapOpts.q = 5;
@@ -110,18 +124,20 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
     PBLOG_DEBUG << "Kmer size              : " << Idx->idx_->k;
     PBLOG_DEBUG << "Minimizer window size  : " << Idx->idx_->w;
     PBLOG_DEBUG << "Homopolymer compressed : " << (Idx->idx_->flag & MM_I_HPC);
-    PBLOG_DEBUG << "Deletion gap open      : " << MapOpts.q;
-    PBLOG_DEBUG << "Insertion gap open     : " << MapOpts.q2;
-    PBLOG_DEBUG << "Deletion gap extension : " << MapOpts.e;
-    PBLOG_DEBUG << "Insertion gap extension: " << MapOpts.e2;
-    PBLOG_DEBUG << "Match score            : " << MapOpts.a;
-    PBLOG_DEBUG << "Mismatch penalty       : " << MapOpts.b;
-    PBLOG_DEBUG << "Z-drop                 : " << MapOpts.zdrop;
-    PBLOG_DEBUG << "Z-drop inv             : " << MapOpts.zdrop_inv;
-    PBLOG_DEBUG << "Bandwidth              : " << MapOpts.bw;
-    if (settings.AlignMode == AlignmentMode::ISOSEQ) {
-        PBLOG_DEBUG << "Max ref intron length  : " << MapOpts.max_gap_ref;
-        PBLOG_DEBUG << "Prefer splice flanks   : " << (!settings.NoSpliceFlank ? "yes" : "no");
+    if (outputMmi.empty()) {
+        PBLOG_DEBUG << "Deletion gap open      : " << MapOpts.q;
+        PBLOG_DEBUG << "Insertion gap open     : " << MapOpts.q2;
+        PBLOG_DEBUG << "Deletion gap extension : " << MapOpts.e;
+        PBLOG_DEBUG << "Insertion gap extension: " << MapOpts.e2;
+        PBLOG_DEBUG << "Match score            : " << MapOpts.a;
+        PBLOG_DEBUG << "Mismatch penalty       : " << MapOpts.b;
+        PBLOG_DEBUG << "Z-drop                 : " << MapOpts.zdrop;
+        PBLOG_DEBUG << "Z-drop inv             : " << MapOpts.zdrop_inv;
+        PBLOG_DEBUG << "Bandwidth              : " << MapOpts.bw;
+        if (settings.AlignMode == AlignmentMode::ISOSEQ) {
+            PBLOG_DEBUG << "Max ref intron length  : " << MapOpts.max_gap_ref;
+            PBLOG_DEBUG << "Prefer splice flanks   : " << (!settings.NoSpliceFlank ? "yes" : "no");
+        }
     }
 }
 

@@ -23,8 +23,15 @@ Latest version can be installed via bioconda package `pbmm2`.
 Please refer to our [official pbbioconda page](https://github.com/PacificBiosciences/pbbioconda)
 for information on Installation, Support, License, Copyright, and Disclaimer.
 
-## Changelog
-Version **0.9.0**: Add `--sort`, `--preset ISOSEQ`, `--median-filter`
+## Latest Version
+
+Version **0.10.0**:
+  * Add `--preset CCS`
+  * Allow disabling of homopolymer-compressed k-mer `--no-hpc`
+  * Adjust concordance metric to be identical to SMRT Link
+  * Add reference fasta to dataset output
+
+[Full changelog here](#full-changelog)
 
 ## Usage
 _pbmm2_ offers following tools
@@ -43,7 +50,7 @@ Usage: pbmm2 index [options] <ref.fa|xml> <out.mmi>
 
 **Notes:**
  - If you use an index file, you can't override parameters `-k` and `-w` in `pbmm2 align`!
- - Minimap2 parameter `-H` (homopolymer-compressed k-mer) is always on.
+ - Minimap2 parameter `-H` (homopolymer-compressed k-mer) is always on and can be disabled with `--no-hpc`.
  - You can also use existing minimap2 `.mmi` files in `pbmm2 align`.
 
 ### Align
@@ -88,8 +95,9 @@ of possible combinations. For this, we currently offer:
 
 ```
   --preset  Set alignment mode:
-             - "SUBREAD" -k 19 -w 10 -d 5 -D 4 -i 56 -I 1 -A 2 -B 5 -z 400 -Z 50 -r 2000
-             - "ISOSEQ" -k 15 -w 5 -d 2 -i 32 -D 1 -I 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000
+             - "SUBREAD" -k 19 -w 10 -d 5 -i 56 -D 4 -I 1 -A 2 -B 5 -z 400 -Z 50 -r 2000
+             - "CCS" -k 19 -w 10 --no-hpc -d 5 -i 56 -D 4 -I 1 -A 2 -B 5 -z 400 -Z 50 -r 2000
+             - "ISOSEQ" -k 15 -w 5 --no-hpc -d 2 -i 32 -D 1 -I 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000
             Default ["SUBREAD"]
 ```
 
@@ -97,17 +105,18 @@ If you want to override any of the parameters of your chosen set,
 please use the respective options:
 
 ```
-  -k   k-mer size (no larger than 28). [-1]
-  -w   Minizer window size. [-1]
-  -A   Matching score. [-1]
-  -B   Mismatch penalty. [-1]
-  -d   Deletion gap open penalty. [-1]
-  -i   Insertion gap open penalty. [-1]
-  -D   Deletion gap extension penalty. [-1]
-  -I   Insertion gap extension penalty. [-1]
-  -z   Z-drop score. [-1]
-  -Z   Z-drop inversion score. [-1]
-  -r   Bandwidth used in chaining and DP-based alignment. [-1]
+  -k        k-mer size (no larger than 28). [-1]
+  -w        Minizer window size. [-1]
+  --no-hpc  Disable homopolymer-compressed k-mer (hpc is only activated for SUBREAD mode)
+  -A        Matching score. [-1]
+  -B        Mismatch penalty. [-1]
+  -d        Deletion gap open penalty. [-1]
+  -i        Insertion gap open penalty. [-1]
+  -D        Deletion gap extension penalty. [-1]
+  -I        Insertion gap extension penalty. [-1]
+  -z        Z-drop score. [-1]
+  -Z        Z-drop inversion score. [-1]
+  -r        Bandwidth used in chaining and DP-based alignment. [-1]
 ```
 
 For `ISOSEQ`, you can override additional parameters:
@@ -185,7 +194,13 @@ That is:
 
 ## ToDo
  - Write `SA` tag
- - Offer `--prefix CCS`
+
+## Full Changelog
+
+ * 0.9.0:
+   * Add `--sort`
+   * Add `--preset ISOSEQ`
+   * Add `--median-filter`
 
 ## Acknowledgements
 Many thanks to Heng Li for a pleasant API experience and
