@@ -1,6 +1,7 @@
 pbmm2_cram_test_data = files([
   'baminput.t',
   'jsoninput.t',
+  'nohpc.t',
   'refxml.t'])
 
 test(

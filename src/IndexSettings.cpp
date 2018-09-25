@@ -47,9 +47,9 @@ const PlainOption AlignModeOpt{
     "align_mode",
     { "preset" },
     "Alignment mode",
-    "Set alignment mode:\n  - \"SUBREAD\" -k 19 -w 10\n  - \"ISOSEQ\"  -k 15 -w 5\nDefault",
+    "Set alignment mode:\n  - \"SUBREAD\" -k 19 -w 10\n  - \"CCS\"  -k 19 -w 10 --no-hpc\n  - \"ISOSEQ\"  -k 15 -w 5 --no-hpc\nDefault",
     CLI::Option::StringType("SUBREAD"),
-    {"SUBREAD", "ISOSEQ"}
+    {"SUBREAD", "CCS", "ISOSEQ"}
 };
 const PlainOption Kmer{
     "kmer_size",
@@ -65,6 +65,13 @@ const PlainOption MinimizerWindowSize{
     "Minizer window size.",
     CLI::Option::IntType(-1)
 };
+const PlainOption DisableHPC{
+    "disable_hpc",
+    { "no-hpc" },
+    "Disable Homopolymer-Compressed seeding",
+    "Disable homopolymer-compressed k-mer (hpc is only activated for SUBREAD mode).",
+    CLI::Option::BoolType(false)
+};
 // clang-format on
 }  // namespace OptionNames
 
@@ -76,6 +83,7 @@ IndexSettings::IndexSettings(const PacBio::CLI::Results& options)
 {
     MM2Settings::Kmer = options[OptionNames::Kmer];
     MM2Settings::MinimizerWindowSize = options[OptionNames::MinimizerWindowSize];
+    MM2Settings::DisableHPC = options[OptionNames::DisableHPC];
 
     int32_t requestedNThreads;
     if (options.IsFromRTC()) {
@@ -86,6 +94,7 @@ IndexSettings::IndexSettings(const PacBio::CLI::Results& options)
     MM2Settings::NumThreads = ThreadCount(requestedNThreads);
 
     const std::map<std::string, AlignmentMode> alignModeMap{{"SUBREAD", AlignmentMode::SUBREADS},
+                                                            {"CCS", AlignmentMode::CCS},
                                                             {"ISOSEQ", AlignmentMode::ISOSEQ}};
     MM2Settings::AlignMode = alignModeMap.at(options[OptionNames::AlignModeOpt].get<std::string>());
 }
@@ -119,7 +128,8 @@ PacBio::CLI::Interface IndexSettings::CreateCLI()
 
     i.AddGroup("Parameter Override Options", {
         OptionNames::Kmer,
-        OptionNames::MinimizerWindowSize
+        OptionNames::MinimizerWindowSize,
+        OptionNames::DisableHPC
     });
 
     i.AddPositionalArguments({

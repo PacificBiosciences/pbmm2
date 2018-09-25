@@ -69,10 +69,11 @@ const PlainOption AlignModeOpt{
     { "preset" },
     "Alignment mode",
     "Set alignment mode:\n  - \"SUBREAD\" -k 19 -w 10 -d 5 -i 56 -D 4 -I 1 -A 2 -B 5 -z 400 -Z 50 -r 2000\n"
-    "  - \"ISOSEQ\" -k 15 -w 5 -d 2 -i 32 -D 1 -I 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000\n"
+    "  - \"CCS\" -k 19 -w 10 --no-hpc -d 5 -i 56 -D 4 -I 1 -A 2 -B 5 -z 400 -Z 50 -r 2000\n"
+    "  - \"ISOSEQ\" -k 15 -w 5 --no-hpc -d 2 -i 32 -D 1 -I 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000\n"
     "Default",
     CLI::Option::StringType("SUBREAD"),
-    {"SUBREAD", "ISOSEQ"}
+    {"SUBREAD", "CCS", "ISOSEQ"}
 };
 const PlainOption ChunkSize{
     "chunk_size",
@@ -223,6 +224,13 @@ const PlainOption SortMemoryTC{
     JSON::Json(nullptr),
     CLI::OptionFlags::HIDE_FROM_HELP
 };
+const PlainOption DisableHPC{
+    "disable_hpc",
+    { "no-hpc" },
+    "Disable Homopolymer-Compressed seeding",
+    "Disable homopolymer-compressed k-mer (hpc is only activated for SUBREAD mode).",
+    CLI::Option::BoolType(false)
+};
 // clang-format on
 }  // namespace OptionNames
 
@@ -253,6 +261,7 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     MM2Settings::MaxIntronLength = options[OptionNames::MaxIntronLength];
     MM2Settings::NonCanon = options[OptionNames::NonCanon];
     MM2Settings::NoSpliceFlank = options[OptionNames::NoSpliceFlank];
+    MM2Settings::DisableHPC = options[OptionNames::DisableHPC];
 
     int32_t requestedNThreads;
     if (IsFromRTC) {
@@ -268,7 +277,8 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     MM2Settings::NumThreads = ThreadCount(requestedNThreads);
 
     const std::map<std::string, AlignmentMode> alignModeMap{{"SUBREAD", AlignmentMode::SUBREADS},
-                                                            {"ISOSEQ", AlignmentMode::ISOSEQ}};
+                                                            {"ISOSEQ", AlignmentMode::ISOSEQ},
+                                                            {"CCS", AlignmentMode::CCS}};
     MM2Settings::AlignMode = alignModeMap.at(options[OptionNames::AlignModeOpt].get<std::string>());
 
     if (Sort) {
@@ -344,6 +354,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     i.AddGroup("General Parameter Override Options", {
         OptionNames::Kmer,
         OptionNames::MinimizerWindowSize,
+        OptionNames::DisableHPC,
         OptionNames::MatchScore,
         OptionNames::MismatchPenalty,
         OptionNames::GapOpenDelete,
