@@ -35,8 +35,11 @@
 
 #include <Pbmm2Version.h>
 
+#include <mmpriv.h>
+
 #include "AlignSettings.h"
 #include "MM2Helper.h"
+#include "Timer.h"
 #include "bam_sort.h"
 
 #include "AlignWorkflow.h"
@@ -386,6 +389,7 @@ std::string OutputFilePrefix(const std::string& outputFile)
 
 int AlignWorkflow::Runner(const CLI::Results& options)
 {
+    const Timer startTime;
     std::ofstream logStream;
     const Logging::LogLevel logLevel(options.IsFromRTC() ? options.LogLevel()
                                                          : options["log_level"].get<std::string>());
@@ -446,7 +450,10 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         return true;
     };
 
+    Timer indexTime;
     MM2Helper mm2helper(refFile, settings);
+    indexTime.Freeze();
+    Timer alignmentTime;
 
     Summary s;
     int64_t alignedReads = 0;
@@ -706,17 +713,16 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                         << (settings.NumThreads + settings.SortThreads) << " threads.";
     }
 
+    alignmentTime.Freeze();
+    std::string sortTiming;
     if (settings.Sort) {
+        Timer sortTime;
         unlink(pipeName.c_str());
         sortThread->join();
+        sortTiming = sortTime.ElapsedTime();
     }
 
-    PBLOG_INFO << "Number of Aligned Reads: " << alignedReads;
-    PBLOG_INFO << "Number of Alignments: " << s.NumAlns;
-    PBLOG_INFO << "Number of Bases: " << s.Bases;
     double meanMappedConcordance = 1.0 * s.Concordance / s.NumAlns;
-    PBLOG_INFO << "Mean Concordance (mapped) : " << meanMappedConcordance << "%";
-
     if (settings.IsFromRTC) {
         JSON::Json root;
         root["mapped_concordance_percentage"] = meanMappedConcordance;
@@ -727,9 +733,12 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         out << root.dump(2);
     }
 
+    std::string pbiTiming;
     if (outputIsXML || outputIsJson) {
+        Timer pbiTimer;
         BAM::BamFile validationBam(alnFile);
         BAM::PbiFile::CreateFrom(validationBam);
+        pbiTiming = pbiTimer.ElapsedTime();
 
         std::string id;
         const auto xmlName = CreateDataSet(qryFile, refFile, isFromXML, outputFilePrefix, outFile,
@@ -772,6 +781,21 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             datastoreStream << datastore.dump(2);
         }
     }
+
+    PBLOG_INFO << "Number of Aligned Reads: " << alignedReads;
+    PBLOG_INFO << "Number of Alignments: " << s.NumAlns;
+    PBLOG_INFO << "Number of Bases: " << s.Bases;
+    PBLOG_INFO << "Mean Concordance (mapped) : " << meanMappedConcordance << "%";
+
+    PBLOG_INFO << "Index build/read time : " << indexTime.ElapsedTime();
+    PBLOG_INFO << "Alignment time : " << alignmentTime.ElapsedTime();
+    if (!sortTiming.empty()) PBLOG_INFO << "Sort merge time : " << sortTiming;
+    if (!pbiTiming.empty()) PBLOG_INFO << "PBI generation time : " << pbiTiming;
+    PBLOG_INFO << "Run time : " << startTime.ElapsedTime();
+    PBLOG_INFO << "CPU time : "
+               << Timer::ElapsedTimeFromSeconds(
+                      static_cast<int64_t>(cputime() * 1000 * 1000 * 1000));
+    PBLOG_INFO << "Peak RSS : " << (peakrss() / 1024.0 / 1024.0 / 1024.0) << " GB";
 
     return EXIT_SUCCESS;
 }  // namespace minimap2
