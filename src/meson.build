@@ -29,7 +29,8 @@ pbmm2_cpp_sources = files([
   'AlignSettings.cpp',
   'AlignWorkflow.cpp',
   'IndexSettings.cpp',
-  'IndexWorkflow.cpp'])
+  'IndexWorkflow.cpp',
+  'Timer.cpp'])
 
 pbmm2_cpp_sources += pbmm2_version_sources
 
