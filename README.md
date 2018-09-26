@@ -62,7 +62,7 @@ Usage: pbmm2 align [options] <in.bam|xml> <ref.fa|xml|mmi> [out.aligned.bam|xml]
 #### Sorting
 Sorted output can be generated using `--sort`.
 In addition, `--sort-threads-perc` defines the percentage of threads used for sorting and
-`--sort-memory` sets the memory used per sorting thread, accepting suffixed `K,M,G`.
+`-m,--sort-memory` sets the memory used per sorting thread, accepting suffixed `K,M,G`.
 
 #### Following datasets combinations are allowed:
 

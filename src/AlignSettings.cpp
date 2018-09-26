@@ -210,7 +210,7 @@ const PlainOption SortThreads{
 };
 const PlainOption SortMemory{
     "sort_memory",
-    { "sort-memory" },
+    { "m", "sort-memory" },
     "Memory per thread for sorting",
     "Memory per thread for sorting.",
     CLI::Option::StringType("768M")
