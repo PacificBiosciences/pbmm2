@@ -93,10 +93,13 @@ int main(int argc, char* argv[])
     $ pbmm2 index ref.fasta ref.mmi
     $ pbmm2 align movie.subreads.bam ref.mmi ref.movie.bam
 
-  B. Align reads and generate index on-the-fly
-    $ pbmm2 align movie.subreads.bam ref.fasta ref.movie.bam
+  B. Align reads and sort on-the-fly, with 4 alignment and 2 sort threads
+    $ pbmm2 align movie.subreads.bam ref.fasta ref.movie.bam --sort -j 4 -J 2
 
-  C. Omit output file to stream BAM output to stdout
+  C. Align reads, sort on-the-fly, and create PBI
+    $ pbmm2 align movie.subreadset.xml ref.fasta ref.movie.alignmentset.xml --sort
+
+  D. Omit output file and stream BAM output to stdout
     $ pbmm2 align movie1.subreadset.xml hg38.mmi | samtools sort > hg38.movie1.sorted.bam)"
                   << std::endl;
         return EXIT_SUCCESS;
