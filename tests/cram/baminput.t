@@ -173,3 +173,34 @@
   1
   $ cut -f 8 -d '|' < $CRAMTMP/out_xml_upper.err
   - Output is XML, but of unknown type! Please use alignmentset.xml, consensusalignmentset.xml, or transcriptalignmentset.xml
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sorted.bam --sort -j 2 -J 2 -m 100M --log-level INFO 2>&1| grep INFO
+  *Using 2 threads for alignments, 2 threads for sorting, and 200M bytes RAM for sorting. (glob)
+  *Start reading/building index (glob)
+  *Finished reading/building index (glob)
+  *Merged sorted output from 0 files and 1 in-memory blocks (glob)
+  *Number of Aligned Reads: 52 (glob)
+  *Number of Alignments: 96 (glob)
+  *Number of Bases: 242445 (glob)
+  *Mean Concordance (mapped): 91.4214% (glob)
+  *Index Build/Read Time: * (glob)
+  *Alignment Time: * (glob)
+  *Sort Merge Time: * (glob)
+  *Run Time: * (glob)
+  *CPU Time: * (glob)
+  *Peak RSS: * (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -j 500 2>&1| grep WARN
+  *Requested more threads for alignment (500) than system-wide available* (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/pass2.bam -j 1 -J 500 -m 500G
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail3.bam -j 1 -J 500 --sort
+  *Requested more threads for sorting* (glob)
+  *Requested more threads for sorting* (glob)
+  *Trying to allocate more memory for sorting* (glob)
+  [1]
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail4.bam -j 1 -J 2 --sort -m 100G 2>&1
+  *Trying to allocate more memory for sorting* (glob)
+  [1]

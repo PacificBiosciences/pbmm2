@@ -318,21 +318,28 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     MM2Settings::NumThreads = ThreadCount(requestedNThreads);
 
     int numAvailableCores = std::thread::hardware_concurrency();
-    if (SortThreads > numAvailableCores) {
-        PBLOG_WARN << "Requested more threads for sorting (" << SortThreads
-                   << ") than system-wide available (" << numAvailableCores << ")!";
-    }
+
     if (requestedNThreads == 0) {
         MM2Settings::NumThreads -= SortThreads;
-    }
-
-    if (MM2Settings::NumThreads + SortThreads > numAvailableCores) {
-        PBLOG_WARN << "Requested more threads for sorting (" << SortThreads << ") and alignment ("
-                   << MM2Settings::NumThreads << ") than system-wide available ("
-                   << numAvailableCores << ")";
+    } else {
+        if (requestedNThreads > numAvailableCores) {
+            PBLOG_WARN << "Requested more threads for alignment (" << requestedNThreads
+                       << ") than system-wide available (" << numAvailableCores << ")";
+        }
     }
 
     if (Sort) {
+        if (SortThreads > numAvailableCores) {
+            PBLOG_WARN << "Requested more threads for sorting (" << SortThreads
+                       << ") than system-wide available (" << numAvailableCores << ")!";
+        }
+
+        if (requestedNThreads + SortThreads > numAvailableCores) {
+            PBLOG_WARN << "Requested more threads for sorting (" << SortThreads
+                       << ") and alignment (" << requestedNThreads
+                       << ") than system-wide available (" << numAvailableCores << ")";
+        }
+
         std::string suffix;
         const auto MemoryToHumanReadable = [](int64_t memInBytes, float* roundedMemory,
                                               std::string* suffix) {
@@ -366,9 +373,10 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
         MemoryToHumanReadable(availableMemory, &availFloat, &availSuffix);
 
         if (maxMem > availableMemory) {
-            PBLOG_INFO << "Trying to allocate more memory for sorting (" << maxMemSortFloat
-                       << maxMemSortSuffix << ") than system-wide available (" << availFloat
-                       << availSuffix << ")";
+            PBLOG_FATAL << "Trying to allocate more memory for sorting (" << maxMemSortFloat
+                        << maxMemSortSuffix << ") than system-wide available (" << availFloat
+                        << availSuffix << ")";
+            std::exit(EXIT_FAILURE);
         }
     } else {
         PBLOG_INFO << "Using " << MM2Settings::NumThreads << " threads for alignments.";
