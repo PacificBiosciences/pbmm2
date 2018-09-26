@@ -86,3 +86,14 @@
   $ ls -alh $CRAMTMP/ji_sortedoutstream.json 2> /dev/null | wc -l | sed 's/ //g'
   0
 
+  $ $__PBTEST_PBMM2_EXE align median.json $REF $CRAMTMP/median_json_preset.bam --log-level INFO 2>&1 | grep "Setting to"
+  *Setting to SUBREAD preset (glob)
+
+  $ $__PBTEST_PBMM2_EXE align median.subreadset.json $REF $CRAMTMP/median_json_preset.bam --log-level INFO 2>&1 | grep "Setting to"
+  *Setting to SUBREAD preset (glob)
+
+  $ $__PBTEST_PBMM2_EXE align median.consensusreadset.json $REF $CRAMTMP/median_json_preset.bam --log-level INFO 2>&1 | grep "Setting to"
+  *Setting to CCS preset (glob)
+
+  $ $__PBTEST_PBMM2_EXE align median.transcriptset.json $REF $CRAMTMP/median_json_preset.bam --log-level INFO 2>&1 | grep "Setting to"
+  *Setting to ISOSEQ preset (glob)
