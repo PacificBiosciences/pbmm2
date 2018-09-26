@@ -1,5 +1,6 @@
 // Author: Armin Töpfer
 
+#include <unistd.h>
 #include <map>
 
 #include <Pbmm2Version.h>
@@ -38,9 +39,9 @@ const PlainOption LogFile{
 };
 const PlainOption NumThreads{
     "numthreads",
-    { "j", "total-threads" },
+    { "j", "alignment-threads" },
     "Number of Threads",
-    "Total number of threads for alignment and sorting, 0 means autodetection (>1 with --sort).",
+    "Number of threads used for alignment, 0 means autodetection.",
     CLI::Option::IntType(0)
 };
 const PlainOption MinPercConcordance{
@@ -201,16 +202,25 @@ const PlainOption Pbi{
     "Generate PBI file, only works with --sort.",
     CLI::Option::BoolType(false)
 };
-const PlainOption SortThreads{
-    "sort_threads",
+const PlainOption SortThreadsTC{
+    "sort_threads_tc",
     { "sort-threads-perc" },
     "Percentage of threads used for sorting",
-    "Percentage of threads used exclusively for sorting (between 0-50).",
-    CLI::Option::IntType(25)
+    "Percentage of threads used exclusively for sorting (absolute number of sort threads is capped at 8).",
+    CLI::Option::IntType(25),
+    JSON::Json(nullptr),
+    CLI::OptionFlags::HIDE_FROM_HELP
+};
+const PlainOption SortThreads{
+    "sort_threads",
+    { "J", "sort-threads" },
+    "Number of threads used for sorting",
+    "Number of threads used for sorting.",
+    CLI::Option::IntType(1)
 };
 const PlainOption SortMemory{
     "sort_memory",
-    { "sort-memory" },
+    { "m", "sort-memory" },
     "Memory per thread for sorting",
     "Memory per thread for sorting.",
     CLI::Option::StringType("768M")
@@ -269,46 +279,113 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
         Sort = true;
         SortMemory =
             PlainOption::SizeStringToInt(options[OptionNames::SortMemoryTC].get<std::string>());
+        if (Sort) {
+            int sortThreadPerc = options[OptionNames::SortThreadsTC];
+            if (sortThreadPerc > 50)
+                PBLOG_WARN
+                    << "Please allocate less than 50% of threads for sorting. Currently allocated: "
+                    << sortThreadPerc << "%!";
+
+            if (MM2Settings::NumThreads < 2) {
+                PBLOG_WARN
+                    << "Please allocate more than 2 threads in total. Enforcing to 2 threads!";
+                MM2Settings::NumThreads = 1;
+                SortThreads = 1;
+            } else {
+                int origThreads = MM2Settings::NumThreads;
+                SortThreads =
+                    std::min(std::max(static_cast<int>(std::round(MM2Settings::NumThreads *
+                                                                  sortThreadPerc / 100.0)),
+                                      1),
+                             8);
+                MM2Settings::NumThreads = std::max(MM2Settings::NumThreads - SortThreads, 1);
+                if (MM2Settings::NumThreads + SortThreads > origThreads) {
+                    if (SortThreads > MM2Settings::NumThreads)
+                        --SortThreads;
+                    else
+                        --MM2Settings::NumThreads;
+                    MM2Settings::NumThreads = std::max(MM2Settings::NumThreads - SortThreads, 1);
+                    SortThreads = std::max(SortThreads, 1);
+                }
+            }
+        }
     } else {
         requestedNThreads = options[OptionNames::NumThreads];
         SortMemory =
             PlainOption::SizeStringToInt(options[OptionNames::SortMemory].get<std::string>());
+        SortThreads = options[OptionNames::SortThreads];
     }
     MM2Settings::NumThreads = ThreadCount(requestedNThreads);
+
+    int numAvailableCores = std::thread::hardware_concurrency();
+
+    if (requestedNThreads == 0) {
+        MM2Settings::NumThreads -= SortThreads;
+    } else {
+        if (requestedNThreads > numAvailableCores) {
+            PBLOG_WARN << "Requested more threads for alignment (" << requestedNThreads
+                       << ") than system-wide available (" << numAvailableCores << ")";
+        }
+    }
+
+    if (Sort) {
+        if (SortThreads > numAvailableCores) {
+            PBLOG_WARN << "Requested more threads for sorting (" << SortThreads
+                       << ") than system-wide available (" << numAvailableCores << ")!";
+        }
+
+        if (requestedNThreads + SortThreads > numAvailableCores) {
+            PBLOG_WARN << "Requested more threads for sorting (" << SortThreads
+                       << ") and alignment (" << requestedNThreads
+                       << ") than system-wide available (" << numAvailableCores << ")";
+        }
+
+        std::string suffix;
+        const auto MemoryToHumanReadable = [](int64_t memInBytes, float* roundedMemory,
+                                              std::string* suffix) {
+            static constexpr int64_t ninek = 1000;
+            *roundedMemory = memInBytes;
+            if (memInBytes >> 10 < ninek) {
+                *roundedMemory /= 1000;
+                *suffix = "K";
+            } else if (memInBytes >> 20 < ninek) {
+                *roundedMemory = (memInBytes >> 10) / 1024.0;
+                *suffix = "M";
+            } else if (memInBytes >> 30 < ninek) {
+                *roundedMemory = (memInBytes >> 20) / 1024.0;
+                *suffix = "G";
+            }
+        };
+        int64_t maxMem = SortMemory * SortThreads;
+        float maxMemSortFloat;
+        std::string maxMemSortSuffix;
+        MemoryToHumanReadable(SortMemory * SortThreads, &maxMemSortFloat, &maxMemSortSuffix);
+        PBLOG_INFO << "Using " << MM2Settings::NumThreads << " threads for alignments, "
+                   << SortThreads << " threads for sorting, and " << maxMemSortFloat
+                   << maxMemSortSuffix << " bytes RAM for sorting.";
+
+        auto pages = sysconf(_SC_PHYS_PAGES);
+        auto page_size = sysconf(_SC_PAGE_SIZE);
+        auto availableMemory = pages * page_size;
+
+        float availFloat;
+        std::string availSuffix;
+        MemoryToHumanReadable(availableMemory, &availFloat, &availSuffix);
+
+        if (maxMem > availableMemory) {
+            PBLOG_FATAL << "Trying to allocate more memory for sorting (" << maxMemSortFloat
+                        << maxMemSortSuffix << ") than system-wide available (" << availFloat
+                        << availSuffix << ")";
+            std::exit(EXIT_FAILURE);
+        }
+    } else {
+        PBLOG_INFO << "Using " << MM2Settings::NumThreads << " threads for alignments.";
+    }
 
     const std::map<std::string, AlignmentMode> alignModeMap{{"SUBREAD", AlignmentMode::SUBREADS},
                                                             {"ISOSEQ", AlignmentMode::ISOSEQ},
                                                             {"CCS", AlignmentMode::CCS}};
     MM2Settings::AlignMode = alignModeMap.at(options[OptionNames::AlignModeOpt].get<std::string>());
-
-    if (Sort) {
-        int sortThreadPerc = options[OptionNames::SortThreads];
-        if (sortThreadPerc > 50)
-            PBLOG_WARN
-                << "Please allocate less than 50% of threads for sorting. Currently allocated: "
-                << sortThreadPerc << "%!";
-
-        if (MM2Settings::NumThreads < 2) {
-            PBLOG_WARN << "Please allocate more than 2 threads in total. Enforcing to 2 threads!";
-            MM2Settings::NumThreads = 1;
-            SortThreads = 1;
-        } else {
-            int origThreads = MM2Settings::NumThreads;
-            SortThreads = std::max(
-                static_cast<int>(std::round(MM2Settings::NumThreads * sortThreadPerc / 100.0)), 1);
-            MM2Settings::NumThreads = std::max(MM2Settings::NumThreads - SortThreads, 1);
-            if (MM2Settings::NumThreads + SortThreads > origThreads) {
-                if (SortThreads > MM2Settings::NumThreads)
-                    --SortThreads;
-                else
-                    --MM2Settings::NumThreads;
-                MM2Settings::NumThreads = std::max(MM2Settings::NumThreads - SortThreads, 1);
-                SortThreads = std::max(SortThreads, 1);
-            }
-        }
-        PBLOG_INFO << "Using " << MM2Settings::NumThreads << " threads for alignments and "
-                   << SortThreads << " threads for sorting.";
-    }
 }
 
 int32_t AlignSettings::ThreadCount(int32_t n)
@@ -345,6 +422,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     i.AddGroup("Threading Options", {
         OptionNames::NumThreads,
         OptionNames::SortThreads,
+        OptionNames::SortThreadsTC,
     });
 
     i.AddGroup("Parameter Set Options", {

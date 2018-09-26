@@ -785,17 +785,17 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     PBLOG_INFO << "Number of Aligned Reads: " << alignedReads;
     PBLOG_INFO << "Number of Alignments: " << s.NumAlns;
     PBLOG_INFO << "Number of Bases: " << s.Bases;
-    PBLOG_INFO << "Mean Concordance (mapped) : " << meanMappedConcordance << "%";
+    PBLOG_INFO << "Mean Concordance (mapped): " << meanMappedConcordance << "%";
 
-    PBLOG_INFO << "Index build/read time : " << indexTime.ElapsedTime();
-    PBLOG_INFO << "Alignment time : " << alignmentTime.ElapsedTime();
-    if (!sortTiming.empty()) PBLOG_INFO << "Sort merge time : " << sortTiming;
-    if (!pbiTiming.empty()) PBLOG_INFO << "PBI generation time : " << pbiTiming;
-    PBLOG_INFO << "Run time : " << startTime.ElapsedTime();
-    PBLOG_INFO << "CPU time : "
+    PBLOG_INFO << "Index Build/Read Time: " << indexTime.ElapsedTime();
+    PBLOG_INFO << "Alignment Time: " << alignmentTime.ElapsedTime();
+    if (!sortTiming.empty()) PBLOG_INFO << "Sort Merge Time: " << sortTiming;
+    if (!pbiTiming.empty()) PBLOG_INFO << "PBI Generation Time: " << pbiTiming;
+    PBLOG_INFO << "Run Time: " << startTime.ElapsedTime();
+    PBLOG_INFO << "CPU Time: "
                << Timer::ElapsedTimeFromSeconds(
                       static_cast<int64_t>(cputime() * 1000 * 1000 * 1000));
-    PBLOG_INFO << "Peak RSS : " << (peakrss() / 1024.0 / 1024.0 / 1024.0) << " GB";
+    PBLOG_INFO << "Peak RSS: " << (peakrss() / 1024.0 / 1024.0 / 1024.0) << " GB";
 
     return EXIT_SUCCESS;
 }  // namespace minimap2

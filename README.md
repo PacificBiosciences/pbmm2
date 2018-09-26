@@ -30,6 +30,8 @@ Version **0.10.0**:
   * Allow disabling of homopolymer-compressed k-mer `--no-hpc`
   * Adjust concordance metric to be identical to SMRT Link
   * Add reference fasta to dataset output
+  * Output run timings and peak memory
+  * Change sort CLI UX
 
 [Full changelog here](#full-changelog)
 
@@ -42,14 +44,30 @@ Tools:
     align      Align PacBio reads to reference sequences
 ```
 
+### Typical workflows
+```
+A. Generate index file for reference and reuse it to align reads
+  $ pbmm2 index ref.fasta ref.mmi
+  $ pbmm2 align movie.subreads.bam ref.mmi ref.movie.bam
+
+B. Align reads and sort on-the-fly, with 4 alignment and 2 sort threads
+  $ pbmm2 align movie.subreads.bam ref.fasta ref.movie.bam --sort -j 4 -J 2
+
+C. Align reads, sort on-the-fly, and create PBI
+  $ pbmm2 align movie.subreadset.xml ref.fasta ref.movie.alignmentset.xml --sort
+
+D. Omit output file and stream BAM output to stdout
+  $ pbmm2 align movie1.subreadset.xml hg38.mmi | samtools sort > hg38.movie1.sorted.bam
+```
+
 ### Index
-Indexing is optional, but recommended it you use the same reference multiple times.
+Indexing is optional, but recommended it you use the same reference with the same `--preset` multiple times.
 ```
 Usage: pbmm2 index [options] <ref.fa|xml> <out.mmi>
 ```
 
 **Notes:**
- - If you use an index file, you can't override parameters `-k` and `-w` in `pbmm2 align`!
+ - If you use an index file, you can't override parameters `-k`, `-w`, nor `--no-hpc` in `pbmm2 align`!
  - Minimap2 parameter `-H` (homopolymer-compressed k-mer) is always on and can be disabled with `--no-hpc`.
  - You can also use existing minimap2 `.mmi` files in `pbmm2 align`.
 
@@ -61,8 +79,19 @@ Usage: pbmm2 align [options] <in.bam|xml> <ref.fa|xml|mmi> [out.aligned.bam|xml]
 
 #### Sorting
 Sorted output can be generated using `--sort`.
-In addition, `--sort-threads-perc` defines the percentage of threads used for sorting and
-`--sort-memory` sets the memory used per sorting thread, accepting suffixed `K,M,G`.
+
+In addition, `-J,--sort-threads` defines the number of threads used for on-the-fly sorting.
+The memory allocated per sort thread can be defined with `-m,--sort-memory`, accepting suffixes `K,M,G`.
+
+Benchmarks on human data have shown that 4 threads are recommended, but no more
+than 8 threads can be effectively leveraged, even with 70 cores used for alignment.
+It is recommended to provide more memory to each of a few sort threads, to avoid disk IO,
+than providing less memory to each of many sort threads.
+
+#### Alignment Parallelization
+The number of alignment threads can be specified with `-j` or `--alignment-threads`.
+If not specified, the maximum number of threads will be used, minus one thread for BAM IO
+and minus the number of threads specified for sorting.
 
 #### Following datasets combinations are allowed:
 
@@ -174,7 +203,21 @@ alignment metrics:
 Number of Aligned Reads: 1529671
 Number of Alignments: 3087717
 Number of Bases: 28020786811
-Mean Concordance (mapped) : 88.4%
+Mean Concordance (mapped): 88.4%
+```
+
+### Is there any benchmark information, like timings and peak memory consumption?
+If you use `--log-level INFO`, after alignment is done, you get following
+timing and memory information:
+
+```
+Index build/read time: 22s 327ms
+Alignment time: 5s 523ms
+Sort merge time: 344ms 927us
+PBI generation time: 161ms 120us
+Run time: 28s 392ms
+CPU time: 39s 653ms
+Peak RSS: 12.5847 GB
 ```
 
 ### Can I get progress output?
@@ -191,6 +234,17 @@ That is:
 * number of reads processed,
 * number of alignments generated,
 * reads per minute processed.
+
+### Can I align FASTA or FASTQ files?
+No. Please use [minimap2](https://github.com/lh3/minimap2) for that.
+
+### How does _pbmm2_ get invoked in pbsmrtpipe?
+The goal was to simplify the interface of _pbmm2_ with pbsmrtpipe.
+The input is polymorphic and the input dataset has to be wrapped into a JSON datastore.
+In addition, sorting is always on per default, 4GB memory is used per sort thread, 25% of the
+provided number of threads is used for sorting (but no more than 8 threads), and
+the parameter preset is chosen implicitly by the input dataset. That means, if you
+have a ConsensusReadSet as input wrapped in a datastore, `CCS` preset is automatically used.
 
 ## ToDo
  - Write `SA` tag
