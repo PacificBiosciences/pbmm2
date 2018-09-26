@@ -203,9 +203,9 @@ const PlainOption Pbi{
 };
 const PlainOption SortThreads{
     "sort_threads",
-    { "sort-threads-perc" },
+    { "J", "sort-threads-perc" },
     "Percentage of threads used for sorting",
-    "Percentage of threads used exclusively for sorting (between 0-50).",
+    "Percentage of threads used exclusively for sorting (absolute number of sort threads is capped at 8).",
     CLI::Option::IntType(25)
 };
 const PlainOption SortMemory{
@@ -294,8 +294,10 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
             SortThreads = 1;
         } else {
             int origThreads = MM2Settings::NumThreads;
-            SortThreads = std::max(
-                static_cast<int>(std::round(MM2Settings::NumThreads * sortThreadPerc / 100.0)), 1);
+            SortThreads = std::min(std::max(static_cast<int>(std::round(MM2Settings::NumThreads *
+                                                                        sortThreadPerc / 100.0)),
+                                            1),
+                                   8);
             MM2Settings::NumThreads = std::max(MM2Settings::NumThreads - SortThreads, 1);
             if (MM2Settings::NumThreads + SortThreads > origThreads) {
                 if (SortThreads > MM2Settings::NumThreads)
