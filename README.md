@@ -32,6 +32,7 @@ Version **0.10.0**:
   * Add reference fasta to dataset output
   * Output run timings and peak memory
   * Change sort CLI UX
+  * No overlapping query intervals
 
 [Full changelog here](#full-changelog)
 
@@ -159,9 +160,14 @@ For `ISOSEQ`, you can override additional parameters:
 If you have suggestions for our default parameters or ideas for a new
 parameter set, please open a GitHub issue!
 
-### What about secondary alignments?
-We currently only provide primary and supplementary alignments. If you have an
-use-case that absolutely needs secondary alignments, please open a GitHub issue!
+### What other special parameters are used implicitly?
+To achieve similar alignment behavior like blasr, we use
+
+ - soft clipping with `-Y`
+ - long cigars for tag `CG` with `-L`
+ - `X/=` cigars instead of `M` with `--eqx`
+ - no overlapping query intervals with `-M 0 --mask-level-hard`
+ - no secondary alignments are produced with `--secondary=no`
 
 ### How do you define mapped concordance?
 The `--min-concordance-perc` option, whereas concordance is defined as
