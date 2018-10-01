@@ -63,6 +63,8 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
     MapOpts.flag |= MM_F_LONG_CIGAR;
     MapOpts.flag |= MM_F_EQX;
     MapOpts.flag |= MM_F_NO_PRINT_2ND;
+    MapOpts.flag |= MM_F_HARD_MLEVEL;
+    MapOpts.mask_level = 0;
     switch (settings.AlignMode) {
         case AlignmentMode::SUBREADS:
             MapOpts.a = 2;
