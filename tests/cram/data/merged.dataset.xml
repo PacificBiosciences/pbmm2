@@ -1,0 +1,824 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pbds:SubreadSet xmlns:pbbase="http://pacificbiosciences.com/PacBioBaseDataModel.xsd" 
+    xmlns:pbbase="http://pacificbiosciences.com/PacBioBaseDataModel.xsd" 
+    xmlns:pbdm="http://pacificbiosciences.com/PacBioDataModel.xsd" 
+    xmlns:pbds="http://pacificbiosciences.com/PacBioDatasets.xsd" 
+    xmlns:pbrk="http://pacificbiosciences.com/PacBioReagentKit.xsd" 
+    xmlns:pbsample="http://pacificbiosciences.com/PacBioSampleInfo.xsd" 
+    xmlns:pbpn="http://pacificbiosciences.com/PacBioPartNumbers.xsd" 
+    xmlns:pbmeta="http://pacificbiosciences.com/PacBioCollectionMetadata.xsd" Name="ecolis" Description="Merged dataset from 3 files from 3 original files using DatasetMerger 0.3.0" Tags="subreadset,merged" Version="4.0.1" CreatedAt="2018-09-27T06:58:13.540-07:00" UniqueId="91f46df4-63c5-4c4f-b483-c9ec8f32a5a5" MetaType="PacBio.DataSet.SubreadSet">
+    <pbbase:ExternalResources>
+        <pbbase:ExternalResource Name="subreads bam" Description="Points to the subreads bam file." ResourceId="m54075_180905_233034.subreads.bam" Version="4.0.1" UniqueId="c295fbe4-7e94-4aed-a292-57d169055137" MetaType="PacBio.SubreadFile.SubreadBamFile" TimeStampedName="pacbio_subreadfile_subreadbamfile-180905_235149941">
+        </pbbase:ExternalResource>
+        <pbbase:ExternalResource Name="subreads bam" Description="Points to the subreads bam file." ResourceId="m54075_180905_225130.subreads.bam" Version="4.0.1" UniqueId="4dd2ac67-af7c-4bbf-acc4-00123b359e99" MetaType="PacBio.SubreadFile.SubreadBamFile" TimeStampedName="pacbio_subreadfile_subreadbamfile-180905_231317902">
+        </pbbase:ExternalResource>
+        <pbbase:ExternalResource Name="subreads bam" Description="Points to the subreads bam file." ResourceId="m54075_180905_221350.subreads.bam" Version="4.0.1" UniqueId="560f5502-7418-4563-ae9a-757ce29d9c8f" MetaType="PacBio.SubreadFile.SubreadBamFile" TimeStampedName="pacbio_subreadfile_subreadbamfile-180905_223511120">
+        </pbbase:ExternalResource>
+    </pbbase:ExternalResources>
+    <pbds:DataSets>
+        <pbds:DataSet Name="3260208_188nM-GTAC_4xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494-Cell1" Tags="subreadset" Version="4.0.1" UniqueId="ca4bfe85-3047-433f-a9ce-e8cb63d8b27f" MetaType="PacBio.DataSet.SubreadSet" TimeStampedName="60001-SubreadSetCollection-2015-07-09T09:30:47.833Z">
+            <pbbase:ExternalResources>
+                <pbbase:ExternalResource Name="subreads bam" Description="Points to the subreads bam file." ResourceId="/pbi/collections/326/3260208/r54075_20180905_232954/1_A01/m54075_180905_233034.subreads.bam" Version="4.0.1" UniqueId="c295fbe4-7e94-4aed-a292-57d169055137" MetaType="PacBio.SubreadFile.SubreadBamFile" TimeStampedName="pacbio_subreadfile_subreadbamfile-180905_235149941">
+                    <pbbase:FileIndices>
+                        <pbbase:FileIndex ResourceId="/pbi/collections/326/3260208/r54075_20180905_232954/1_A01/m54075_180905_233034.subreads.bam.pbi" Version="4.0.1" UniqueId="d94686ee-1ba3-44bf-a88f-d6dc9f7105d2" MetaType="PacBio.Index.PacBioIndex" TimeStampedName="pacbio_index_pacbioindex-180905_235149941"/>
+                    </pbbase:FileIndices>
+                    <pbbase:ExternalResources>
+                        <pbbase:ExternalResource Name="scraps bam" Description="Points to the scraps bam file." ResourceId="/pbi/collections/326/3260208/r54075_20180905_232954/1_A01/m54075_180905_233034.scraps.bam" Version="4.0.1" UniqueId="0b2d348d-3f8a-42ff-a411-f4d15c6a1b17" MetaType="PacBio.SubreadFile.ScrapsBamFile" TimeStampedName="pacbio_subreadfile_scrapsbamfile-180905_235149951">
+                            <pbbase:FileIndices>
+                                <pbbase:FileIndex ResourceId="/pbi/collections/326/3260208/r54075_20180905_232954/1_A01/m54075_180905_233034.scraps.bam.pbi" Version="4.0.1" UniqueId="bc93b1a1-e79b-4ad7-8720-f70be0e068da" MetaType="PacBio.Index.PacBioIndex" TimeStampedName="pacbio_index_pacbioindex-180905_235149951"/>
+                            </pbbase:FileIndices>
+                        </pbbase:ExternalResource>
+                        <pbbase:ExternalResource Name="Adapters FASTA" Description="Points to the adapters.fasta file." ResourceId="/pbi/collections/326/3260208/r54075_20180905_232954/1_A01/m54075_180905_233034.adapters.fasta" Version="4.0.1" UniqueId="ec310cf5-9c24-4559-844e-d7250afec232" MetaType="PacBio.SubreadFile.AdapterFastaFile" TimeStampedName="pacbio_subreadfile_adapterfastafile-180905_235149951"/>
+                        <pbbase:ExternalResource Name="Chipstats XML" Description="Points to the summary sts.xml file." ResourceId="/pbi/collections/326/3260208/r54075_20180905_232954/1_A01/m54075_180905_233034.sts.xml" Version="4.0.1" UniqueId="2dcab9e0-af6b-42e7-a5e4-cec77cd39068" MetaType="PacBio.SubreadFile.ChipStatsFile" TimeStampedName="pacbio_subreadfile_chipstatsfile-180905_235149951"/>
+                    </pbbase:ExternalResources>
+                </pbbase:ExternalResource>
+            </pbbase:ExternalResources>
+            <pbds:DataSetMetadata>
+                <pbds:TotalLength>62102073</pbds:TotalLength>
+                <pbds:NumRecords>98316</pbds:NumRecords>
+                <pbmeta:Collections>
+                    <pbmeta:CollectionMetadata CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" UniqueId="ca4bfe85-3047-433f-a9ce-e8cb63d8b27f" MetaType="CollectionMetadata" TimeStampedName="60001-CollectionMetadata-2015-07-09T09:30:47.833Z" Context="m54075_180905_233034" Status="Ready" InstrumentId="60001" InstrumentName="Inst60001">
+                        <pbmeta:InstCtrlVer>6.0.0.SNAPSHOT39495</pbmeta:InstCtrlVer>
+                        <pbmeta:SigProcVer>6.0.0.SNAPSHOT39495</pbmeta:SigProcVer>
+                        <pbmeta:RunDetails>
+                            <pbmeta:TimeStampedName>r54075_20180905_232954</pbmeta:TimeStampedName>
+                            <pbmeta:Name>3260208_188nM-GTAC_4xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494</pbmeta:Name>
+                            <pbmeta:CreatedBy>unknown</pbmeta:CreatedBy>
+                            <pbmeta:WhenCreated>2015-07-09T09:30:47.833Z</pbmeta:WhenCreated>
+                            <pbmeta:StartedBy>unknown</pbmeta:StartedBy>
+                        </pbmeta:RunDetails>
+                        <pbmeta:WellSample Name="3260208_188nM-GTAC_4xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00">
+                            <pbmeta:WellName>SamplePlate-1-A-1</pbmeta:WellName>
+                            <pbmeta:Concentration>0.0</pbmeta:Concentration>
+                            <pbmeta:InsertSize>0</pbmeta:InsertSize>
+                            <pbmeta:SampleReuseEnabled>false</pbmeta:SampleReuseEnabled>
+                            <pbmeta:StageHotstartEnabled>false</pbmeta:StageHotstartEnabled>
+                            <pbmeta:SizeSelectionEnabled>false</pbmeta:SizeSelectionEnabled>
+                            <pbmeta:UseCount>0</pbmeta:UseCount>
+                        </pbmeta:WellSample>
+                        <pbmeta:Automation Name="manualcellprep.py">
+                            <pbbase:AutomationParameters>
+                                <pbbase:AutomationParameter Name="CouplerLaserPower" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="Double" SimpleValue="7"/>
+                                <pbbase:AutomationParameter Name="MovieLength" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="Double" SimpleValue="15"/>
+                                <pbbase:AutomationParameter Name="Exposure" CreatedAt="2018-03-19T20:02:47.574Z" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="0.01"/>
+                                <pbbase:AutomationParameter Name="SNRCut" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="Double" SimpleValue="2.5"/>
+                                <pbbase:AutomationParameter Name="ActiveLaserPower" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="False"/>
+                                <pbbase:AutomationParameter Name="sequencingPixelROI" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="JSON" SimpleValue="[[0,0,1080,1920]]"/>
+                                <pbbase:AutomationParameter Name="traceFilePixelROI" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="JSON" SimpleValue="[[0,0,8,32],[71,0,8,32],[142,0,8,32],[213,0,8,32],[284,0,8,32],[355,0,8,32],[426,0,8,32],[497,0,8,32],[568,0,8,32],[639,0,8,32],[710,0,8,32],[781,0,8,32],[852,0,8,32],[923,0,8,32],[994,0,8,32],[1072,0,8,32],[0,128,8,32],[71,128,8,32],[142,128,8,32],[213,128,8,32],[284,128,8,32],[355,128,8,32],[426,128,8,32],[497,128,8,32],[568,128,8,32],[639,128,8,32],[710,128,8,32],[781,128,8,32],[852,128,8,32],[923,128,8,32],[994,128,8,32],[1072,128,8,32],[0,256,8,32],[71,256,8,32],[142,256,8,32],[213,256,8,32],[284,256,8,32],[355,256,8,32],[426,256,8,32],[497,256,8,32],[568,256,8,32],[639,256,8,32],[710,256,8,32],[781,256,8,32],[852,256,8,32],[923,256,8,32],[994,256,8,32],[1072,256,8,32],[0,384,8,32],[71,384,8,32],[142,384,8,32],[213,384,8,32],[284,384,8,32],[355,384,8,32],[426,384,8,32],[497,384,8,32],[568,384,8,32],[639,384,8,32],[710,384,8,32],[781,384,8,32],[852,384,8,32],[923,384,8,32],[994,384,8,32],[1072,384,8,32],[0,512,8,32],[71,512,8,32],[142,512,8,32],[213,512,8,32],[284,512,8,32],[355,512,8,32],[426,512,8,32],[497,512,8,32],[568,512,8,32],[639,512,8,32],[710,512,8,32],[781,512,8,32],[852,512,8,32],[923,512,8,32],[994,512,8,32],[1072,512,8,32],[0,640,8,32],[71,640,8,32],[142,640,8,32],[213,640,8,32],[284,640,8,32],[355,640,8,32],[426,640,8,32],[497,640,8,32],[568,640,8,32],[639,640,8,32],[710,640,8,32],[781,640,8,32],[852,640,8,32],[923,640,8,32],[994,640,8,32],[1072,640,8,32],[0,768,8,32],[71,768,8,32],[142,768,8,32],[213,768,8,32],[284,768,8,32],[355,768,8,32],[426,768,8,32],[497,768,8,32],[568,768,8,32],[639,768,8,32],[710,768,8,32],[781,768,8,32],[852,768,8,32],[923,768,8,32],[994,768,8,32],[1072,768,8,32],[0,896,8,32],[71,896,8,32],[142,896,8,32],[213,896,8,32],[284,896,8,32],[355,896,8,32],[426,896,8,32],[497,896,8,32],[568,896,8,32],[639,896,8,32],[710,896,8,32],[781,896,8,32],[852,896,8,32],[923,896,8,32],[994,896,8,32],[1072,896,8,32],[0,1024,8,32],[71,1024,8,32],[142,1024,8,32],[213,1024,8,32],[284,1024,8,32],[355,1024,8,32],[426,1024,8,32],[497,1024,8,32],[568,1024,8,32],[639,1024,8,32],[710,1024,8,32],[781,1024,8,32],[852,1024,8,32],[923,1024,8,32],[994,1024,8,32],[1072,1024,8,32],[0,1152,8,32],[71,1152,8,32],[142,1152,8,32],[213,1152,8,32],[284,1152,8,32],[355,1152,8,32],[426,1152,8,32],[497,1152,8,32],[568,1152,8,32],[639,1152,8,32],[710,1152,8,32],[781,1152,8,32],[852,1152,8,32],[923,1152,8,32],[994,1152,8,32],[1072,1152,8,32],[0,1280,8,32],[71,1280,8,32],[142,1280,8,32],[213,1280,8,32],[284,1280,8,32],[355,1280,8,32],[426,1280,8,32],[497,1280,8,32],[568,1280,8,32],[639,1280,8,32],[710,1280,8,32],[781,1280,8,32],[852,1280,8,32],[923,1280,8,32],[994,1280,8,32],[1072,1280,8,32],[0,1408,8,32],[71,1408,8,32],[142,1408,8,32],[213,1408,8,32],[284,1408,8,32],[355,1408,8,32],[426,1408,8,32],[497,1408,8,32],[568,1408,8,32],[639,1408,8,32],[710,1408,8,32],[781,1408,8,32],[852,1408,8,32],[923,1408,8,32],[994,1408,8,32],[1072,1408,8,32],[0,1536,8,32],[71,1536,8,32],[142,1536,8,32],[213,1536,8,32],[284,1536,8,32],[355,1536,8,32],[426,1536,8,32],[497,1536,8,32],[568,1536,8,32],[639,1536,8,32],[710,1536,8,32],[781,1536,8,32],[852,1536,8,32],[923,1536,8,32],[994,1536,8,32],[1072,1536,8,32],[0,1664,8,32],[71,1664,8,32],[142,1664,8,32],[213,1664,8,32],[284,1664,8,32],[355,1664,8,32],[426,1664,8,32],[497,1664,8,32],[568,1664,8,32],[639,1664,8,32],[710,1664,8,32],[781,1664,8,32],[852,1664,8,32],[923,1664,8,32],[994,1664,8,32],[1072,1664,8,32],[0,1792,8,32],[71,1792,8,32],[142,1792,8,32],[213,1792,8,32],[284,1792,8,32],[355,1792,8,32],[426,1792,8,32],[497,1792,8,32],[568,1792,8,32],[639,1792,8,32],[710,1792,8,32],[781,1792,8,32],[852,1792,8,32],[923,1792,8,32],[994,1792,8,32],[1072,1792,8,32],[0,1888,8,32],[71,1888,8,32],[142,1888,8,32],[213,1888,8,32],[284,1888,8,32],[355,1888,8,32],[426,1888,8,32],[497,1888,8,32],[568,1888,8,32],[639,1888,8,32],[710,1888,8,32],[781,1888,8,32],[852,1888,8,32],[923,1888,8,32],[994,1888,8,32],[1072,1888,8,32]]"/>
+                                <pbbase:AutomationParameter Name="CellAtStage" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="True"/>
+                                <pbbase:AutomationParameter Name="SkipAlignment" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="False"/>
+                                <pbbase:AutomationParameter Name="UseStageHotStart" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="False"/>
+                                <pbbase:AutomationParameter Name="CellNFCIndex" ValueDataType="Int32" SimpleValue="1"/>
+                                <pbbase:AutomationParameter Name="CollectionNumber" ValueDataType="Int32" SimpleValue="0"/>
+                                <pbbase:AutomationParameter Name="HasN2Switch" ValueDataType="Boolean" SimpleValue="False"/>
+                                <pbbase:AutomationParameter Name="TipSearchMaxDuration" ValueDataType="Int32" SimpleValue="576"/>
+                            </pbbase:AutomationParameters>
+                            <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                        </pbmeta:Automation>
+                        <pbmeta:CollectionNumber>0</pbmeta:CollectionNumber>
+                        <pbmeta:CellIndex>0</pbmeta:CellIndex>
+                        <pbmeta:SetNumber>0</pbmeta:SetNumber>
+                        <pbmeta:CellPac Name="SMRT® Cell 1M v2 LR (4/Pack)" Description="The Sequel SMRT Cell 1M (4/Pack) are nanofabricated consumables each patterned with 1,000,000 wells called zero-mode waveguides (ZMWs). They are packaged together in a streamlined 4 SMRT Cell format (4/tray). One SMRT Cell is utilized in each sequencing reaction, and experiments can be run in single or in batch mode, giving your projects a greater level of flexibility." Version="2.0" PartNumber="101-008-001" LotNumber="321693" Barcode="BA233119" ExpirationDate="2018-06-08" MovieTimeGrade="LR">
+                            <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                            <pbbase:ChipLayout>SequEL_4.0_RTO3</pbbase:ChipLayout>
+                        </pbmeta:CellPac>
+                        <pbmeta:ControlKit Name="Sequel® DNA Internal Control 2.0" Description="The Sequel DNA Internal Control 2.0 contains a fixed template of 2 kb length bound to Sequel Binding Kit 2.0 for use as an internal sequencing control. Reagent quantities provide spike-in controls for a minimum of 24 samples." Tags="Control Kit, CCK" Version="2.0" PartNumber="101-084-300" LotNumber="444444" Barcode="444444101084300062030" ExpirationDate="2030-06-20" ChipType="1mChip">
+                            <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                            <pbbase:CustomSequence>>left_adapter\nTAGAGAGAGAAAAGGAGGAGGAGGCAACAACAACAACTCTCTCTA\n>right_adapter\nTAGAGAGAGAAAAGGAGGAGGAGGCAACAACAACAACTCTCTCTA\n>custom_sequence\nTGTCTAGGTCATCTCAACGTAGCTTTGACATATAACTTATCTAAAGTAATCCCTGCACACCTGTATGCATTATGCTTGCTATACACGCGGACACAGGCATATCATTTATTTTTTGCCATGTCCATTAATTGTTCAATAATTTTACTCACGGTATTTAATTTGATGTTGTGTTATATAGAATTGGAATTAAACTTATAAGGATGCTTAGACGTTGCATTATAAAAGTTTATGTACTAAGTATTTAAGACATTGGCATATGATTATAGCTTGACATTATTAAAAATTAATTAATTAAATCTCACACAATACTTATTCAAGACATTTTTACTAAGATAACCAAAGGAATGCGAACAAAATAATACTTAAAATATAAGACTTAGAAGTAATATGATCCAATAGTTACATATAGTACACTAAGTTCCTAAATTATATAACTTTAAAACAAAGTTACGAAATTTGGAAATAATTTTATTTAATCATATTTTCATAATAATGAAATACTGTTTATTTCAGTGGCGAAAAGAGATAATACGATTTTATAGTGATAGAATATCCTTGAAATATCTAAAGATAAAATTAGAAACTTTCTCTTTTCGCTGTAAAGCTATATGACTTAAAAATAACTTATACGCAAAGTATATTGCAGTGGAAACCCAAGAGTATAGTAGCCATGTAATCTCGGGTTCGAAACTACACGCCGCGCACGTAGTCAGATGGTCTGAAACTTGTCTGGGGCTGTTTGTTGACGGATGGAGACTTCACTAAGTGGCGTCAGGCGATGCGCACACACGGGACTCAATCCCGTAGCATGTTATGTGTCGTTCGAAACTCGTGCGTTCGAGATTTACGCCACATTGCCGGCTGGTCCAAGGACGTTATCTACCAGATGATACGGTCCAATTCGTAAGTTTGACTCACATAGTCGCGAACCGCGGAGCTGGAGAACAATAATTACCGGATGATTAGTTGACCATACGCACTATCATGCTCCGTGACTCAGTTTCCGCCATGGAGTTCTCACAGCCCCGTGTGTACCATAACTGCAGTAAGTAAGGACCTTGTTCGGAGGCCGACTCGTATTTCATATGATCTTAGTCTCGCCACCTTATCGCACGAATTGGGGGTGTCTTTTAGCCGACTCCGGCACGATCCGCCGGGAAGTTACTCGACCAGTTGCGGGACGCCCTAGTATGTTCGTATTACGTTCGATGCGTAAGCACCCCAGAGATTTTTGGCGGACGTTTCGGTAAATCATAGTAGAACCGGAGCGGTAAAGCTATTGATAACACGCAGGGACGAGCCAGTCGTCTAAGCTCCTCAGGGGTACCGTTCGCCGGACTACAGCCTGTCCCCGGCGGCCGCAACTGGGCTGCGATCCAGCCCCCGCTCCAAAAGGATGACTCGACCTTGCGCCTCGCGTACTCTGCTCTCGAGCTGTCTCCGTGGGCAATGCCGGCTCACGCTGTGGGGAACCCTGGACGCCCGGGCCGAGCCGACGTGGCCCCGCCCAGGCCTTTTCGTCGATCGCAGCTATGTACCCTGTGCTGGCCAGCGCTACTGCGCCGGCCATTAGCGGTGCGCTCTCGACTCGGCCCCAACGTAGACGGCGTCGCTGGCCGGATTCAAAGAAGTGAGCTACTACCATCGCGTGACGCCCTGCGGGCCTGAGTAACCGTGCACGAAGGACACCCCGTTCGTGGCGGGGGTTGCCTCCGCGACGGTCGCCAACGTTGGGGGTCGGTGCATTCAGGCGACGAGGGACCGCTGGTTTCCGGAGAGCGGCCTGTGCTCACACAGGTGCGGTCCATGGGGCCTGTGGATCCGGTTCTCCCACGCGTAGCGCCGGCGTTAGCATGGACGCTAAATAAGTATACGCCGGCAAAGGGAGTGTAGGCCGGCCCGAGGGCAATCGCGGTTACCGGGGTGGGGGAGCTCCCCGCACCAGCCTTGATGTGGTGTGCGAGCG</pbbase:CustomSequence>
+                        </pbmeta:ControlKit>
+                        <pbmeta:TemplatePrepKit Name="CRISPR/Cas9 Placeholder w/ asymmetric adapters" Description="The SMRTbell® Template Prep Kit contains reagent supplies to perform SMRTbell library preparations of primer-annealed SMRTbell libraries for insert sizes ranging from 500 bp to over 20 kb." Tags="Template Prep Kit, TPK" Version="1.0" PartNumber="100-902-400" LotNumber="333333" Barcode="333333100902400092215" ExpirationDate="2015-09-22" IsRestricted="true" MinInsertSize="500" MaxInsertSize="20000">
+                            <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                            <pbbase:LeftAdaptorSequence>ATCTCTCTCAATTTTTTTTTTTTTTTTTTTTTTTAAGAGAGAGAT</pbbase:LeftAdaptorSequence>
+                            <pbbase:LeftPrimerSequence>aacggaggaggagga</pbbase:LeftPrimerSequence>
+                            <pbbase:RightAdaptorSequence>ATCTCTCTCAACAACAACAACGGAGGAGGAGGAAAAGAGAGAGAT</pbbase:RightAdaptorSequence>
+                            <pbbase:RightPrimerSequence>aacggaggaggagga</pbbase:RightPrimerSequence>
+                        </pbmeta:TemplatePrepKit>
+                        <pbmeta:BindingKit Name="Sequel® Binding Kit 2.0" Description="The Sequel Binding Kit 2.0 contains reagent supplies to bind prepared DNA template libraries to the Sequel Polymerase 2.0 in preparation for sequencing on the Sequel System. The result is a DNA polymerase/template complex. Sequel Binding Kit 1.0 should be used only with Sequel Sequencing Kit 2.0. Reagent quantities support 24 binding reactions." Tags="Binding Kit, BDK" Version="2.0" PartNumber="100-862-200" LotNumber="777777" Barcode="777777100862200062030" ExpirationDate="2030-06-20" ChipType="1mChip">
+                            <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                        </pbmeta:BindingKit>
+                        <pbmeta:SequencingKitPlate Name="Sequel® Dev Sequencing Plate" Description="The DNA Sequencing Kit contains a sequencing reagent plate with chemistry for single molecule real-time sequencing on the PacBio Sequel®. Reagent quantities support 8 sequencing reactions to be used in conjunction with SMRT® Cell 4Pac(s).  (8 Cells max/Each Row supplies reagents for 1 Sequel SMRT Cell)" Tags="Sequencing Kit, SQK" Version="3.0" PartNumber="999-861-800" LotNumber="010765" Barcode="010765999861800030818" ExpirationDate="2018-03-08" IsRestricted="true">
+                            <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                            <pbrk:ReagentTubes Name="Sequel® SMRT®Cell Oil" PartNumber="100-619-600" LotNumber="012197" Barcode="012197100619600033122" ExpirationDate="2022-03-31">
+                                <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                            </pbrk:ReagentTubes>
+                        </pbmeta:SequencingKitPlate>
+                        <pbmeta:Primary>
+                            <pbmeta:AutomationName>SequelAlpha</pbmeta:AutomationName>
+                            <pbmeta:ConfigFileName>SqlPoC_SubCrf_2C2A-t2.xml</pbmeta:ConfigFileName>
+                            <pbmeta:OutputOptions>
+                                <pbmeta:ResultsFolder>326/3260208/r54075_20180905_232954/1_A01/</pbmeta:ResultsFolder>
+                                <pbmeta:CollectionPathUri>/pbi/collections/326/3260208/r54075_20180905_232954/1_A01/</pbmeta:CollectionPathUri>
+                                <pbmeta:CopyFiles>
+                                    <pbmeta:CollectionFileCopy>Trace</pbmeta:CollectionFileCopy>
+                                    <pbmeta:CollectionFileCopy>Fasta</pbmeta:CollectionFileCopy>
+                                    <pbmeta:CollectionFileCopy>Bam</pbmeta:CollectionFileCopy>
+                                    <pbmeta:CollectionFileCopy>StatsH5</pbmeta:CollectionFileCopy>
+                                </pbmeta:CopyFiles>
+                                <pbmeta:Readout>Pulses</pbmeta:Readout>
+                                <pbmeta:MetricsVerbosity>High</pbmeta:MetricsVerbosity>
+                                <pbmeta:TransferResource>
+                                    <pbmeta:Id>srs-pbi-collections</pbmeta:Id>
+                                    <pbmeta:TransferScheme>SRS</pbmeta:TransferScheme>
+                                    <pbmeta:Name>PBI Collections Xfer test using Rsync+SSH</pbmeta:Name>
+                                    <pbmeta:Description>Test Location for writing Transfer services to write to. Should be used by internal tools (PA SIM) and ICS tests</pbmeta:Description>
+                                    <pbmeta:DestPath>/pbi/collections</pbmeta:DestPath>
+                                </pbmeta:TransferResource>
+                            </pbmeta:OutputOptions>
+                        </pbmeta:Primary>
+                        <pbmeta:Secondary>
+                            <pbmeta:AutomationName>NoRS_Standard_Edna.1</pbmeta:AutomationName>
+                            <pbmeta:AutomationParameters>
+                                <pbmeta:AutomationParameter Name="Reference" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="EColi5k_001_BsaI_AS_tc6_scr_tc6_unrolled_circular_12x_l123900"/>
+                            </pbmeta:AutomationParameters>
+                            <pbmeta:CellCountInJob>0</pbmeta:CellCountInJob>
+                        </pbmeta:Secondary>
+                        <pbmeta:UserDefinedFields>
+                            <pbbase:DataEntities Name="LIMS_IMPORT" ValueDataType="String" SimpleValue="1234TestFolder"/>
+                            <pbbase:DataEntities Name="USER" ValueDataType="String" SimpleValue="TestUser"/>
+                            <pbbase:DataEntities ValueDataType="String"/>
+                            <pbbase:DataEntities ValueDataType="String"/>
+                            <pbbase:DataEntities ValueDataType="String"/>
+                            <pbbase:DataEntities ValueDataType="String"/>
+                        </pbmeta:UserDefinedFields>
+                        <pbmeta:ComponentVersions>
+                            <pbmeta:VersionInfo Name="ics" Version="6.0.0.SNAPSHOT39495"/>
+                            <pbmeta:VersionInfo Name="iui" Version="6.0.0.SNAPSHOT39495"/>
+                            <pbmeta:VersionInfo Name="chemistry" Version="6.0.0.SNAPSHOT39452"/>
+                            <pbmeta:VersionInfo Name="pa" Version="6.0.0.SNAPSHOT39495"/>
+                            <pbmeta:VersionInfo Name="paws" Version="6.0.0.SNAPSHOT39495"/>
+                            <pbmeta:VersionInfo Name="ppa" Version="6.0.0.SNAPSHOT39495"/>
+                            <pbmeta:VersionInfo Name="realtime" Version="6.0.0.SNAPSHOT39495"/>
+                            <pbmeta:VersionInfo Name="transfer" Version="6.0.0.SNAPSHOT39495"/>
+                            <pbmeta:VersionInfo Name="smrtlink-analysisservices-gui" Version="6.0.0.45618"/>
+                            <pbmeta:VersionInfo Name="smrtimisc" Version="6.0.0.45621"/>
+                            <pbmeta:VersionInfo Name="smrtlink" Version="6.0.0.45621"/>
+                            <pbmeta:VersionInfo Name="smrttools" Version="6.0.0.45580"/>
+                            <pbmeta:VersionInfo Name="smrtinub" Version="6.0.0.45580"/>
+                            <pbmeta:VersionInfo Name="smrtview" Version="6.0.0.45580"/>
+                        </pbmeta:ComponentVersions>
+                    </pbmeta:CollectionMetadata>
+                </pbmeta:Collections>
+            </pbds:DataSetMetadata>
+        </pbds:DataSet>
+        <pbds:DataSet Name="3260208_188nM-GTAC_3xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494-Cell1" Tags="subreadset" Version="4.0.1" UniqueId="cd8e9b35-e755-4b6b-9878-ba45e6700781" MetaType="PacBio.DataSet.SubreadSet" TimeStampedName="60001-SubreadSetCollection-2015-07-09T09:30:47.833Z">
+            <pbbase:ExternalResources>
+                <pbbase:ExternalResource Name="subreads bam" Description="Points to the subreads bam file." ResourceId="/pbi/collections/326/3260208/r54075_20180905_225050/1_A01/m54075_180905_225130.subreads.bam" Version="4.0.1" UniqueId="4dd2ac67-af7c-4bbf-acc4-00123b359e99" MetaType="PacBio.SubreadFile.SubreadBamFile" TimeStampedName="pacbio_subreadfile_subreadbamfile-180905_231317902">
+                    <pbbase:FileIndices>
+                        <pbbase:FileIndex ResourceId="/pbi/collections/326/3260208/r54075_20180905_225050/1_A01/m54075_180905_225130.subreads.bam.pbi" Version="4.0.1" UniqueId="64c79a19-b288-41d2-811a-9c6cc1849fc0" MetaType="PacBio.Index.PacBioIndex" TimeStampedName="pacbio_index_pacbioindex-180905_231317902"/>
+                    </pbbase:FileIndices>
+                    <pbbase:ExternalResources>
+                        <pbbase:ExternalResource Name="scraps bam" Description="Points to the scraps bam file." ResourceId="/pbi/collections/326/3260208/r54075_20180905_225050/1_A01/m54075_180905_225130.scraps.bam" Version="4.0.1" UniqueId="0d989178-b64d-4cb0-afd3-652c41d8829f" MetaType="PacBio.SubreadFile.ScrapsBamFile" TimeStampedName="pacbio_subreadfile_scrapsbamfile-180905_231317913">
+                            <pbbase:FileIndices>
+                                <pbbase:FileIndex ResourceId="/pbi/collections/326/3260208/r54075_20180905_225050/1_A01/m54075_180905_225130.scraps.bam.pbi" Version="4.0.1" UniqueId="6f52760b-6dfe-4a36-9649-5db5a4b7c6ae" MetaType="PacBio.Index.PacBioIndex" TimeStampedName="pacbio_index_pacbioindex-180905_231317913"/>
+                            </pbbase:FileIndices>
+                        </pbbase:ExternalResource>
+                        <pbbase:ExternalResource Name="Adapters FASTA" Description="Points to the adapters.fasta file." ResourceId="/pbi/collections/326/3260208/r54075_20180905_225050/1_A01/m54075_180905_225130.adapters.fasta" Version="4.0.1" UniqueId="7269c39a-ad57-49de-8594-2d2bb764ad63" MetaType="PacBio.SubreadFile.AdapterFastaFile" TimeStampedName="pacbio_subreadfile_adapterfastafile-180905_231317913"/>
+                        <pbbase:ExternalResource Name="Chipstats XML" Description="Points to the summary sts.xml file." ResourceId="/pbi/collections/326/3260208/r54075_20180905_225050/1_A01/m54075_180905_225130.sts.xml" Version="4.0.1" UniqueId="8dd58fb7-eb40-42f0-a4fa-cbf4ef453f85" MetaType="PacBio.SubreadFile.ChipStatsFile" TimeStampedName="pacbio_subreadfile_chipstatsfile-180905_231317913"/>
+                    </pbbase:ExternalResources>
+                </pbbase:ExternalResource>
+            </pbbase:ExternalResources>
+            <pbds:DataSetMetadata>
+                <pbds:TotalLength>87554036</pbds:TotalLength>
+                <pbds:NumRecords>125023</pbds:NumRecords>
+                <pbmeta:Collections>
+                    <pbmeta:CollectionMetadata CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" UniqueId="cd8e9b35-e755-4b6b-9878-ba45e6700781" MetaType="CollectionMetadata" TimeStampedName="60001-CollectionMetadata-2015-07-09T09:30:47.833Z" Context="m54075_180905_225130" Status="Ready" InstrumentId="60001" InstrumentName="Inst60001">
+                        <pbmeta:InstCtrlVer>6.0.0.SNAPSHOT39495</pbmeta:InstCtrlVer>
+                        <pbmeta:SigProcVer>6.0.0.SNAPSHOT39495</pbmeta:SigProcVer>
+                        <pbmeta:RunDetails>
+                            <pbmeta:TimeStampedName>r54075_20180905_225050</pbmeta:TimeStampedName>
+                            <pbmeta:Name>3260208_188nM-GTAC_3xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494</pbmeta:Name>
+                            <pbmeta:CreatedBy>unknown</pbmeta:CreatedBy>
+                            <pbmeta:WhenCreated>2015-07-09T09:30:47.833Z</pbmeta:WhenCreated>
+                            <pbmeta:StartedBy>unknown</pbmeta:StartedBy>
+                        </pbmeta:RunDetails>
+                        <pbmeta:WellSample Name="3260208_188nM-GTAC_3xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00">
+                            <pbmeta:WellName>SamplePlate-1-A-1</pbmeta:WellName>
+                            <pbmeta:Concentration>0.0</pbmeta:Concentration>
+                            <pbmeta:InsertSize>0</pbmeta:InsertSize>
+                            <pbmeta:SampleReuseEnabled>false</pbmeta:SampleReuseEnabled>
+                            <pbmeta:StageHotstartEnabled>false</pbmeta:StageHotstartEnabled>
+                            <pbmeta:SizeSelectionEnabled>false</pbmeta:SizeSelectionEnabled>
+                            <pbmeta:UseCount>0</pbmeta:UseCount>
+                        </pbmeta:WellSample>
+                        <pbmeta:Automation Name="manualcellprep.py">
+                            <pbbase:AutomationParameters>
+                                <pbbase:AutomationParameter Name="CouplerLaserPower" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="Double" SimpleValue="7"/>
+                                <pbbase:AutomationParameter Name="MovieLength" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="Double" SimpleValue="15"/>
+                                <pbbase:AutomationParameter Name="Exposure" CreatedAt="2018-03-19T20:02:47.574Z" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="0.01"/>
+                                <pbbase:AutomationParameter Name="SNRCut" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="Double" SimpleValue="2.5"/>
+                                <pbbase:AutomationParameter Name="ActiveLaserPower" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="False"/>
+                                <pbbase:AutomationParameter Name="sequencingPixelROI" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="JSON" SimpleValue="[[0,0,1080,1920]]"/>
+                                <pbbase:AutomationParameter Name="traceFilePixelROI" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="JSON" SimpleValue="[[0,0,8,32],[71,0,8,32],[142,0,8,32],[213,0,8,32],[284,0,8,32],[355,0,8,32],[426,0,8,32],[497,0,8,32],[568,0,8,32],[639,0,8,32],[710,0,8,32],[781,0,8,32],[852,0,8,32],[923,0,8,32],[994,0,8,32],[1072,0,8,32],[0,128,8,32],[71,128,8,32],[142,128,8,32],[213,128,8,32],[284,128,8,32],[355,128,8,32],[426,128,8,32],[497,128,8,32],[568,128,8,32],[639,128,8,32],[710,128,8,32],[781,128,8,32],[852,128,8,32],[923,128,8,32],[994,128,8,32],[1072,128,8,32],[0,256,8,32],[71,256,8,32],[142,256,8,32],[213,256,8,32],[284,256,8,32],[355,256,8,32],[426,256,8,32],[497,256,8,32],[568,256,8,32],[639,256,8,32],[710,256,8,32],[781,256,8,32],[852,256,8,32],[923,256,8,32],[994,256,8,32],[1072,256,8,32],[0,384,8,32],[71,384,8,32],[142,384,8,32],[213,384,8,32],[284,384,8,32],[355,384,8,32],[426,384,8,32],[497,384,8,32],[568,384,8,32],[639,384,8,32],[710,384,8,32],[781,384,8,32],[852,384,8,32],[923,384,8,32],[994,384,8,32],[1072,384,8,32],[0,512,8,32],[71,512,8,32],[142,512,8,32],[213,512,8,32],[284,512,8,32],[355,512,8,32],[426,512,8,32],[497,512,8,32],[568,512,8,32],[639,512,8,32],[710,512,8,32],[781,512,8,32],[852,512,8,32],[923,512,8,32],[994,512,8,32],[1072,512,8,32],[0,640,8,32],[71,640,8,32],[142,640,8,32],[213,640,8,32],[284,640,8,32],[355,640,8,32],[426,640,8,32],[497,640,8,32],[568,640,8,32],[639,640,8,32],[710,640,8,32],[781,640,8,32],[852,640,8,32],[923,640,8,32],[994,640,8,32],[1072,640,8,32],[0,768,8,32],[71,768,8,32],[142,768,8,32],[213,768,8,32],[284,768,8,32],[355,768,8,32],[426,768,8,32],[497,768,8,32],[568,768,8,32],[639,768,8,32],[710,768,8,32],[781,768,8,32],[852,768,8,32],[923,768,8,32],[994,768,8,32],[1072,768,8,32],[0,896,8,32],[71,896,8,32],[142,896,8,32],[213,896,8,32],[284,896,8,32],[355,896,8,32],[426,896,8,32],[497,896,8,32],[568,896,8,32],[639,896,8,32],[710,896,8,32],[781,896,8,32],[852,896,8,32],[923,896,8,32],[994,896,8,32],[1072,896,8,32],[0,1024,8,32],[71,1024,8,32],[142,1024,8,32],[213,1024,8,32],[284,1024,8,32],[355,1024,8,32],[426,1024,8,32],[497,1024,8,32],[568,1024,8,32],[639,1024,8,32],[710,1024,8,32],[781,1024,8,32],[852,1024,8,32],[923,1024,8,32],[994,1024,8,32],[1072,1024,8,32],[0,1152,8,32],[71,1152,8,32],[142,1152,8,32],[213,1152,8,32],[284,1152,8,32],[355,1152,8,32],[426,1152,8,32],[497,1152,8,32],[568,1152,8,32],[639,1152,8,32],[710,1152,8,32],[781,1152,8,32],[852,1152,8,32],[923,1152,8,32],[994,1152,8,32],[1072,1152,8,32],[0,1280,8,32],[71,1280,8,32],[142,1280,8,32],[213,1280,8,32],[284,1280,8,32],[355,1280,8,32],[426,1280,8,32],[497,1280,8,32],[568,1280,8,32],[639,1280,8,32],[710,1280,8,32],[781,1280,8,32],[852,1280,8,32],[923,1280,8,32],[994,1280,8,32],[1072,1280,8,32],[0,1408,8,32],[71,1408,8,32],[142,1408,8,32],[213,1408,8,32],[284,1408,8,32],[355,1408,8,32],[426,1408,8,32],[497,1408,8,32],[568,1408,8,32],[639,1408,8,32],[710,1408,8,32],[781,1408,8,32],[852,1408,8,32],[923,1408,8,32],[994,1408,8,32],[1072,1408,8,32],[0,1536,8,32],[71,1536,8,32],[142,1536,8,32],[213,1536,8,32],[284,1536,8,32],[355,1536,8,32],[426,1536,8,32],[497,1536,8,32],[568,1536,8,32],[639,1536,8,32],[710,1536,8,32],[781,1536,8,32],[852,1536,8,32],[923,1536,8,32],[994,1536,8,32],[1072,1536,8,32],[0,1664,8,32],[71,1664,8,32],[142,1664,8,32],[213,1664,8,32],[284,1664,8,32],[355,1664,8,32],[426,1664,8,32],[497,1664,8,32],[568,1664,8,32],[639,1664,8,32],[710,1664,8,32],[781,1664,8,32],[852,1664,8,32],[923,1664,8,32],[994,1664,8,32],[1072,1664,8,32],[0,1792,8,32],[71,1792,8,32],[142,1792,8,32],[213,1792,8,32],[284,1792,8,32],[355,1792,8,32],[426,1792,8,32],[497,1792,8,32],[568,1792,8,32],[639,1792,8,32],[710,1792,8,32],[781,1792,8,32],[852,1792,8,32],[923,1792,8,32],[994,1792,8,32],[1072,1792,8,32],[0,1888,8,32],[71,1888,8,32],[142,1888,8,32],[213,1888,8,32],[284,1888,8,32],[355,1888,8,32],[426,1888,8,32],[497,1888,8,32],[568,1888,8,32],[639,1888,8,32],[710,1888,8,32],[781,1888,8,32],[852,1888,8,32],[923,1888,8,32],[994,1888,8,32],[1072,1888,8,32]]"/>
+                                <pbbase:AutomationParameter Name="CellAtStage" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="True"/>
+                                <pbbase:AutomationParameter Name="SkipAlignment" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="False"/>
+                                <pbbase:AutomationParameter Name="UseStageHotStart" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="False"/>
+                                <pbbase:AutomationParameter Name="CellNFCIndex" ValueDataType="Int32" SimpleValue="1"/>
+                                <pbbase:AutomationParameter Name="CollectionNumber" ValueDataType="Int32" SimpleValue="0"/>
+                                <pbbase:AutomationParameter Name="HasN2Switch" ValueDataType="Boolean" SimpleValue="False"/>
+                                <pbbase:AutomationParameter Name="TipSearchMaxDuration" ValueDataType="Int32" SimpleValue="576"/>
+                            </pbbase:AutomationParameters>
+                            <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                        </pbmeta:Automation>
+                        <pbmeta:CollectionNumber>0</pbmeta:CollectionNumber>
+                        <pbmeta:CellIndex>0</pbmeta:CellIndex>
+                        <pbmeta:SetNumber>0</pbmeta:SetNumber>
+                        <pbmeta:CellPac Name="SMRT® Cell 1M v2 LR (4/Pack)" Description="The Sequel SMRT Cell 1M (4/Pack) are nanofabricated consumables each patterned with 1,000,000 wells called zero-mode waveguides (ZMWs). They are packaged together in a streamlined 4 SMRT Cell format (4/tray). One SMRT Cell is utilized in each sequencing reaction, and experiments can be run in single or in batch mode, giving your projects a greater level of flexibility." Version="2.0" PartNumber="101-008-001" LotNumber="321693" Barcode="BA233119" ExpirationDate="2018-06-08" MovieTimeGrade="LR">
+                            <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                            <pbbase:ChipLayout>SequEL_4.0_RTO3</pbbase:ChipLayout>
+                        </pbmeta:CellPac>
+                        <pbmeta:ControlKit Name="Sequel® DNA Internal Control 2.0" Description="The Sequel DNA Internal Control 2.0 contains a fixed template of 2 kb length bound to Sequel Binding Kit 2.0 for use as an internal sequencing control. Reagent quantities provide spike-in controls for a minimum of 24 samples." Tags="Control Kit, CCK" Version="2.0" PartNumber="101-084-300" LotNumber="444444" Barcode="444444101084300062030" ExpirationDate="2030-06-20" ChipType="1mChip">
+                            <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                            <pbbase:CustomSequence>>left_adapter\nTAGAGAGAGAAAAGGAGGAGGAGGCAACAACAACAACTCTCTCTA\n>right_adapter\nTAGAGAGAGAAAAGGAGGAGGAGGCAACAACAACAACTCTCTCTA\n>custom_sequence\nTGTCTAGGTCATCTCAACGTAGCTTTGACATATAACTTATCTAAAGTAATCCCTGCACACCTGTATGCATTATGCTTGCTATACACGCGGACACAGGCATATCATTTATTTTTTGCCATGTCCATTAATTGTTCAATAATTTTACTCACGGTATTTAATTTGATGTTGTGTTATATAGAATTGGAATTAAACTTATAAGGATGCTTAGACGTTGCATTATAAAAGTTTATGTACTAAGTATTTAAGACATTGGCATATGATTATAGCTTGACATTATTAAAAATTAATTAATTAAATCTCACACAATACTTATTCAAGACATTTTTACTAAGATAACCAAAGGAATGCGAACAAAATAATACTTAAAATATAAGACTTAGAAGTAATATGATCCAATAGTTACATATAGTACACTAAGTTCCTAAATTATATAACTTTAAAACAAAGTTACGAAATTTGGAAATAATTTTATTTAATCATATTTTCATAATAATGAAATACTGTTTATTTCAGTGGCGAAAAGAGATAATACGATTTTATAGTGATAGAATATCCTTGAAATATCTAAAGATAAAATTAGAAACTTTCTCTTTTCGCTGTAAAGCTATATGACTTAAAAATAACTTATACGCAAAGTATATTGCAGTGGAAACCCAAGAGTATAGTAGCCATGTAATCTCGGGTTCGAAACTACACGCCGCGCACGTAGTCAGATGGTCTGAAACTTGTCTGGGGCTGTTTGTTGACGGATGGAGACTTCACTAAGTGGCGTCAGGCGATGCGCACACACGGGACTCAATCCCGTAGCATGTTATGTGTCGTTCGAAACTCGTGCGTTCGAGATTTACGCCACATTGCCGGCTGGTCCAAGGACGTTATCTACCAGATGATACGGTCCAATTCGTAAGTTTGACTCACATAGTCGCGAACCGCGGAGCTGGAGAACAATAATTACCGGATGATTAGTTGACCATACGCACTATCATGCTCCGTGACTCAGTTTCCGCCATGGAGTTCTCACAGCCCCGTGTGTACCATAACTGCAGTAAGTAAGGACCTTGTTCGGAGGCCGACTCGTATTTCATATGATCTTAGTCTCGCCACCTTATCGCACGAATTGGGGGTGTCTTTTAGCCGACTCCGGCACGATCCGCCGGGAAGTTACTCGACCAGTTGCGGGACGCCCTAGTATGTTCGTATTACGTTCGATGCGTAAGCACCCCAGAGATTTTTGGCGGACGTTTCGGTAAATCATAGTAGAACCGGAGCGGTAAAGCTATTGATAACACGCAGGGACGAGCCAGTCGTCTAAGCTCCTCAGGGGTACCGTTCGCCGGACTACAGCCTGTCCCCGGCGGCCGCAACTGGGCTGCGATCCAGCCCCCGCTCCAAAAGGATGACTCGACCTTGCGCCTCGCGTACTCTGCTCTCGAGCTGTCTCCGTGGGCAATGCCGGCTCACGCTGTGGGGAACCCTGGACGCCCGGGCCGAGCCGACGTGGCCCCGCCCAGGCCTTTTCGTCGATCGCAGCTATGTACCCTGTGCTGGCCAGCGCTACTGCGCCGGCCATTAGCGGTGCGCTCTCGACTCGGCCCCAACGTAGACGGCGTCGCTGGCCGGATTCAAAGAAGTGAGCTACTACCATCGCGTGACGCCCTGCGGGCCTGAGTAACCGTGCACGAAGGACACCCCGTTCGTGGCGGGGGTTGCCTCCGCGACGGTCGCCAACGTTGGGGGTCGGTGCATTCAGGCGACGAGGGACCGCTGGTTTCCGGAGAGCGGCCTGTGCTCACACAGGTGCGGTCCATGGGGCCTGTGGATCCGGTTCTCCCACGCGTAGCGCCGGCGTTAGCATGGACGCTAAATAAGTATACGCCGGCAAAGGGAGTGTAGGCCGGCCCGAGGGCAATCGCGGTTACCGGGGTGGGGGAGCTCCCCGCACCAGCCTTGATGTGGTGTGCGAGCG</pbbase:CustomSequence>
+                        </pbmeta:ControlKit>
+                        <pbmeta:TemplatePrepKit Name="CRISPR/Cas9 Placeholder w/ asymmetric adapters" Description="The SMRTbell® Template Prep Kit contains reagent supplies to perform SMRTbell library preparations of primer-annealed SMRTbell libraries for insert sizes ranging from 500 bp to over 20 kb." Tags="Template Prep Kit, TPK" Version="1.0" PartNumber="100-902-400" LotNumber="333333" Barcode="333333100902400092215" ExpirationDate="2015-09-22" IsRestricted="true" MinInsertSize="500" MaxInsertSize="20000">
+                            <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                            <pbbase:LeftAdaptorSequence>ATCTCTCTCAATTTTTTTTTTTTTTTTTTTTTTTAAGAGAGAGAT</pbbase:LeftAdaptorSequence>
+                            <pbbase:LeftPrimerSequence>aacggaggaggagga</pbbase:LeftPrimerSequence>
+                            <pbbase:RightAdaptorSequence>ATCTCTCTCAACAACAACAACGGAGGAGGAGGAAAAGAGAGAGAT</pbbase:RightAdaptorSequence>
+                            <pbbase:RightPrimerSequence>aacggaggaggagga</pbbase:RightPrimerSequence>
+                        </pbmeta:TemplatePrepKit>
+                        <pbmeta:BindingKit Name="Sequel® Binding Kit 2.0" Description="The Sequel Binding Kit 2.0 contains reagent supplies to bind prepared DNA template libraries to the Sequel Polymerase 2.0 in preparation for sequencing on the Sequel System. The result is a DNA polymerase/template complex. Sequel Binding Kit 1.0 should be used only with Sequel Sequencing Kit 2.0. Reagent quantities support 24 binding reactions." Tags="Binding Kit, BDK" Version="2.0" PartNumber="100-862-200" LotNumber="777777" Barcode="777777100862200062030" ExpirationDate="2030-06-20" ChipType="1mChip">
+                            <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                        </pbmeta:BindingKit>
+                        <pbmeta:SequencingKitPlate Name="Sequel® Dev Sequencing Plate" Description="The DNA Sequencing Kit contains a sequencing reagent plate with chemistry for single molecule real-time sequencing on the PacBio Sequel®. Reagent quantities support 8 sequencing reactions to be used in conjunction with SMRT® Cell 4Pac(s).  (8 Cells max/Each Row supplies reagents for 1 Sequel SMRT Cell)" Tags="Sequencing Kit, SQK" Version="3.0" PartNumber="999-861-800" LotNumber="010765" Barcode="010765999861800030818" ExpirationDate="2018-03-08" IsRestricted="true">
+                            <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                            <pbrk:ReagentTubes Name="Sequel® SMRT®Cell Oil" PartNumber="100-619-600" LotNumber="012197" Barcode="012197100619600033122" ExpirationDate="2022-03-31">
+                                <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                            </pbrk:ReagentTubes>
+                        </pbmeta:SequencingKitPlate>
+                        <pbmeta:Primary>
+                            <pbmeta:AutomationName>SequelAlpha</pbmeta:AutomationName>
+                            <pbmeta:ConfigFileName>SqlPoC_SubCrf_2C2A-t2.xml</pbmeta:ConfigFileName>
+                            <pbmeta:OutputOptions>
+                                <pbmeta:ResultsFolder>326/3260208/r54075_20180905_225050/1_A01/</pbmeta:ResultsFolder>
+                                <pbmeta:CollectionPathUri>/pbi/collections/326/3260208/r54075_20180905_225050/1_A01/</pbmeta:CollectionPathUri>
+                                <pbmeta:CopyFiles>
+                                    <pbmeta:CollectionFileCopy>Trace</pbmeta:CollectionFileCopy>
+                                    <pbmeta:CollectionFileCopy>Fasta</pbmeta:CollectionFileCopy>
+                                    <pbmeta:CollectionFileCopy>Bam</pbmeta:CollectionFileCopy>
+                                    <pbmeta:CollectionFileCopy>StatsH5</pbmeta:CollectionFileCopy>
+                                </pbmeta:CopyFiles>
+                                <pbmeta:Readout>Pulses</pbmeta:Readout>
+                                <pbmeta:MetricsVerbosity>High</pbmeta:MetricsVerbosity>
+                                <pbmeta:TransferResource>
+                                    <pbmeta:Id>srs-pbi-collections</pbmeta:Id>
+                                    <pbmeta:TransferScheme>SRS</pbmeta:TransferScheme>
+                                    <pbmeta:Name>PBI Collections Xfer test using Rsync+SSH</pbmeta:Name>
+                                    <pbmeta:Description>Test Location for writing Transfer services to write to. Should be used by internal tools (PA SIM) and ICS tests</pbmeta:Description>
+                                    <pbmeta:DestPath>/pbi/collections</pbmeta:DestPath>
+                                </pbmeta:TransferResource>
+                            </pbmeta:OutputOptions>
+                        </pbmeta:Primary>
+                        <pbmeta:Secondary>
+                            <pbmeta:AutomationName>NoRS_Standard_Edna.1</pbmeta:AutomationName>
+                            <pbmeta:AutomationParameters>
+                                <pbmeta:AutomationParameter Name="Reference" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="EColi5k_001_BsaI_AS_tc6_scr_tc6_unrolled_circular_12x_l123900"/>
+                            </pbmeta:AutomationParameters>
+                            <pbmeta:CellCountInJob>0</pbmeta:CellCountInJob>
+                        </pbmeta:Secondary>
+                        <pbmeta:UserDefinedFields>
+                            <pbbase:DataEntities Name="LIMS_IMPORT" ValueDataType="String" SimpleValue="1234TestFolder"/>
+                            <pbbase:DataEntities Name="USER" ValueDataType="String" SimpleValue="TestUser"/>
+                            <pbbase:DataEntities ValueDataType="String"/>
+                            <pbbase:DataEntities ValueDataType="String"/>
+                            <pbbase:DataEntities ValueDataType="String"/>
+                            <pbbase:DataEntities ValueDataType="String"/>
+                        </pbmeta:UserDefinedFields>
+                        <pbmeta:ComponentVersions>
+                            <pbmeta:VersionInfo Name="ics" Version="6.0.0.SNAPSHOT39495"/>
+                            <pbmeta:VersionInfo Name="iui" Version="6.0.0.SNAPSHOT39495"/>
+                            <pbmeta:VersionInfo Name="chemistry" Version="6.0.0.SNAPSHOT39452"/>
+                            <pbmeta:VersionInfo Name="pa" Version="6.0.0.SNAPSHOT39495"/>
+                            <pbmeta:VersionInfo Name="paws" Version="6.0.0.SNAPSHOT39495"/>
+                            <pbmeta:VersionInfo Name="ppa" Version="6.0.0.SNAPSHOT39495"/>
+                            <pbmeta:VersionInfo Name="realtime" Version="6.0.0.SNAPSHOT39495"/>
+                            <pbmeta:VersionInfo Name="transfer" Version="6.0.0.SNAPSHOT39495"/>
+                            <pbmeta:VersionInfo Name="smrtlink-analysisservices-gui" Version="6.0.0.45618"/>
+                            <pbmeta:VersionInfo Name="smrtimisc" Version="6.0.0.45621"/>
+                            <pbmeta:VersionInfo Name="smrtlink" Version="6.0.0.45621"/>
+                            <pbmeta:VersionInfo Name="smrttools" Version="6.0.0.45580"/>
+                            <pbmeta:VersionInfo Name="smrtinub" Version="6.0.0.45580"/>
+                            <pbmeta:VersionInfo Name="smrtview" Version="6.0.0.45580"/>
+                        </pbmeta:ComponentVersions>
+                    </pbmeta:CollectionMetadata>
+                </pbmeta:Collections>
+            </pbds:DataSetMetadata>
+        </pbds:DataSet>
+        <pbds:DataSet Name="3260208_188nM-GTAC_2xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494-Cell1" Tags="subreadset" Version="4.0.1" UniqueId="ab0a16df-1bd5-4f09-aa98-35cbedde995d" MetaType="PacBio.DataSet.SubreadSet" TimeStampedName="60001-SubreadSetCollection-2015-07-09T09:30:47.833Z">
+            <pbbase:ExternalResources>
+                <pbbase:ExternalResource Name="subreads bam" Description="Points to the subreads bam file." ResourceId="/pbi/collections/326/3260208/r54075_20180905_221306/1_A01/m54075_180905_221350.subreads.bam" Version="4.0.1" UniqueId="560f5502-7418-4563-ae9a-757ce29d9c8f" MetaType="PacBio.SubreadFile.SubreadBamFile" TimeStampedName="pacbio_subreadfile_subreadbamfile-180905_223511120">
+                    <pbbase:FileIndices>
+                        <pbbase:FileIndex ResourceId="/pbi/collections/326/3260208/r54075_20180905_221306/1_A01/m54075_180905_221350.subreads.bam.pbi" Version="4.0.1" UniqueId="827751e1-fd0a-4060-ae49-d38025601242" MetaType="PacBio.Index.PacBioIndex" TimeStampedName="pacbio_index_pacbioindex-180905_223511120"/>
+                    </pbbase:FileIndices>
+                    <pbbase:ExternalResources>
+                        <pbbase:ExternalResource Name="scraps bam" Description="Points to the scraps bam file." ResourceId="/pbi/collections/326/3260208/r54075_20180905_221306/1_A01/m54075_180905_221350.scraps.bam" Version="4.0.1" UniqueId="947da06d-62fa-4ab4-a231-67722f7886b1" MetaType="PacBio.SubreadFile.ScrapsBamFile" TimeStampedName="pacbio_subreadfile_scrapsbamfile-180905_223511131">
+                            <pbbase:FileIndices>
+                                <pbbase:FileIndex ResourceId="/pbi/collections/326/3260208/r54075_20180905_221306/1_A01/m54075_180905_221350.scraps.bam.pbi" Version="4.0.1" UniqueId="9ebd2fb3-756d-4b99-8411-448ad0707781" MetaType="PacBio.Index.PacBioIndex" TimeStampedName="pacbio_index_pacbioindex-180905_223511131"/>
+                            </pbbase:FileIndices>
+                        </pbbase:ExternalResource>
+                        <pbbase:ExternalResource Name="Adapters FASTA" Description="Points to the adapters.fasta file." ResourceId="/pbi/collections/326/3260208/r54075_20180905_221306/1_A01/m54075_180905_221350.adapters.fasta" Version="4.0.1" UniqueId="92d995df-0197-4456-b999-766a0d690655" MetaType="PacBio.SubreadFile.AdapterFastaFile" TimeStampedName="pacbio_subreadfile_adapterfastafile-180905_223511131"/>
+                        <pbbase:ExternalResource Name="Chipstats XML" Description="Points to the summary sts.xml file." ResourceId="/pbi/collections/326/3260208/r54075_20180905_221306/1_A01/m54075_180905_221350.sts.xml" Version="4.0.1" UniqueId="83f98c8d-ffe7-462e-9734-541b73802188" MetaType="PacBio.SubreadFile.ChipStatsFile" TimeStampedName="pacbio_subreadfile_chipstatsfile-180905_223511131"/>
+                    </pbbase:ExternalResources>
+                </pbbase:ExternalResource>
+            </pbbase:ExternalResources>
+            <pbds:DataSetMetadata>
+                <pbds:TotalLength>126278035</pbds:TotalLength>
+                <pbds:NumRecords>163007</pbds:NumRecords>
+                <pbmeta:Collections>
+                    <pbmeta:CollectionMetadata CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" UniqueId="ab0a16df-1bd5-4f09-aa98-35cbedde995d" MetaType="CollectionMetadata" TimeStampedName="60001-CollectionMetadata-2015-07-09T09:30:47.833Z" Context="m54075_180905_221350" Status="Ready" InstrumentId="60001" InstrumentName="Inst60001">
+                        <pbmeta:InstCtrlVer>6.0.0.SNAPSHOT39495</pbmeta:InstCtrlVer>
+                        <pbmeta:SigProcVer>6.0.0.SNAPSHOT39495</pbmeta:SigProcVer>
+                        <pbmeta:RunDetails>
+                            <pbmeta:TimeStampedName>r54075_20180905_221306</pbmeta:TimeStampedName>
+                            <pbmeta:Name>3260208_188nM-GTAC_2xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494</pbmeta:Name>
+                            <pbmeta:CreatedBy>unknown</pbmeta:CreatedBy>
+                            <pbmeta:WhenCreated>2015-07-09T09:30:47.833Z</pbmeta:WhenCreated>
+                            <pbmeta:StartedBy>unknown</pbmeta:StartedBy>
+                        </pbmeta:RunDetails>
+                        <pbmeta:WellSample Name="3260208_188nM-GTAC_2xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00">
+                            <pbmeta:WellName>SamplePlate-1-A-1</pbmeta:WellName>
+                            <pbmeta:Concentration>0.0</pbmeta:Concentration>
+                            <pbmeta:InsertSize>0</pbmeta:InsertSize>
+                            <pbmeta:SampleReuseEnabled>false</pbmeta:SampleReuseEnabled>
+                            <pbmeta:StageHotstartEnabled>false</pbmeta:StageHotstartEnabled>
+                            <pbmeta:SizeSelectionEnabled>false</pbmeta:SizeSelectionEnabled>
+                            <pbmeta:UseCount>0</pbmeta:UseCount>
+                        </pbmeta:WellSample>
+                        <pbmeta:Automation Name="manualcellprep.py">
+                            <pbbase:AutomationParameters>
+                                <pbbase:AutomationParameter Name="CouplerLaserPower" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="Double" SimpleValue="7"/>
+                                <pbbase:AutomationParameter Name="MovieLength" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="Double" SimpleValue="15"/>
+                                <pbbase:AutomationParameter Name="Exposure" CreatedAt="2018-03-19T20:02:47.574Z" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="0.01"/>
+                                <pbbase:AutomationParameter Name="SNRCut" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="Double" SimpleValue="2.5"/>
+                                <pbbase:AutomationParameter Name="ActiveLaserPower" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="False"/>
+                                <pbbase:AutomationParameter Name="sequencingPixelROI" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="JSON" SimpleValue="[[0,0,1080,1920]]"/>
+                                <pbbase:AutomationParameter Name="traceFilePixelROI" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="JSON" SimpleValue="[[0,0,8,32],[71,0,8,32],[142,0,8,32],[213,0,8,32],[284,0,8,32],[355,0,8,32],[426,0,8,32],[497,0,8,32],[568,0,8,32],[639,0,8,32],[710,0,8,32],[781,0,8,32],[852,0,8,32],[923,0,8,32],[994,0,8,32],[1072,0,8,32],[0,128,8,32],[71,128,8,32],[142,128,8,32],[213,128,8,32],[284,128,8,32],[355,128,8,32],[426,128,8,32],[497,128,8,32],[568,128,8,32],[639,128,8,32],[710,128,8,32],[781,128,8,32],[852,128,8,32],[923,128,8,32],[994,128,8,32],[1072,128,8,32],[0,256,8,32],[71,256,8,32],[142,256,8,32],[213,256,8,32],[284,256,8,32],[355,256,8,32],[426,256,8,32],[497,256,8,32],[568,256,8,32],[639,256,8,32],[710,256,8,32],[781,256,8,32],[852,256,8,32],[923,256,8,32],[994,256,8,32],[1072,256,8,32],[0,384,8,32],[71,384,8,32],[142,384,8,32],[213,384,8,32],[284,384,8,32],[355,384,8,32],[426,384,8,32],[497,384,8,32],[568,384,8,32],[639,384,8,32],[710,384,8,32],[781,384,8,32],[852,384,8,32],[923,384,8,32],[994,384,8,32],[1072,384,8,32],[0,512,8,32],[71,512,8,32],[142,512,8,32],[213,512,8,32],[284,512,8,32],[355,512,8,32],[426,512,8,32],[497,512,8,32],[568,512,8,32],[639,512,8,32],[710,512,8,32],[781,512,8,32],[852,512,8,32],[923,512,8,32],[994,512,8,32],[1072,512,8,32],[0,640,8,32],[71,640,8,32],[142,640,8,32],[213,640,8,32],[284,640,8,32],[355,640,8,32],[426,640,8,32],[497,640,8,32],[568,640,8,32],[639,640,8,32],[710,640,8,32],[781,640,8,32],[852,640,8,32],[923,640,8,32],[994,640,8,32],[1072,640,8,32],[0,768,8,32],[71,768,8,32],[142,768,8,32],[213,768,8,32],[284,768,8,32],[355,768,8,32],[426,768,8,32],[497,768,8,32],[568,768,8,32],[639,768,8,32],[710,768,8,32],[781,768,8,32],[852,768,8,32],[923,768,8,32],[994,768,8,32],[1072,768,8,32],[0,896,8,32],[71,896,8,32],[142,896,8,32],[213,896,8,32],[284,896,8,32],[355,896,8,32],[426,896,8,32],[497,896,8,32],[568,896,8,32],[639,896,8,32],[710,896,8,32],[781,896,8,32],[852,896,8,32],[923,896,8,32],[994,896,8,32],[1072,896,8,32],[0,1024,8,32],[71,1024,8,32],[142,1024,8,32],[213,1024,8,32],[284,1024,8,32],[355,1024,8,32],[426,1024,8,32],[497,1024,8,32],[568,1024,8,32],[639,1024,8,32],[710,1024,8,32],[781,1024,8,32],[852,1024,8,32],[923,1024,8,32],[994,1024,8,32],[1072,1024,8,32],[0,1152,8,32],[71,1152,8,32],[142,1152,8,32],[213,1152,8,32],[284,1152,8,32],[355,1152,8,32],[426,1152,8,32],[497,1152,8,32],[568,1152,8,32],[639,1152,8,32],[710,1152,8,32],[781,1152,8,32],[852,1152,8,32],[923,1152,8,32],[994,1152,8,32],[1072,1152,8,32],[0,1280,8,32],[71,1280,8,32],[142,1280,8,32],[213,1280,8,32],[284,1280,8,32],[355,1280,8,32],[426,1280,8,32],[497,1280,8,32],[568,1280,8,32],[639,1280,8,32],[710,1280,8,32],[781,1280,8,32],[852,1280,8,32],[923,1280,8,32],[994,1280,8,32],[1072,1280,8,32],[0,1408,8,32],[71,1408,8,32],[142,1408,8,32],[213,1408,8,32],[284,1408,8,32],[355,1408,8,32],[426,1408,8,32],[497,1408,8,32],[568,1408,8,32],[639,1408,8,32],[710,1408,8,32],[781,1408,8,32],[852,1408,8,32],[923,1408,8,32],[994,1408,8,32],[1072,1408,8,32],[0,1536,8,32],[71,1536,8,32],[142,1536,8,32],[213,1536,8,32],[284,1536,8,32],[355,1536,8,32],[426,1536,8,32],[497,1536,8,32],[568,1536,8,32],[639,1536,8,32],[710,1536,8,32],[781,1536,8,32],[852,1536,8,32],[923,1536,8,32],[994,1536,8,32],[1072,1536,8,32],[0,1664,8,32],[71,1664,8,32],[142,1664,8,32],[213,1664,8,32],[284,1664,8,32],[355,1664,8,32],[426,1664,8,32],[497,1664,8,32],[568,1664,8,32],[639,1664,8,32],[710,1664,8,32],[781,1664,8,32],[852,1664,8,32],[923,1664,8,32],[994,1664,8,32],[1072,1664,8,32],[0,1792,8,32],[71,1792,8,32],[142,1792,8,32],[213,1792,8,32],[284,1792,8,32],[355,1792,8,32],[426,1792,8,32],[497,1792,8,32],[568,1792,8,32],[639,1792,8,32],[710,1792,8,32],[781,1792,8,32],[852,1792,8,32],[923,1792,8,32],[994,1792,8,32],[1072,1792,8,32],[0,1888,8,32],[71,1888,8,32],[142,1888,8,32],[213,1888,8,32],[284,1888,8,32],[355,1888,8,32],[426,1888,8,32],[497,1888,8,32],[568,1888,8,32],[639,1888,8,32],[710,1888,8,32],[781,1888,8,32],[852,1888,8,32],[923,1888,8,32],[994,1888,8,32],[1072,1888,8,32]]"/>
+                                <pbbase:AutomationParameter Name="CellAtStage" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="True"/>
+                                <pbbase:AutomationParameter Name="SkipAlignment" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="False"/>
+                                <pbbase:AutomationParameter Name="UseStageHotStart" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="False"/>
+                                <pbbase:AutomationParameter Name="CellNFCIndex" ValueDataType="Int32" SimpleValue="1"/>
+                                <pbbase:AutomationParameter Name="CollectionNumber" ValueDataType="Int32" SimpleValue="0"/>
+                                <pbbase:AutomationParameter Name="HasN2Switch" ValueDataType="Boolean" SimpleValue="False"/>
+                                <pbbase:AutomationParameter Name="TipSearchMaxDuration" ValueDataType="Int32" SimpleValue="576"/>
+                            </pbbase:AutomationParameters>
+                            <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                        </pbmeta:Automation>
+                        <pbmeta:CollectionNumber>0</pbmeta:CollectionNumber>
+                        <pbmeta:CellIndex>0</pbmeta:CellIndex>
+                        <pbmeta:SetNumber>0</pbmeta:SetNumber>
+                        <pbmeta:CellPac Name="SMRT® Cell 1M v2 LR (4/Pack)" Description="The Sequel SMRT Cell 1M (4/Pack) are nanofabricated consumables each patterned with 1,000,000 wells called zero-mode waveguides (ZMWs). They are packaged together in a streamlined 4 SMRT Cell format (4/tray). One SMRT Cell is utilized in each sequencing reaction, and experiments can be run in single or in batch mode, giving your projects a greater level of flexibility." Version="2.0" PartNumber="101-008-001" LotNumber="321693" Barcode="BA233119" ExpirationDate="2018-06-08" MovieTimeGrade="LR">
+                            <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                            <pbbase:ChipLayout>SequEL_4.0_RTO3</pbbase:ChipLayout>
+                        </pbmeta:CellPac>
+                        <pbmeta:ControlKit Name="Sequel® DNA Internal Control 2.0" Description="The Sequel DNA Internal Control 2.0 contains a fixed template of 2 kb length bound to Sequel Binding Kit 2.0 for use as an internal sequencing control. Reagent quantities provide spike-in controls for a minimum of 24 samples." Tags="Control Kit, CCK" Version="2.0" PartNumber="101-084-300" LotNumber="444444" Barcode="444444101084300062030" ExpirationDate="2030-06-20" ChipType="1mChip">
+                            <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                            <pbbase:CustomSequence>>left_adapter\nTAGAGAGAGAAAAGGAGGAGGAGGCAACAACAACAACTCTCTCTA\n>right_adapter\nTAGAGAGAGAAAAGGAGGAGGAGGCAACAACAACAACTCTCTCTA\n>custom_sequence\nTGTCTAGGTCATCTCAACGTAGCTTTGACATATAACTTATCTAAAGTAATCCCTGCACACCTGTATGCATTATGCTTGCTATACACGCGGACACAGGCATATCATTTATTTTTTGCCATGTCCATTAATTGTTCAATAATTTTACTCACGGTATTTAATTTGATGTTGTGTTATATAGAATTGGAATTAAACTTATAAGGATGCTTAGACGTTGCATTATAAAAGTTTATGTACTAAGTATTTAAGACATTGGCATATGATTATAGCTTGACATTATTAAAAATTAATTAATTAAATCTCACACAATACTTATTCAAGACATTTTTACTAAGATAACCAAAGGAATGCGAACAAAATAATACTTAAAATATAAGACTTAGAAGTAATATGATCCAATAGTTACATATAGTACACTAAGTTCCTAAATTATATAACTTTAAAACAAAGTTACGAAATTTGGAAATAATTTTATTTAATCATATTTTCATAATAATGAAATACTGTTTATTTCAGTGGCGAAAAGAGATAATACGATTTTATAGTGATAGAATATCCTTGAAATATCTAAAGATAAAATTAGAAACTTTCTCTTTTCGCTGTAAAGCTATATGACTTAAAAATAACTTATACGCAAAGTATATTGCAGTGGAAACCCAAGAGTATAGTAGCCATGTAATCTCGGGTTCGAAACTACACGCCGCGCACGTAGTCAGATGGTCTGAAACTTGTCTGGGGCTGTTTGTTGACGGATGGAGACTTCACTAAGTGGCGTCAGGCGATGCGCACACACGGGACTCAATCCCGTAGCATGTTATGTGTCGTTCGAAACTCGTGCGTTCGAGATTTACGCCACATTGCCGGCTGGTCCAAGGACGTTATCTACCAGATGATACGGTCCAATTCGTAAGTTTGACTCACATAGTCGCGAACCGCGGAGCTGGAGAACAATAATTACCGGATGATTAGTTGACCATACGCACTATCATGCTCCGTGACTCAGTTTCCGCCATGGAGTTCTCACAGCCCCGTGTGTACCATAACTGCAGTAAGTAAGGACCTTGTTCGGAGGCCGACTCGTATTTCATATGATCTTAGTCTCGCCACCTTATCGCACGAATTGGGGGTGTCTTTTAGCCGACTCCGGCACGATCCGCCGGGAAGTTACTCGACCAGTTGCGGGACGCCCTAGTATGTTCGTATTACGTTCGATGCGTAAGCACCCCAGAGATTTTTGGCGGACGTTTCGGTAAATCATAGTAGAACCGGAGCGGTAAAGCTATTGATAACACGCAGGGACGAGCCAGTCGTCTAAGCTCCTCAGGGGTACCGTTCGCCGGACTACAGCCTGTCCCCGGCGGCCGCAACTGGGCTGCGATCCAGCCCCCGCTCCAAAAGGATGACTCGACCTTGCGCCTCGCGTACTCTGCTCTCGAGCTGTCTCCGTGGGCAATGCCGGCTCACGCTGTGGGGAACCCTGGACGCCCGGGCCGAGCCGACGTGGCCCCGCCCAGGCCTTTTCGTCGATCGCAGCTATGTACCCTGTGCTGGCCAGCGCTACTGCGCCGGCCATTAGCGGTGCGCTCTCGACTCGGCCCCAACGTAGACGGCGTCGCTGGCCGGATTCAAAGAAGTGAGCTACTACCATCGCGTGACGCCCTGCGGGCCTGAGTAACCGTGCACGAAGGACACCCCGTTCGTGGCGGGGGTTGCCTCCGCGACGGTCGCCAACGTTGGGGGTCGGTGCATTCAGGCGACGAGGGACCGCTGGTTTCCGGAGAGCGGCCTGTGCTCACACAGGTGCGGTCCATGGGGCCTGTGGATCCGGTTCTCCCACGCGTAGCGCCGGCGTTAGCATGGACGCTAAATAAGTATACGCCGGCAAAGGGAGTGTAGGCCGGCCCGAGGGCAATCGCGGTTACCGGGGTGGGGGAGCTCCCCGCACCAGCCTTGATGTGGTGTGCGAGCG</pbbase:CustomSequence>
+                        </pbmeta:ControlKit>
+                        <pbmeta:TemplatePrepKit Name="CRISPR/Cas9 Placeholder w/ asymmetric adapters" Description="The SMRTbell® Template Prep Kit contains reagent supplies to perform SMRTbell library preparations of primer-annealed SMRTbell libraries for insert sizes ranging from 500 bp to over 20 kb." Tags="Template Prep Kit, TPK" Version="1.0" PartNumber="100-902-400" LotNumber="333333" Barcode="333333100902400092215" ExpirationDate="2015-09-22" IsRestricted="true" MinInsertSize="500" MaxInsertSize="20000">
+                            <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                            <pbbase:LeftAdaptorSequence>ATCTCTCTCAATTTTTTTTTTTTTTTTTTTTTTTAAGAGAGAGAT</pbbase:LeftAdaptorSequence>
+                            <pbbase:LeftPrimerSequence>aacggaggaggagga</pbbase:LeftPrimerSequence>
+                            <pbbase:RightAdaptorSequence>ATCTCTCTCAACAACAACAACGGAGGAGGAGGAAAAGAGAGAGAT</pbbase:RightAdaptorSequence>
+                            <pbbase:RightPrimerSequence>aacggaggaggagga</pbbase:RightPrimerSequence>
+                        </pbmeta:TemplatePrepKit>
+                        <pbmeta:BindingKit Name="Sequel® Binding Kit 2.0" Description="The Sequel Binding Kit 2.0 contains reagent supplies to bind prepared DNA template libraries to the Sequel Polymerase 2.0 in preparation for sequencing on the Sequel System. The result is a DNA polymerase/template complex. Sequel Binding Kit 1.0 should be used only with Sequel Sequencing Kit 2.0. Reagent quantities support 24 binding reactions." Tags="Binding Kit, BDK" Version="2.0" PartNumber="100-862-200" LotNumber="777777" Barcode="777777100862200062030" ExpirationDate="2030-06-20" ChipType="1mChip">
+                            <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                        </pbmeta:BindingKit>
+                        <pbmeta:SequencingKitPlate Name="Sequel® Dev Sequencing Plate" Description="The DNA Sequencing Kit contains a sequencing reagent plate with chemistry for single molecule real-time sequencing on the PacBio Sequel®. Reagent quantities support 8 sequencing reactions to be used in conjunction with SMRT® Cell 4Pac(s).  (8 Cells max/Each Row supplies reagents for 1 Sequel SMRT Cell)" Tags="Sequencing Kit, SQK" Version="3.0" PartNumber="999-861-800" LotNumber="010765" Barcode="010765999861800030818" ExpirationDate="2018-03-08" IsRestricted="true">
+                            <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                            <pbrk:ReagentTubes Name="Sequel® SMRT®Cell Oil" PartNumber="100-619-600" LotNumber="012197" Barcode="012197100619600033122" ExpirationDate="2022-03-31">
+                                <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                            </pbrk:ReagentTubes>
+                        </pbmeta:SequencingKitPlate>
+                        <pbmeta:Primary>
+                            <pbmeta:AutomationName>SequelAlpha</pbmeta:AutomationName>
+                            <pbmeta:ConfigFileName>SqlPoC_SubCrf_2C2A-t2.xml</pbmeta:ConfigFileName>
+                            <pbmeta:OutputOptions>
+                                <pbmeta:ResultsFolder>326/3260208/r54075_20180905_221306/1_A01/</pbmeta:ResultsFolder>
+                                <pbmeta:CollectionPathUri>/pbi/collections/326/3260208/r54075_20180905_221306/1_A01/</pbmeta:CollectionPathUri>
+                                <pbmeta:CopyFiles>
+                                    <pbmeta:CollectionFileCopy>Trace</pbmeta:CollectionFileCopy>
+                                    <pbmeta:CollectionFileCopy>Fasta</pbmeta:CollectionFileCopy>
+                                    <pbmeta:CollectionFileCopy>Bam</pbmeta:CollectionFileCopy>
+                                    <pbmeta:CollectionFileCopy>StatsH5</pbmeta:CollectionFileCopy>
+                                </pbmeta:CopyFiles>
+                                <pbmeta:Readout>Pulses</pbmeta:Readout>
+                                <pbmeta:MetricsVerbosity>High</pbmeta:MetricsVerbosity>
+                                <pbmeta:TransferResource>
+                                    <pbmeta:Id>srs-pbi-collections</pbmeta:Id>
+                                    <pbmeta:TransferScheme>SRS</pbmeta:TransferScheme>
+                                    <pbmeta:Name>PBI Collections Xfer test using Rsync+SSH</pbmeta:Name>
+                                    <pbmeta:Description>Test Location for writing Transfer services to write to. Should be used by internal tools (PA SIM) and ICS tests</pbmeta:Description>
+                                    <pbmeta:DestPath>/pbi/collections</pbmeta:DestPath>
+                                </pbmeta:TransferResource>
+                            </pbmeta:OutputOptions>
+                        </pbmeta:Primary>
+                        <pbmeta:Secondary>
+                            <pbmeta:AutomationName>NoRS_Standard_Edna.1</pbmeta:AutomationName>
+                            <pbmeta:AutomationParameters>
+                                <pbmeta:AutomationParameter Name="Reference" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="EColi5k_001_BsaI_AS_tc6_scr_tc6_unrolled_circular_12x_l123900"/>
+                            </pbmeta:AutomationParameters>
+                            <pbmeta:CellCountInJob>0</pbmeta:CellCountInJob>
+                        </pbmeta:Secondary>
+                        <pbmeta:UserDefinedFields>
+                            <pbbase:DataEntities Name="LIMS_IMPORT" ValueDataType="String" SimpleValue="1234TestFolder"/>
+                            <pbbase:DataEntities Name="USER" ValueDataType="String" SimpleValue="TestUser"/>
+                            <pbbase:DataEntities ValueDataType="String"/>
+                            <pbbase:DataEntities ValueDataType="String"/>
+                            <pbbase:DataEntities ValueDataType="String"/>
+                            <pbbase:DataEntities ValueDataType="String"/>
+                        </pbmeta:UserDefinedFields>
+                        <pbmeta:ComponentVersions>
+                            <pbmeta:VersionInfo Name="ics" Version="6.0.0.SNAPSHOT39495"/>
+                            <pbmeta:VersionInfo Name="iui" Version="6.0.0.SNAPSHOT39495"/>
+                            <pbmeta:VersionInfo Name="chemistry" Version="6.0.0.SNAPSHOT39452"/>
+                            <pbmeta:VersionInfo Name="pa" Version="6.0.0.SNAPSHOT39495"/>
+                            <pbmeta:VersionInfo Name="paws" Version="6.0.0.SNAPSHOT39495"/>
+                            <pbmeta:VersionInfo Name="ppa" Version="6.0.0.SNAPSHOT39495"/>
+                            <pbmeta:VersionInfo Name="realtime" Version="6.0.0.SNAPSHOT39495"/>
+                            <pbmeta:VersionInfo Name="transfer" Version="6.0.0.SNAPSHOT39495"/>
+                            <pbmeta:VersionInfo Name="smrtlink-analysisservices-gui" Version="6.0.0.45618"/>
+                            <pbmeta:VersionInfo Name="smrtimisc" Version="6.0.0.45621"/>
+                            <pbmeta:VersionInfo Name="smrtlink" Version="6.0.0.45621"/>
+                            <pbmeta:VersionInfo Name="smrttools" Version="6.0.0.45580"/>
+                            <pbmeta:VersionInfo Name="smrtinub" Version="6.0.0.45580"/>
+                            <pbmeta:VersionInfo Name="smrtview" Version="6.0.0.45580"/>
+                        </pbmeta:ComponentVersions>
+                    </pbmeta:CollectionMetadata>
+                </pbmeta:Collections>
+            </pbds:DataSetMetadata>
+        </pbds:DataSet>
+    </pbds:DataSets>
+    <pbds:DataSetMetadata>
+        <pbds:TotalLength>275934144</pbds:TotalLength>
+        <pbds:NumRecords>386346</pbds:NumRecords>
+        <pbmeta:Collections>
+            <pbmeta:CollectionMetadata CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" UniqueId="ca4bfe85-3047-433f-a9ce-e8cb63d8b27f" MetaType="CollectionMetadata" TimeStampedName="60001-CollectionMetadata-2015-07-09T09:30:47.833Z" Context="m54075_180905_233034" Status="Ready" InstrumentId="60001" InstrumentName="Inst60001">
+                <pbmeta:InstCtrlVer>6.0.0.SNAPSHOT39495</pbmeta:InstCtrlVer>
+                <pbmeta:SigProcVer>6.0.0.SNAPSHOT39495</pbmeta:SigProcVer>
+                <pbmeta:RunDetails>
+                    <pbmeta:TimeStampedName>r54075_20180905_232954</pbmeta:TimeStampedName>
+                    <pbmeta:Name>3260208_188nM-GTAC_4xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494</pbmeta:Name>
+                    <pbmeta:CreatedBy>unknown</pbmeta:CreatedBy>
+                    <pbmeta:WhenCreated>2015-07-09T09:30:47.833Z</pbmeta:WhenCreated>
+                    <pbmeta:StartedBy>unknown</pbmeta:StartedBy>
+                </pbmeta:RunDetails>
+                <pbmeta:WellSample Name="3260208_188nM-GTAC_4xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00">
+                    <pbmeta:WellName>SamplePlate-1-A-1</pbmeta:WellName>
+                    <pbmeta:Concentration>0.0</pbmeta:Concentration>
+                    <pbmeta:InsertSize>0</pbmeta:InsertSize>
+                    <pbmeta:SampleReuseEnabled>false</pbmeta:SampleReuseEnabled>
+                    <pbmeta:StageHotstartEnabled>false</pbmeta:StageHotstartEnabled>
+                    <pbmeta:SizeSelectionEnabled>false</pbmeta:SizeSelectionEnabled>
+                    <pbmeta:UseCount>0</pbmeta:UseCount>
+                    <pbsample:BioSamples>
+                        <pbsample:BioSample Name="  UCLA 1023 "/>
+                    </pbsample:BioSamples>
+                </pbmeta:WellSample>
+                <pbmeta:Automation Name="manualcellprep.py">
+                    <pbbase:AutomationParameters>
+                        <pbbase:AutomationParameter Name="CouplerLaserPower" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="Double" SimpleValue="7"/>
+                        <pbbase:AutomationParameter Name="MovieLength" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="Double" SimpleValue="15"/>
+                        <pbbase:AutomationParameter Name="Exposure" CreatedAt="2018-03-19T20:02:47.574Z" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="0.01"/>
+                        <pbbase:AutomationParameter Name="SNRCut" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="Double" SimpleValue="2.5"/>
+                        <pbbase:AutomationParameter Name="ActiveLaserPower" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="False"/>
+                        <pbbase:AutomationParameter Name="sequencingPixelROI" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="JSON" SimpleValue="[[0,0,1080,1920]]"/>
+                        <pbbase:AutomationParameter Name="traceFilePixelROI" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="JSON" SimpleValue="[[0,0,8,32],[71,0,8,32],[142,0,8,32],[213,0,8,32],[284,0,8,32],[355,0,8,32],[426,0,8,32],[497,0,8,32],[568,0,8,32],[639,0,8,32],[710,0,8,32],[781,0,8,32],[852,0,8,32],[923,0,8,32],[994,0,8,32],[1072,0,8,32],[0,128,8,32],[71,128,8,32],[142,128,8,32],[213,128,8,32],[284,128,8,32],[355,128,8,32],[426,128,8,32],[497,128,8,32],[568,128,8,32],[639,128,8,32],[710,128,8,32],[781,128,8,32],[852,128,8,32],[923,128,8,32],[994,128,8,32],[1072,128,8,32],[0,256,8,32],[71,256,8,32],[142,256,8,32],[213,256,8,32],[284,256,8,32],[355,256,8,32],[426,256,8,32],[497,256,8,32],[568,256,8,32],[639,256,8,32],[710,256,8,32],[781,256,8,32],[852,256,8,32],[923,256,8,32],[994,256,8,32],[1072,256,8,32],[0,384,8,32],[71,384,8,32],[142,384,8,32],[213,384,8,32],[284,384,8,32],[355,384,8,32],[426,384,8,32],[497,384,8,32],[568,384,8,32],[639,384,8,32],[710,384,8,32],[781,384,8,32],[852,384,8,32],[923,384,8,32],[994,384,8,32],[1072,384,8,32],[0,512,8,32],[71,512,8,32],[142,512,8,32],[213,512,8,32],[284,512,8,32],[355,512,8,32],[426,512,8,32],[497,512,8,32],[568,512,8,32],[639,512,8,32],[710,512,8,32],[781,512,8,32],[852,512,8,32],[923,512,8,32],[994,512,8,32],[1072,512,8,32],[0,640,8,32],[71,640,8,32],[142,640,8,32],[213,640,8,32],[284,640,8,32],[355,640,8,32],[426,640,8,32],[497,640,8,32],[568,640,8,32],[639,640,8,32],[710,640,8,32],[781,640,8,32],[852,640,8,32],[923,640,8,32],[994,640,8,32],[1072,640,8,32],[0,768,8,32],[71,768,8,32],[142,768,8,32],[213,768,8,32],[284,768,8,32],[355,768,8,32],[426,768,8,32],[497,768,8,32],[568,768,8,32],[639,768,8,32],[710,768,8,32],[781,768,8,32],[852,768,8,32],[923,768,8,32],[994,768,8,32],[1072,768,8,32],[0,896,8,32],[71,896,8,32],[142,896,8,32],[213,896,8,32],[284,896,8,32],[355,896,8,32],[426,896,8,32],[497,896,8,32],[568,896,8,32],[639,896,8,32],[710,896,8,32],[781,896,8,32],[852,896,8,32],[923,896,8,32],[994,896,8,32],[1072,896,8,32],[0,1024,8,32],[71,1024,8,32],[142,1024,8,32],[213,1024,8,32],[284,1024,8,32],[355,1024,8,32],[426,1024,8,32],[497,1024,8,32],[568,1024,8,32],[639,1024,8,32],[710,1024,8,32],[781,1024,8,32],[852,1024,8,32],[923,1024,8,32],[994,1024,8,32],[1072,1024,8,32],[0,1152,8,32],[71,1152,8,32],[142,1152,8,32],[213,1152,8,32],[284,1152,8,32],[355,1152,8,32],[426,1152,8,32],[497,1152,8,32],[568,1152,8,32],[639,1152,8,32],[710,1152,8,32],[781,1152,8,32],[852,1152,8,32],[923,1152,8,32],[994,1152,8,32],[1072,1152,8,32],[0,1280,8,32],[71,1280,8,32],[142,1280,8,32],[213,1280,8,32],[284,1280,8,32],[355,1280,8,32],[426,1280,8,32],[497,1280,8,32],[568,1280,8,32],[639,1280,8,32],[710,1280,8,32],[781,1280,8,32],[852,1280,8,32],[923,1280,8,32],[994,1280,8,32],[1072,1280,8,32],[0,1408,8,32],[71,1408,8,32],[142,1408,8,32],[213,1408,8,32],[284,1408,8,32],[355,1408,8,32],[426,1408,8,32],[497,1408,8,32],[568,1408,8,32],[639,1408,8,32],[710,1408,8,32],[781,1408,8,32],[852,1408,8,32],[923,1408,8,32],[994,1408,8,32],[1072,1408,8,32],[0,1536,8,32],[71,1536,8,32],[142,1536,8,32],[213,1536,8,32],[284,1536,8,32],[355,1536,8,32],[426,1536,8,32],[497,1536,8,32],[568,1536,8,32],[639,1536,8,32],[710,1536,8,32],[781,1536,8,32],[852,1536,8,32],[923,1536,8,32],[994,1536,8,32],[1072,1536,8,32],[0,1664,8,32],[71,1664,8,32],[142,1664,8,32],[213,1664,8,32],[284,1664,8,32],[355,1664,8,32],[426,1664,8,32],[497,1664,8,32],[568,1664,8,32],[639,1664,8,32],[710,1664,8,32],[781,1664,8,32],[852,1664,8,32],[923,1664,8,32],[994,1664,8,32],[1072,1664,8,32],[0,1792,8,32],[71,1792,8,32],[142,1792,8,32],[213,1792,8,32],[284,1792,8,32],[355,1792,8,32],[426,1792,8,32],[497,1792,8,32],[568,1792,8,32],[639,1792,8,32],[710,1792,8,32],[781,1792,8,32],[852,1792,8,32],[923,1792,8,32],[994,1792,8,32],[1072,1792,8,32],[0,1888,8,32],[71,1888,8,32],[142,1888,8,32],[213,1888,8,32],[284,1888,8,32],[355,1888,8,32],[426,1888,8,32],[497,1888,8,32],[568,1888,8,32],[639,1888,8,32],[710,1888,8,32],[781,1888,8,32],[852,1888,8,32],[923,1888,8,32],[994,1888,8,32],[1072,1888,8,32]]"/>
+                        <pbbase:AutomationParameter Name="CellAtStage" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="True"/>
+                        <pbbase:AutomationParameter Name="SkipAlignment" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="False"/>
+                        <pbbase:AutomationParameter Name="UseStageHotStart" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="False"/>
+                        <pbbase:AutomationParameter Name="CellNFCIndex" ValueDataType="Int32" SimpleValue="1"/>
+                        <pbbase:AutomationParameter Name="CollectionNumber" ValueDataType="Int32" SimpleValue="0"/>
+                        <pbbase:AutomationParameter Name="HasN2Switch" ValueDataType="Boolean" SimpleValue="False"/>
+                        <pbbase:AutomationParameter Name="TipSearchMaxDuration" ValueDataType="Int32" SimpleValue="576"/>
+                    </pbbase:AutomationParameters>
+                    <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                </pbmeta:Automation>
+                <pbmeta:CollectionNumber>0</pbmeta:CollectionNumber>
+                <pbmeta:CellIndex>0</pbmeta:CellIndex>
+                <pbmeta:SetNumber>0</pbmeta:SetNumber>
+                <pbmeta:CellPac Name="SMRT® Cell 1M v2 LR (4/Pack)" Description="The Sequel SMRT Cell 1M (4/Pack) are nanofabricated consumables each patterned with 1,000,000 wells called zero-mode waveguides (ZMWs). They are packaged together in a streamlined 4 SMRT Cell format (4/tray). One SMRT Cell is utilized in each sequencing reaction, and experiments can be run in single or in batch mode, giving your projects a greater level of flexibility." Version="2.0" PartNumber="101-008-001" LotNumber="321693" Barcode="BA233119" ExpirationDate="2018-06-08" MovieTimeGrade="LR">
+                    <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                    <pbbase:ChipLayout>SequEL_4.0_RTO3</pbbase:ChipLayout>
+                </pbmeta:CellPac>
+                <pbmeta:ControlKit Name="Sequel® DNA Internal Control 2.0" Description="The Sequel DNA Internal Control 2.0 contains a fixed template of 2 kb length bound to Sequel Binding Kit 2.0 for use as an internal sequencing control. Reagent quantities provide spike-in controls for a minimum of 24 samples." Tags="Control Kit, CCK" Version="2.0" PartNumber="101-084-300" LotNumber="444444" Barcode="444444101084300062030" ExpirationDate="2030-06-20" ChipType="1mChip">
+                    <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                    <pbbase:CustomSequence>>left_adapter\nTAGAGAGAGAAAAGGAGGAGGAGGCAACAACAACAACTCTCTCTA\n>right_adapter\nTAGAGAGAGAAAAGGAGGAGGAGGCAACAACAACAACTCTCTCTA\n>custom_sequence\nTGTCTAGGTCATCTCAACGTAGCTTTGACATATAACTTATCTAAAGTAATCCCTGCACACCTGTATGCATTATGCTTGCTATACACGCGGACACAGGCATATCATTTATTTTTTGCCATGTCCATTAATTGTTCAATAATTTTACTCACGGTATTTAATTTGATGTTGTGTTATATAGAATTGGAATTAAACTTATAAGGATGCTTAGACGTTGCATTATAAAAGTTTATGTACTAAGTATTTAAGACATTGGCATATGATTATAGCTTGACATTATTAAAAATTAATTAATTAAATCTCACACAATACTTATTCAAGACATTTTTACTAAGATAACCAAAGGAATGCGAACAAAATAATACTTAAAATATAAGACTTAGAAGTAATATGATCCAATAGTTACATATAGTACACTAAGTTCCTAAATTATATAACTTTAAAACAAAGTTACGAAATTTGGAAATAATTTTATTTAATCATATTTTCATAATAATGAAATACTGTTTATTTCAGTGGCGAAAAGAGATAATACGATTTTATAGTGATAGAATATCCTTGAAATATCTAAAGATAAAATTAGAAACTTTCTCTTTTCGCTGTAAAGCTATATGACTTAAAAATAACTTATACGCAAAGTATATTGCAGTGGAAACCCAAGAGTATAGTAGCCATGTAATCTCGGGTTCGAAACTACACGCCGCGCACGTAGTCAGATGGTCTGAAACTTGTCTGGGGCTGTTTGTTGACGGATGGAGACTTCACTAAGTGGCGTCAGGCGATGCGCACACACGGGACTCAATCCCGTAGCATGTTATGTGTCGTTCGAAACTCGTGCGTTCGAGATTTACGCCACATTGCCGGCTGGTCCAAGGACGTTATCTACCAGATGATACGGTCCAATTCGTAAGTTTGACTCACATAGTCGCGAACCGCGGAGCTGGAGAACAATAATTACCGGATGATTAGTTGACCATACGCACTATCATGCTCCGTGACTCAGTTTCCGCCATGGAGTTCTCACAGCCCCGTGTGTACCATAACTGCAGTAAGTAAGGACCTTGTTCGGAGGCCGACTCGTATTTCATATGATCTTAGTCTCGCCACCTTATCGCACGAATTGGGGGTGTCTTTTAGCCGACTCCGGCACGATCCGCCGGGAAGTTACTCGACCAGTTGCGGGACGCCCTAGTATGTTCGTATTACGTTCGATGCGTAAGCACCCCAGAGATTTTTGGCGGACGTTTCGGTAAATCATAGTAGAACCGGAGCGGTAAAGCTATTGATAACACGCAGGGACGAGCCAGTCGTCTAAGCTCCTCAGGGGTACCGTTCGCCGGACTACAGCCTGTCCCCGGCGGCCGCAACTGGGCTGCGATCCAGCCCCCGCTCCAAAAGGATGACTCGACCTTGCGCCTCGCGTACTCTGCTCTCGAGCTGTCTCCGTGGGCAATGCCGGCTCACGCTGTGGGGAACCCTGGACGCCCGGGCCGAGCCGACGTGGCCCCGCCCAGGCCTTTTCGTCGATCGCAGCTATGTACCCTGTGCTGGCCAGCGCTACTGCGCCGGCCATTAGCGGTGCGCTCTCGACTCGGCCCCAACGTAGACGGCGTCGCTGGCCGGATTCAAAGAAGTGAGCTACTACCATCGCGTGACGCCCTGCGGGCCTGAGTAACCGTGCACGAAGGACACCCCGTTCGTGGCGGGGGTTGCCTCCGCGACGGTCGCCAACGTTGGGGGTCGGTGCATTCAGGCGACGAGGGACCGCTGGTTTCCGGAGAGCGGCCTGTGCTCACACAGGTGCGGTCCATGGGGCCTGTGGATCCGGTTCTCCCACGCGTAGCGCCGGCGTTAGCATGGACGCTAAATAAGTATACGCCGGCAAAGGGAGTGTAGGCCGGCCCGAGGGCAATCGCGGTTACCGGGGTGGGGGAGCTCCCCGCACCAGCCTTGATGTGGTGTGCGAGCG</pbbase:CustomSequence>
+                </pbmeta:ControlKit>
+                <pbmeta:TemplatePrepKit Name="CRISPR/Cas9 Placeholder w/ asymmetric adapters" Description="The SMRTbell® Template Prep Kit contains reagent supplies to perform SMRTbell library preparations of primer-annealed SMRTbell libraries for insert sizes ranging from 500 bp to over 20 kb." Tags="Template Prep Kit, TPK" Version="1.0" PartNumber="100-902-400" LotNumber="333333" Barcode="333333100902400092215" ExpirationDate="2015-09-22" IsRestricted="true" MinInsertSize="500" MaxInsertSize="20000">
+                    <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                    <pbbase:LeftAdaptorSequence>ATCTCTCTCAATTTTTTTTTTTTTTTTTTTTTTTAAGAGAGAGAT</pbbase:LeftAdaptorSequence>
+                    <pbbase:LeftPrimerSequence>aacggaggaggagga</pbbase:LeftPrimerSequence>
+                    <pbbase:RightAdaptorSequence>ATCTCTCTCAACAACAACAACGGAGGAGGAGGAAAAGAGAGAGAT</pbbase:RightAdaptorSequence>
+                    <pbbase:RightPrimerSequence>aacggaggaggagga</pbbase:RightPrimerSequence>
+                </pbmeta:TemplatePrepKit>
+                <pbmeta:BindingKit Name="Sequel® Binding Kit 2.0" Description="The Sequel Binding Kit 2.0 contains reagent supplies to bind prepared DNA template libraries to the Sequel Polymerase 2.0 in preparation for sequencing on the Sequel System. The result is a DNA polymerase/template complex. Sequel Binding Kit 1.0 should be used only with Sequel Sequencing Kit 2.0. Reagent quantities support 24 binding reactions." Tags="Binding Kit, BDK" Version="2.0" PartNumber="100-862-200" LotNumber="777777" Barcode="777777100862200062030" ExpirationDate="2030-06-20" ChipType="1mChip">
+                    <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                </pbmeta:BindingKit>
+                <pbmeta:SequencingKitPlate Name="Sequel® Dev Sequencing Plate" Description="The DNA Sequencing Kit contains a sequencing reagent plate with chemistry for single molecule real-time sequencing on the PacBio Sequel®. Reagent quantities support 8 sequencing reactions to be used in conjunction with SMRT® Cell 4Pac(s).  (8 Cells max/Each Row supplies reagents for 1 Sequel SMRT Cell)" Tags="Sequencing Kit, SQK" Version="3.0" PartNumber="999-861-800" LotNumber="010765" Barcode="010765999861800030818" ExpirationDate="2018-03-08" IsRestricted="true">
+                    <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                    <pbrk:ReagentTubes Name="Sequel® SMRT®Cell Oil" PartNumber="100-619-600" LotNumber="012197" Barcode="012197100619600033122" ExpirationDate="2022-03-31">
+                        <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                    </pbrk:ReagentTubes>
+                </pbmeta:SequencingKitPlate>
+                <pbmeta:Primary>
+                    <pbmeta:AutomationName>SequelAlpha</pbmeta:AutomationName>
+                    <pbmeta:ConfigFileName>SqlPoC_SubCrf_2C2A-t2.xml</pbmeta:ConfigFileName>
+                    <pbmeta:OutputOptions>
+                        <pbmeta:ResultsFolder>326/3260208/r54075_20180905_232954/1_A01/</pbmeta:ResultsFolder>
+                        <pbmeta:CollectionPathUri>/pbi/collections/326/3260208/r54075_20180905_232954/1_A01/</pbmeta:CollectionPathUri>
+                        <pbmeta:CopyFiles>
+                            <pbmeta:CollectionFileCopy>Trace</pbmeta:CollectionFileCopy>
+                            <pbmeta:CollectionFileCopy>Fasta</pbmeta:CollectionFileCopy>
+                            <pbmeta:CollectionFileCopy>Bam</pbmeta:CollectionFileCopy>
+                            <pbmeta:CollectionFileCopy>StatsH5</pbmeta:CollectionFileCopy>
+                        </pbmeta:CopyFiles>
+                        <pbmeta:Readout>Pulses</pbmeta:Readout>
+                        <pbmeta:MetricsVerbosity>High</pbmeta:MetricsVerbosity>
+                        <pbmeta:TransferResource>
+                            <pbmeta:Id>srs-pbi-collections</pbmeta:Id>
+                            <pbmeta:TransferScheme>SRS</pbmeta:TransferScheme>
+                            <pbmeta:Name>PBI Collections Xfer test using Rsync+SSH</pbmeta:Name>
+                            <pbmeta:Description>Test Location for writing Transfer services to write to. Should be used by internal tools (PA SIM) and ICS tests</pbmeta:Description>
+                            <pbmeta:DestPath>/pbi/collections</pbmeta:DestPath>
+                        </pbmeta:TransferResource>
+                    </pbmeta:OutputOptions>
+                </pbmeta:Primary>
+                <pbmeta:Secondary>
+                    <pbmeta:AutomationName>NoRS_Standard_Edna.1</pbmeta:AutomationName>
+                    <pbmeta:AutomationParameters>
+                        <pbmeta:AutomationParameter Name="Reference" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="EColi5k_001_BsaI_AS_tc6_scr_tc6_unrolled_circular_12x_l123900"/>
+                    </pbmeta:AutomationParameters>
+                    <pbmeta:CellCountInJob>0</pbmeta:CellCountInJob>
+                </pbmeta:Secondary>
+                <pbmeta:UserDefinedFields>
+                    <pbbase:DataEntities Name="LIMS_IMPORT" ValueDataType="String" SimpleValue="1234TestFolder"/>
+                    <pbbase:DataEntities Name="USER" ValueDataType="String" SimpleValue="TestUser"/>
+                    <pbbase:DataEntities ValueDataType="String"/>
+                    <pbbase:DataEntities ValueDataType="String"/>
+                    <pbbase:DataEntities ValueDataType="String"/>
+                    <pbbase:DataEntities ValueDataType="String"/>
+                </pbmeta:UserDefinedFields>
+                <pbmeta:ComponentVersions>
+                    <pbmeta:VersionInfo Name="ics" Version="6.0.0.SNAPSHOT39495"/>
+                    <pbmeta:VersionInfo Name="iui" Version="6.0.0.SNAPSHOT39495"/>
+                    <pbmeta:VersionInfo Name="chemistry" Version="6.0.0.SNAPSHOT39452"/>
+                    <pbmeta:VersionInfo Name="pa" Version="6.0.0.SNAPSHOT39495"/>
+                    <pbmeta:VersionInfo Name="paws" Version="6.0.0.SNAPSHOT39495"/>
+                    <pbmeta:VersionInfo Name="ppa" Version="6.0.0.SNAPSHOT39495"/>
+                    <pbmeta:VersionInfo Name="realtime" Version="6.0.0.SNAPSHOT39495"/>
+                    <pbmeta:VersionInfo Name="transfer" Version="6.0.0.SNAPSHOT39495"/>
+                    <pbmeta:VersionInfo Name="smrtlink-analysisservices-gui" Version="6.0.0.45618"/>
+                    <pbmeta:VersionInfo Name="smrtimisc" Version="6.0.0.45621"/>
+                    <pbmeta:VersionInfo Name="smrtlink" Version="6.0.0.45621"/>
+                    <pbmeta:VersionInfo Name="smrttools" Version="6.0.0.45580"/>
+                    <pbmeta:VersionInfo Name="smrtinub" Version="6.0.0.45580"/>
+                    <pbmeta:VersionInfo Name="smrtview" Version="6.0.0.45580"/>
+                </pbmeta:ComponentVersions>
+            </pbmeta:CollectionMetadata>
+            <pbmeta:CollectionMetadata CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" UniqueId="cd8e9b35-e755-4b6b-9878-ba45e6700781" MetaType="CollectionMetadata" TimeStampedName="60001-CollectionMetadata-2015-07-09T09:30:47.833Z" Context="m54075_180905_225130" Status="Ready" InstrumentId="60001" InstrumentName="Inst60001">
+                <pbmeta:InstCtrlVer>6.0.0.SNAPSHOT39495</pbmeta:InstCtrlVer>
+                <pbmeta:SigProcVer>6.0.0.SNAPSHOT39495</pbmeta:SigProcVer>
+                <pbmeta:RunDetails>
+                    <pbmeta:TimeStampedName>r54075_20180905_225050</pbmeta:TimeStampedName>
+                    <pbmeta:Name>3260208_188nM-GTAC_3xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494</pbmeta:Name>
+                    <pbmeta:CreatedBy>unknown</pbmeta:CreatedBy>
+                    <pbmeta:WhenCreated>2015-07-09T09:30:47.833Z</pbmeta:WhenCreated>
+                    <pbmeta:StartedBy>unknown</pbmeta:StartedBy>
+                </pbmeta:RunDetails>
+                <pbmeta:WellSample Name="3260208_188nM-GTAC_3xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00">
+                    <pbmeta:WellName>SamplePlate-1-A-1</pbmeta:WellName>
+                    <pbmeta:Concentration>0.0</pbmeta:Concentration>
+                    <pbmeta:InsertSize>0</pbmeta:InsertSize>
+                    <pbmeta:SampleReuseEnabled>false</pbmeta:SampleReuseEnabled>
+                    <pbmeta:StageHotstartEnabled>false</pbmeta:StageHotstartEnabled>
+                    <pbmeta:SizeSelectionEnabled>false</pbmeta:SizeSelectionEnabled>
+                    <pbmeta:UseCount>0</pbmeta:UseCount>
+                    <pbsample:BioSamples>
+                        <pbsample:BioSample Name="test test "/>
+                    </pbsample:BioSamples>
+                </pbmeta:WellSample>
+                <pbmeta:Automation Name="manualcellprep.py">
+                    <pbbase:AutomationParameters>
+                        <pbbase:AutomationParameter Name="CouplerLaserPower" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="Double" SimpleValue="7"/>
+                        <pbbase:AutomationParameter Name="MovieLength" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="Double" SimpleValue="15"/>
+                        <pbbase:AutomationParameter Name="Exposure" CreatedAt="2018-03-19T20:02:47.574Z" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="0.01"/>
+                        <pbbase:AutomationParameter Name="SNRCut" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="Double" SimpleValue="2.5"/>
+                        <pbbase:AutomationParameter Name="ActiveLaserPower" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="False"/>
+                        <pbbase:AutomationParameter Name="sequencingPixelROI" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="JSON" SimpleValue="[[0,0,1080,1920]]"/>
+                        <pbbase:AutomationParameter Name="traceFilePixelROI" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="JSON" SimpleValue="[[0,0,8,32],[71,0,8,32],[142,0,8,32],[213,0,8,32],[284,0,8,32],[355,0,8,32],[426,0,8,32],[497,0,8,32],[568,0,8,32],[639,0,8,32],[710,0,8,32],[781,0,8,32],[852,0,8,32],[923,0,8,32],[994,0,8,32],[1072,0,8,32],[0,128,8,32],[71,128,8,32],[142,128,8,32],[213,128,8,32],[284,128,8,32],[355,128,8,32],[426,128,8,32],[497,128,8,32],[568,128,8,32],[639,128,8,32],[710,128,8,32],[781,128,8,32],[852,128,8,32],[923,128,8,32],[994,128,8,32],[1072,128,8,32],[0,256,8,32],[71,256,8,32],[142,256,8,32],[213,256,8,32],[284,256,8,32],[355,256,8,32],[426,256,8,32],[497,256,8,32],[568,256,8,32],[639,256,8,32],[710,256,8,32],[781,256,8,32],[852,256,8,32],[923,256,8,32],[994,256,8,32],[1072,256,8,32],[0,384,8,32],[71,384,8,32],[142,384,8,32],[213,384,8,32],[284,384,8,32],[355,384,8,32],[426,384,8,32],[497,384,8,32],[568,384,8,32],[639,384,8,32],[710,384,8,32],[781,384,8,32],[852,384,8,32],[923,384,8,32],[994,384,8,32],[1072,384,8,32],[0,512,8,32],[71,512,8,32],[142,512,8,32],[213,512,8,32],[284,512,8,32],[355,512,8,32],[426,512,8,32],[497,512,8,32],[568,512,8,32],[639,512,8,32],[710,512,8,32],[781,512,8,32],[852,512,8,32],[923,512,8,32],[994,512,8,32],[1072,512,8,32],[0,640,8,32],[71,640,8,32],[142,640,8,32],[213,640,8,32],[284,640,8,32],[355,640,8,32],[426,640,8,32],[497,640,8,32],[568,640,8,32],[639,640,8,32],[710,640,8,32],[781,640,8,32],[852,640,8,32],[923,640,8,32],[994,640,8,32],[1072,640,8,32],[0,768,8,32],[71,768,8,32],[142,768,8,32],[213,768,8,32],[284,768,8,32],[355,768,8,32],[426,768,8,32],[497,768,8,32],[568,768,8,32],[639,768,8,32],[710,768,8,32],[781,768,8,32],[852,768,8,32],[923,768,8,32],[994,768,8,32],[1072,768,8,32],[0,896,8,32],[71,896,8,32],[142,896,8,32],[213,896,8,32],[284,896,8,32],[355,896,8,32],[426,896,8,32],[497,896,8,32],[568,896,8,32],[639,896,8,32],[710,896,8,32],[781,896,8,32],[852,896,8,32],[923,896,8,32],[994,896,8,32],[1072,896,8,32],[0,1024,8,32],[71,1024,8,32],[142,1024,8,32],[213,1024,8,32],[284,1024,8,32],[355,1024,8,32],[426,1024,8,32],[497,1024,8,32],[568,1024,8,32],[639,1024,8,32],[710,1024,8,32],[781,1024,8,32],[852,1024,8,32],[923,1024,8,32],[994,1024,8,32],[1072,1024,8,32],[0,1152,8,32],[71,1152,8,32],[142,1152,8,32],[213,1152,8,32],[284,1152,8,32],[355,1152,8,32],[426,1152,8,32],[497,1152,8,32],[568,1152,8,32],[639,1152,8,32],[710,1152,8,32],[781,1152,8,32],[852,1152,8,32],[923,1152,8,32],[994,1152,8,32],[1072,1152,8,32],[0,1280,8,32],[71,1280,8,32],[142,1280,8,32],[213,1280,8,32],[284,1280,8,32],[355,1280,8,32],[426,1280,8,32],[497,1280,8,32],[568,1280,8,32],[639,1280,8,32],[710,1280,8,32],[781,1280,8,32],[852,1280,8,32],[923,1280,8,32],[994,1280,8,32],[1072,1280,8,32],[0,1408,8,32],[71,1408,8,32],[142,1408,8,32],[213,1408,8,32],[284,1408,8,32],[355,1408,8,32],[426,1408,8,32],[497,1408,8,32],[568,1408,8,32],[639,1408,8,32],[710,1408,8,32],[781,1408,8,32],[852,1408,8,32],[923,1408,8,32],[994,1408,8,32],[1072,1408,8,32],[0,1536,8,32],[71,1536,8,32],[142,1536,8,32],[213,1536,8,32],[284,1536,8,32],[355,1536,8,32],[426,1536,8,32],[497,1536,8,32],[568,1536,8,32],[639,1536,8,32],[710,1536,8,32],[781,1536,8,32],[852,1536,8,32],[923,1536,8,32],[994,1536,8,32],[1072,1536,8,32],[0,1664,8,32],[71,1664,8,32],[142,1664,8,32],[213,1664,8,32],[284,1664,8,32],[355,1664,8,32],[426,1664,8,32],[497,1664,8,32],[568,1664,8,32],[639,1664,8,32],[710,1664,8,32],[781,1664,8,32],[852,1664,8,32],[923,1664,8,32],[994,1664,8,32],[1072,1664,8,32],[0,1792,8,32],[71,1792,8,32],[142,1792,8,32],[213,1792,8,32],[284,1792,8,32],[355,1792,8,32],[426,1792,8,32],[497,1792,8,32],[568,1792,8,32],[639,1792,8,32],[710,1792,8,32],[781,1792,8,32],[852,1792,8,32],[923,1792,8,32],[994,1792,8,32],[1072,1792,8,32],[0,1888,8,32],[71,1888,8,32],[142,1888,8,32],[213,1888,8,32],[284,1888,8,32],[355,1888,8,32],[426,1888,8,32],[497,1888,8,32],[568,1888,8,32],[639,1888,8,32],[710,1888,8,32],[781,1888,8,32],[852,1888,8,32],[923,1888,8,32],[994,1888,8,32],[1072,1888,8,32]]"/>
+                        <pbbase:AutomationParameter Name="CellAtStage" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="True"/>
+                        <pbbase:AutomationParameter Name="SkipAlignment" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="False"/>
+                        <pbbase:AutomationParameter Name="UseStageHotStart" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="False"/>
+                        <pbbase:AutomationParameter Name="CellNFCIndex" ValueDataType="Int32" SimpleValue="1"/>
+                        <pbbase:AutomationParameter Name="CollectionNumber" ValueDataType="Int32" SimpleValue="0"/>
+                        <pbbase:AutomationParameter Name="HasN2Switch" ValueDataType="Boolean" SimpleValue="False"/>
+                        <pbbase:AutomationParameter Name="TipSearchMaxDuration" ValueDataType="Int32" SimpleValue="576"/>
+                    </pbbase:AutomationParameters>
+                    <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                </pbmeta:Automation>
+                <pbmeta:CollectionNumber>0</pbmeta:CollectionNumber>
+                <pbmeta:CellIndex>0</pbmeta:CellIndex>
+                <pbmeta:SetNumber>0</pbmeta:SetNumber>
+                <pbmeta:CellPac Name="SMRT® Cell 1M v2 LR (4/Pack)" Description="The Sequel SMRT Cell 1M (4/Pack) are nanofabricated consumables each patterned with 1,000,000 wells called zero-mode waveguides (ZMWs). They are packaged together in a streamlined 4 SMRT Cell format (4/tray). One SMRT Cell is utilized in each sequencing reaction, and experiments can be run in single or in batch mode, giving your projects a greater level of flexibility." Version="2.0" PartNumber="101-008-001" LotNumber="321693" Barcode="BA233119" ExpirationDate="2018-06-08" MovieTimeGrade="LR">
+                    <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                    <pbbase:ChipLayout>SequEL_4.0_RTO3</pbbase:ChipLayout>
+                </pbmeta:CellPac>
+                <pbmeta:ControlKit Name="Sequel® DNA Internal Control 2.0" Description="The Sequel DNA Internal Control 2.0 contains a fixed template of 2 kb length bound to Sequel Binding Kit 2.0 for use as an internal sequencing control. Reagent quantities provide spike-in controls for a minimum of 24 samples." Tags="Control Kit, CCK" Version="2.0" PartNumber="101-084-300" LotNumber="444444" Barcode="444444101084300062030" ExpirationDate="2030-06-20" ChipType="1mChip">
+                    <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                    <pbbase:CustomSequence>>left_adapter\nTAGAGAGAGAAAAGGAGGAGGAGGCAACAACAACAACTCTCTCTA\n>right_adapter\nTAGAGAGAGAAAAGGAGGAGGAGGCAACAACAACAACTCTCTCTA\n>custom_sequence\nTGTCTAGGTCATCTCAACGTAGCTTTGACATATAACTTATCTAAAGTAATCCCTGCACACCTGTATGCATTATGCTTGCTATACACGCGGACACAGGCATATCATTTATTTTTTGCCATGTCCATTAATTGTTCAATAATTTTACTCACGGTATTTAATTTGATGTTGTGTTATATAGAATTGGAATTAAACTTATAAGGATGCTTAGACGTTGCATTATAAAAGTTTATGTACTAAGTATTTAAGACATTGGCATATGATTATAGCTTGACATTATTAAAAATTAATTAATTAAATCTCACACAATACTTATTCAAGACATTTTTACTAAGATAACCAAAGGAATGCGAACAAAATAATACTTAAAATATAAGACTTAGAAGTAATATGATCCAATAGTTACATATAGTACACTAAGTTCCTAAATTATATAACTTTAAAACAAAGTTACGAAATTTGGAAATAATTTTATTTAATCATATTTTCATAATAATGAAATACTGTTTATTTCAGTGGCGAAAAGAGATAATACGATTTTATAGTGATAGAATATCCTTGAAATATCTAAAGATAAAATTAGAAACTTTCTCTTTTCGCTGTAAAGCTATATGACTTAAAAATAACTTATACGCAAAGTATATTGCAGTGGAAACCCAAGAGTATAGTAGCCATGTAATCTCGGGTTCGAAACTACACGCCGCGCACGTAGTCAGATGGTCTGAAACTTGTCTGGGGCTGTTTGTTGACGGATGGAGACTTCACTAAGTGGCGTCAGGCGATGCGCACACACGGGACTCAATCCCGTAGCATGTTATGTGTCGTTCGAAACTCGTGCGTTCGAGATTTACGCCACATTGCCGGCTGGTCCAAGGACGTTATCTACCAGATGATACGGTCCAATTCGTAAGTTTGACTCACATAGTCGCGAACCGCGGAGCTGGAGAACAATAATTACCGGATGATTAGTTGACCATACGCACTATCATGCTCCGTGACTCAGTTTCCGCCATGGAGTTCTCACAGCCCCGTGTGTACCATAACTGCAGTAAGTAAGGACCTTGTTCGGAGGCCGACTCGTATTTCATATGATCTTAGTCTCGCCACCTTATCGCACGAATTGGGGGTGTCTTTTAGCCGACTCCGGCACGATCCGCCGGGAAGTTACTCGACCAGTTGCGGGACGCCCTAGTATGTTCGTATTACGTTCGATGCGTAAGCACCCCAGAGATTTTTGGCGGACGTTTCGGTAAATCATAGTAGAACCGGAGCGGTAAAGCTATTGATAACACGCAGGGACGAGCCAGTCGTCTAAGCTCCTCAGGGGTACCGTTCGCCGGACTACAGCCTGTCCCCGGCGGCCGCAACTGGGCTGCGATCCAGCCCCCGCTCCAAAAGGATGACTCGACCTTGCGCCTCGCGTACTCTGCTCTCGAGCTGTCTCCGTGGGCAATGCCGGCTCACGCTGTGGGGAACCCTGGACGCCCGGGCCGAGCCGACGTGGCCCCGCCCAGGCCTTTTCGTCGATCGCAGCTATGTACCCTGTGCTGGCCAGCGCTACTGCGCCGGCCATTAGCGGTGCGCTCTCGACTCGGCCCCAACGTAGACGGCGTCGCTGGCCGGATTCAAAGAAGTGAGCTACTACCATCGCGTGACGCCCTGCGGGCCTGAGTAACCGTGCACGAAGGACACCCCGTTCGTGGCGGGGGTTGCCTCCGCGACGGTCGCCAACGTTGGGGGTCGGTGCATTCAGGCGACGAGGGACCGCTGGTTTCCGGAGAGCGGCCTGTGCTCACACAGGTGCGGTCCATGGGGCCTGTGGATCCGGTTCTCCCACGCGTAGCGCCGGCGTTAGCATGGACGCTAAATAAGTATACGCCGGCAAAGGGAGTGTAGGCCGGCCCGAGGGCAATCGCGGTTACCGGGGTGGGGGAGCTCCCCGCACCAGCCTTGATGTGGTGTGCGAGCG</pbbase:CustomSequence>
+                </pbmeta:ControlKit>
+                <pbmeta:TemplatePrepKit Name="CRISPR/Cas9 Placeholder w/ asymmetric adapters" Description="The SMRTbell® Template Prep Kit contains reagent supplies to perform SMRTbell library preparations of primer-annealed SMRTbell libraries for insert sizes ranging from 500 bp to over 20 kb." Tags="Template Prep Kit, TPK" Version="1.0" PartNumber="100-902-400" LotNumber="333333" Barcode="333333100902400092215" ExpirationDate="2015-09-22" IsRestricted="true" MinInsertSize="500" MaxInsertSize="20000">
+                    <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                    <pbbase:LeftAdaptorSequence>ATCTCTCTCAATTTTTTTTTTTTTTTTTTTTTTTAAGAGAGAGAT</pbbase:LeftAdaptorSequence>
+                    <pbbase:LeftPrimerSequence>aacggaggaggagga</pbbase:LeftPrimerSequence>
+                    <pbbase:RightAdaptorSequence>ATCTCTCTCAACAACAACAACGGAGGAGGAGGAAAAGAGAGAGAT</pbbase:RightAdaptorSequence>
+                    <pbbase:RightPrimerSequence>aacggaggaggagga</pbbase:RightPrimerSequence>
+                </pbmeta:TemplatePrepKit>
+                <pbmeta:BindingKit Name="Sequel® Binding Kit 2.0" Description="The Sequel Binding Kit 2.0 contains reagent supplies to bind prepared DNA template libraries to the Sequel Polymerase 2.0 in preparation for sequencing on the Sequel System. The result is a DNA polymerase/template complex. Sequel Binding Kit 1.0 should be used only with Sequel Sequencing Kit 2.0. Reagent quantities support 24 binding reactions." Tags="Binding Kit, BDK" Version="2.0" PartNumber="100-862-200" LotNumber="777777" Barcode="777777100862200062030" ExpirationDate="2030-06-20" ChipType="1mChip">
+                    <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                </pbmeta:BindingKit>
+                <pbmeta:SequencingKitPlate Name="Sequel® Dev Sequencing Plate" Description="The DNA Sequencing Kit contains a sequencing reagent plate with chemistry for single molecule real-time sequencing on the PacBio Sequel®. Reagent quantities support 8 sequencing reactions to be used in conjunction with SMRT® Cell 4Pac(s).  (8 Cells max/Each Row supplies reagents for 1 Sequel SMRT Cell)" Tags="Sequencing Kit, SQK" Version="3.0" PartNumber="999-861-800" LotNumber="010765" Barcode="010765999861800030818" ExpirationDate="2018-03-08" IsRestricted="true">
+                    <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                    <pbrk:ReagentTubes Name="Sequel® SMRT®Cell Oil" PartNumber="100-619-600" LotNumber="012197" Barcode="012197100619600033122" ExpirationDate="2022-03-31">
+                        <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                    </pbrk:ReagentTubes>
+                </pbmeta:SequencingKitPlate>
+                <pbmeta:Primary>
+                    <pbmeta:AutomationName>SequelAlpha</pbmeta:AutomationName>
+                    <pbmeta:ConfigFileName>SqlPoC_SubCrf_2C2A-t2.xml</pbmeta:ConfigFileName>
+                    <pbmeta:OutputOptions>
+                        <pbmeta:ResultsFolder>326/3260208/r54075_20180905_225050/1_A01/</pbmeta:ResultsFolder>
+                        <pbmeta:CollectionPathUri>/pbi/collections/326/3260208/r54075_20180905_225050/1_A01/</pbmeta:CollectionPathUri>
+                        <pbmeta:CopyFiles>
+                            <pbmeta:CollectionFileCopy>Trace</pbmeta:CollectionFileCopy>
+                            <pbmeta:CollectionFileCopy>Fasta</pbmeta:CollectionFileCopy>
+                            <pbmeta:CollectionFileCopy>Bam</pbmeta:CollectionFileCopy>
+                            <pbmeta:CollectionFileCopy>StatsH5</pbmeta:CollectionFileCopy>
+                        </pbmeta:CopyFiles>
+                        <pbmeta:Readout>Pulses</pbmeta:Readout>
+                        <pbmeta:MetricsVerbosity>High</pbmeta:MetricsVerbosity>
+                        <pbmeta:TransferResource>
+                            <pbmeta:Id>srs-pbi-collections</pbmeta:Id>
+                            <pbmeta:TransferScheme>SRS</pbmeta:TransferScheme>
+                            <pbmeta:Name>PBI Collections Xfer test using Rsync+SSH</pbmeta:Name>
+                            <pbmeta:Description>Test Location for writing Transfer services to write to. Should be used by internal tools (PA SIM) and ICS tests</pbmeta:Description>
+                            <pbmeta:DestPath>/pbi/collections</pbmeta:DestPath>
+                        </pbmeta:TransferResource>
+                    </pbmeta:OutputOptions>
+                </pbmeta:Primary>
+                <pbmeta:Secondary>
+                    <pbmeta:AutomationName>NoRS_Standard_Edna.1</pbmeta:AutomationName>
+                    <pbmeta:AutomationParameters>
+                        <pbmeta:AutomationParameter Name="Reference" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="EColi5k_001_BsaI_AS_tc6_scr_tc6_unrolled_circular_12x_l123900"/>
+                    </pbmeta:AutomationParameters>
+                    <pbmeta:CellCountInJob>0</pbmeta:CellCountInJob>
+                </pbmeta:Secondary>
+                <pbmeta:UserDefinedFields>
+                    <pbbase:DataEntities Name="LIMS_IMPORT" ValueDataType="String" SimpleValue="1234TestFolder"/>
+                    <pbbase:DataEntities Name="USER" ValueDataType="String" SimpleValue="TestUser"/>
+                    <pbbase:DataEntities ValueDataType="String"/>
+                    <pbbase:DataEntities ValueDataType="String"/>
+                    <pbbase:DataEntities ValueDataType="String"/>
+                    <pbbase:DataEntities ValueDataType="String"/>
+                </pbmeta:UserDefinedFields>
+                <pbmeta:ComponentVersions>
+                    <pbmeta:VersionInfo Name="ics" Version="6.0.0.SNAPSHOT39495"/>
+                    <pbmeta:VersionInfo Name="iui" Version="6.0.0.SNAPSHOT39495"/>
+                    <pbmeta:VersionInfo Name="chemistry" Version="6.0.0.SNAPSHOT39452"/>
+                    <pbmeta:VersionInfo Name="pa" Version="6.0.0.SNAPSHOT39495"/>
+                    <pbmeta:VersionInfo Name="paws" Version="6.0.0.SNAPSHOT39495"/>
+                    <pbmeta:VersionInfo Name="ppa" Version="6.0.0.SNAPSHOT39495"/>
+                    <pbmeta:VersionInfo Name="realtime" Version="6.0.0.SNAPSHOT39495"/>
+                    <pbmeta:VersionInfo Name="transfer" Version="6.0.0.SNAPSHOT39495"/>
+                    <pbmeta:VersionInfo Name="smrtlink-analysisservices-gui" Version="6.0.0.45618"/>
+                    <pbmeta:VersionInfo Name="smrtimisc" Version="6.0.0.45621"/>
+                    <pbmeta:VersionInfo Name="smrtlink" Version="6.0.0.45621"/>
+                    <pbmeta:VersionInfo Name="smrttools" Version="6.0.0.45580"/>
+                    <pbmeta:VersionInfo Name="smrtinub" Version="6.0.0.45580"/>
+                    <pbmeta:VersionInfo Name="smrtview" Version="6.0.0.45580"/>
+                </pbmeta:ComponentVersions>
+            </pbmeta:CollectionMetadata>
+            <pbmeta:CollectionMetadata CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" UniqueId="ab0a16df-1bd5-4f09-aa98-35cbedde995d" MetaType="CollectionMetadata" TimeStampedName="60001-CollectionMetadata-2015-07-09T09:30:47.833Z" Context="m54075_180905_221350" Status="Ready" InstrumentId="60001" InstrumentName="Inst60001">
+                <pbmeta:InstCtrlVer>6.0.0.SNAPSHOT39495</pbmeta:InstCtrlVer>
+                <pbmeta:SigProcVer>6.0.0.SNAPSHOT39495</pbmeta:SigProcVer>
+                <pbmeta:RunDetails>
+                    <pbmeta:TimeStampedName>r54075_20180905_221306</pbmeta:TimeStampedName>
+                    <pbmeta:Name>3260208_188nM-GTAC_2xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494</pbmeta:Name>
+                    <pbmeta:CreatedBy>unknown</pbmeta:CreatedBy>
+                    <pbmeta:WhenCreated>2015-07-09T09:30:47.833Z</pbmeta:WhenCreated>
+                    <pbmeta:StartedBy>unknown</pbmeta:StartedBy>
+                </pbmeta:RunDetails>
+                <pbmeta:WellSample Name="3260208_188nM-GTAC_2xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00">
+                    <pbmeta:WellName>SamplePlate-1-A-1</pbmeta:WellName>
+                    <pbmeta:Concentration>0.0</pbmeta:Concentration>
+                    <pbmeta:InsertSize>0</pbmeta:InsertSize>
+                    <pbmeta:SampleReuseEnabled>false</pbmeta:SampleReuseEnabled>
+                    <pbmeta:StageHotstartEnabled>false</pbmeta:StageHotstartEnabled>
+                    <pbmeta:SizeSelectionEnabled>false</pbmeta:SizeSelectionEnabled>
+                    <pbmeta:UseCount>0</pbmeta:UseCount>
+                </pbmeta:WellSample>
+                <pbmeta:Automation Name="manualcellprep.py">
+                    <pbbase:AutomationParameters>
+                        <pbbase:AutomationParameter Name="CouplerLaserPower" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="Double" SimpleValue="7"/>
+                        <pbbase:AutomationParameter Name="MovieLength" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="Double" SimpleValue="15"/>
+                        <pbbase:AutomationParameter Name="Exposure" CreatedAt="2018-03-19T20:02:47.574Z" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="0.01"/>
+                        <pbbase:AutomationParameter Name="SNRCut" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="Double" SimpleValue="2.5"/>
+                        <pbbase:AutomationParameter Name="ActiveLaserPower" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="False"/>
+                        <pbbase:AutomationParameter Name="sequencingPixelROI" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="JSON" SimpleValue="[[0,0,1080,1920]]"/>
+                        <pbbase:AutomationParameter Name="traceFilePixelROI" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="JSON" SimpleValue="[[0,0,8,32],[71,0,8,32],[142,0,8,32],[213,0,8,32],[284,0,8,32],[355,0,8,32],[426,0,8,32],[497,0,8,32],[568,0,8,32],[639,0,8,32],[710,0,8,32],[781,0,8,32],[852,0,8,32],[923,0,8,32],[994,0,8,32],[1072,0,8,32],[0,128,8,32],[71,128,8,32],[142,128,8,32],[213,128,8,32],[284,128,8,32],[355,128,8,32],[426,128,8,32],[497,128,8,32],[568,128,8,32],[639,128,8,32],[710,128,8,32],[781,128,8,32],[852,128,8,32],[923,128,8,32],[994,128,8,32],[1072,128,8,32],[0,256,8,32],[71,256,8,32],[142,256,8,32],[213,256,8,32],[284,256,8,32],[355,256,8,32],[426,256,8,32],[497,256,8,32],[568,256,8,32],[639,256,8,32],[710,256,8,32],[781,256,8,32],[852,256,8,32],[923,256,8,32],[994,256,8,32],[1072,256,8,32],[0,384,8,32],[71,384,8,32],[142,384,8,32],[213,384,8,32],[284,384,8,32],[355,384,8,32],[426,384,8,32],[497,384,8,32],[568,384,8,32],[639,384,8,32],[710,384,8,32],[781,384,8,32],[852,384,8,32],[923,384,8,32],[994,384,8,32],[1072,384,8,32],[0,512,8,32],[71,512,8,32],[142,512,8,32],[213,512,8,32],[284,512,8,32],[355,512,8,32],[426,512,8,32],[497,512,8,32],[568,512,8,32],[639,512,8,32],[710,512,8,32],[781,512,8,32],[852,512,8,32],[923,512,8,32],[994,512,8,32],[1072,512,8,32],[0,640,8,32],[71,640,8,32],[142,640,8,32],[213,640,8,32],[284,640,8,32],[355,640,8,32],[426,640,8,32],[497,640,8,32],[568,640,8,32],[639,640,8,32],[710,640,8,32],[781,640,8,32],[852,640,8,32],[923,640,8,32],[994,640,8,32],[1072,640,8,32],[0,768,8,32],[71,768,8,32],[142,768,8,32],[213,768,8,32],[284,768,8,32],[355,768,8,32],[426,768,8,32],[497,768,8,32],[568,768,8,32],[639,768,8,32],[710,768,8,32],[781,768,8,32],[852,768,8,32],[923,768,8,32],[994,768,8,32],[1072,768,8,32],[0,896,8,32],[71,896,8,32],[142,896,8,32],[213,896,8,32],[284,896,8,32],[355,896,8,32],[426,896,8,32],[497,896,8,32],[568,896,8,32],[639,896,8,32],[710,896,8,32],[781,896,8,32],[852,896,8,32],[923,896,8,32],[994,896,8,32],[1072,896,8,32],[0,1024,8,32],[71,1024,8,32],[142,1024,8,32],[213,1024,8,32],[284,1024,8,32],[355,1024,8,32],[426,1024,8,32],[497,1024,8,32],[568,1024,8,32],[639,1024,8,32],[710,1024,8,32],[781,1024,8,32],[852,1024,8,32],[923,1024,8,32],[994,1024,8,32],[1072,1024,8,32],[0,1152,8,32],[71,1152,8,32],[142,1152,8,32],[213,1152,8,32],[284,1152,8,32],[355,1152,8,32],[426,1152,8,32],[497,1152,8,32],[568,1152,8,32],[639,1152,8,32],[710,1152,8,32],[781,1152,8,32],[852,1152,8,32],[923,1152,8,32],[994,1152,8,32],[1072,1152,8,32],[0,1280,8,32],[71,1280,8,32],[142,1280,8,32],[213,1280,8,32],[284,1280,8,32],[355,1280,8,32],[426,1280,8,32],[497,1280,8,32],[568,1280,8,32],[639,1280,8,32],[710,1280,8,32],[781,1280,8,32],[852,1280,8,32],[923,1280,8,32],[994,1280,8,32],[1072,1280,8,32],[0,1408,8,32],[71,1408,8,32],[142,1408,8,32],[213,1408,8,32],[284,1408,8,32],[355,1408,8,32],[426,1408,8,32],[497,1408,8,32],[568,1408,8,32],[639,1408,8,32],[710,1408,8,32],[781,1408,8,32],[852,1408,8,32],[923,1408,8,32],[994,1408,8,32],[1072,1408,8,32],[0,1536,8,32],[71,1536,8,32],[142,1536,8,32],[213,1536,8,32],[284,1536,8,32],[355,1536,8,32],[426,1536,8,32],[497,1536,8,32],[568,1536,8,32],[639,1536,8,32],[710,1536,8,32],[781,1536,8,32],[852,1536,8,32],[923,1536,8,32],[994,1536,8,32],[1072,1536,8,32],[0,1664,8,32],[71,1664,8,32],[142,1664,8,32],[213,1664,8,32],[284,1664,8,32],[355,1664,8,32],[426,1664,8,32],[497,1664,8,32],[568,1664,8,32],[639,1664,8,32],[710,1664,8,32],[781,1664,8,32],[852,1664,8,32],[923,1664,8,32],[994,1664,8,32],[1072,1664,8,32],[0,1792,8,32],[71,1792,8,32],[142,1792,8,32],[213,1792,8,32],[284,1792,8,32],[355,1792,8,32],[426,1792,8,32],[497,1792,8,32],[568,1792,8,32],[639,1792,8,32],[710,1792,8,32],[781,1792,8,32],[852,1792,8,32],[923,1792,8,32],[994,1792,8,32],[1072,1792,8,32],[0,1888,8,32],[71,1888,8,32],[142,1888,8,32],[213,1888,8,32],[284,1888,8,32],[355,1888,8,32],[426,1888,8,32],[497,1888,8,32],[568,1888,8,32],[639,1888,8,32],[710,1888,8,32],[781,1888,8,32],[852,1888,8,32],[923,1888,8,32],[994,1888,8,32],[1072,1888,8,32]]"/>
+                        <pbbase:AutomationParameter Name="CellAtStage" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="True"/>
+                        <pbbase:AutomationParameter Name="SkipAlignment" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="False"/>
+                        <pbbase:AutomationParameter Name="UseStageHotStart" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="False"/>
+                        <pbbase:AutomationParameter Name="CellNFCIndex" ValueDataType="Int32" SimpleValue="1"/>
+                        <pbbase:AutomationParameter Name="CollectionNumber" ValueDataType="Int32" SimpleValue="0"/>
+                        <pbbase:AutomationParameter Name="HasN2Switch" ValueDataType="Boolean" SimpleValue="False"/>
+                        <pbbase:AutomationParameter Name="TipSearchMaxDuration" ValueDataType="Int32" SimpleValue="576"/>
+                    </pbbase:AutomationParameters>
+                    <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                </pbmeta:Automation>
+                <pbmeta:CollectionNumber>0</pbmeta:CollectionNumber>
+                <pbmeta:CellIndex>0</pbmeta:CellIndex>
+                <pbmeta:SetNumber>0</pbmeta:SetNumber>
+                <pbmeta:CellPac Name="SMRT® Cell 1M v2 LR (4/Pack)" Description="The Sequel SMRT Cell 1M (4/Pack) are nanofabricated consumables each patterned with 1,000,000 wells called zero-mode waveguides (ZMWs). They are packaged together in a streamlined 4 SMRT Cell format (4/tray). One SMRT Cell is utilized in each sequencing reaction, and experiments can be run in single or in batch mode, giving your projects a greater level of flexibility." Version="2.0" PartNumber="101-008-001" LotNumber="321693" Barcode="BA233119" ExpirationDate="2018-06-08" MovieTimeGrade="LR">
+                    <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                    <pbbase:ChipLayout>SequEL_4.0_RTO3</pbbase:ChipLayout>
+                </pbmeta:CellPac>
+                <pbmeta:ControlKit Name="Sequel® DNA Internal Control 2.0" Description="The Sequel DNA Internal Control 2.0 contains a fixed template of 2 kb length bound to Sequel Binding Kit 2.0 for use as an internal sequencing control. Reagent quantities provide spike-in controls for a minimum of 24 samples." Tags="Control Kit, CCK" Version="2.0" PartNumber="101-084-300" LotNumber="444444" Barcode="444444101084300062030" ExpirationDate="2030-06-20" ChipType="1mChip">
+                    <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                    <pbbase:CustomSequence>>left_adapter\nTAGAGAGAGAAAAGGAGGAGGAGGCAACAACAACAACTCTCTCTA\n>right_adapter\nTAGAGAGAGAAAAGGAGGAGGAGGCAACAACAACAACTCTCTCTA\n>custom_sequence\nTGTCTAGGTCATCTCAACGTAGCTTTGACATATAACTTATCTAAAGTAATCCCTGCACACCTGTATGCATTATGCTTGCTATACACGCGGACACAGGCATATCATTTATTTTTTGCCATGTCCATTAATTGTTCAATAATTTTACTCACGGTATTTAATTTGATGTTGTGTTATATAGAATTGGAATTAAACTTATAAGGATGCTTAGACGTTGCATTATAAAAGTTTATGTACTAAGTATTTAAGACATTGGCATATGATTATAGCTTGACATTATTAAAAATTAATTAATTAAATCTCACACAATACTTATTCAAGACATTTTTACTAAGATAACCAAAGGAATGCGAACAAAATAATACTTAAAATATAAGACTTAGAAGTAATATGATCCAATAGTTACATATAGTACACTAAGTTCCTAAATTATATAACTTTAAAACAAAGTTACGAAATTTGGAAATAATTTTATTTAATCATATTTTCATAATAATGAAATACTGTTTATTTCAGTGGCGAAAAGAGATAATACGATTTTATAGTGATAGAATATCCTTGAAATATCTAAAGATAAAATTAGAAACTTTCTCTTTTCGCTGTAAAGCTATATGACTTAAAAATAACTTATACGCAAAGTATATTGCAGTGGAAACCCAAGAGTATAGTAGCCATGTAATCTCGGGTTCGAAACTACACGCCGCGCACGTAGTCAGATGGTCTGAAACTTGTCTGGGGCTGTTTGTTGACGGATGGAGACTTCACTAAGTGGCGTCAGGCGATGCGCACACACGGGACTCAATCCCGTAGCATGTTATGTGTCGTTCGAAACTCGTGCGTTCGAGATTTACGCCACATTGCCGGCTGGTCCAAGGACGTTATCTACCAGATGATACGGTCCAATTCGTAAGTTTGACTCACATAGTCGCGAACCGCGGAGCTGGAGAACAATAATTACCGGATGATTAGTTGACCATACGCACTATCATGCTCCGTGACTCAGTTTCCGCCATGGAGTTCTCACAGCCCCGTGTGTACCATAACTGCAGTAAGTAAGGACCTTGTTCGGAGGCCGACTCGTATTTCATATGATCTTAGTCTCGCCACCTTATCGCACGAATTGGGGGTGTCTTTTAGCCGACTCCGGCACGATCCGCCGGGAAGTTACTCGACCAGTTGCGGGACGCCCTAGTATGTTCGTATTACGTTCGATGCGTAAGCACCCCAGAGATTTTTGGCGGACGTTTCGGTAAATCATAGTAGAACCGGAGCGGTAAAGCTATTGATAACACGCAGGGACGAGCCAGTCGTCTAAGCTCCTCAGGGGTACCGTTCGCCGGACTACAGCCTGTCCCCGGCGGCCGCAACTGGGCTGCGATCCAGCCCCCGCTCCAAAAGGATGACTCGACCTTGCGCCTCGCGTACTCTGCTCTCGAGCTGTCTCCGTGGGCAATGCCGGCTCACGCTGTGGGGAACCCTGGACGCCCGGGCCGAGCCGACGTGGCCCCGCCCAGGCCTTTTCGTCGATCGCAGCTATGTACCCTGTGCTGGCCAGCGCTACTGCGCCGGCCATTAGCGGTGCGCTCTCGACTCGGCCCCAACGTAGACGGCGTCGCTGGCCGGATTCAAAGAAGTGAGCTACTACCATCGCGTGACGCCCTGCGGGCCTGAGTAACCGTGCACGAAGGACACCCCGTTCGTGGCGGGGGTTGCCTCCGCGACGGTCGCCAACGTTGGGGGTCGGTGCATTCAGGCGACGAGGGACCGCTGGTTTCCGGAGAGCGGCCTGTGCTCACACAGGTGCGGTCCATGGGGCCTGTGGATCCGGTTCTCCCACGCGTAGCGCCGGCGTTAGCATGGACGCTAAATAAGTATACGCCGGCAAAGGGAGTGTAGGCCGGCCCGAGGGCAATCGCGGTTACCGGGGTGGGGGAGCTCCCCGCACCAGCCTTGATGTGGTGTGCGAGCG</pbbase:CustomSequence>
+                </pbmeta:ControlKit>
+                <pbmeta:TemplatePrepKit Name="CRISPR/Cas9 Placeholder w/ asymmetric adapters" Description="The SMRTbell® Template Prep Kit contains reagent supplies to perform SMRTbell library preparations of primer-annealed SMRTbell libraries for insert sizes ranging from 500 bp to over 20 kb." Tags="Template Prep Kit, TPK" Version="1.0" PartNumber="100-902-400" LotNumber="333333" Barcode="333333100902400092215" ExpirationDate="2015-09-22" IsRestricted="true" MinInsertSize="500" MaxInsertSize="20000">
+                    <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                    <pbbase:LeftAdaptorSequence>ATCTCTCTCAATTTTTTTTTTTTTTTTTTTTTTTAAGAGAGAGAT</pbbase:LeftAdaptorSequence>
+                    <pbbase:LeftPrimerSequence>aacggaggaggagga</pbbase:LeftPrimerSequence>
+                    <pbbase:RightAdaptorSequence>ATCTCTCTCAACAACAACAACGGAGGAGGAGGAAAAGAGAGAGAT</pbbase:RightAdaptorSequence>
+                    <pbbase:RightPrimerSequence>aacggaggaggagga</pbbase:RightPrimerSequence>
+                </pbmeta:TemplatePrepKit>
+                <pbmeta:BindingKit Name="Sequel® Binding Kit 2.0" Description="The Sequel Binding Kit 2.0 contains reagent supplies to bind prepared DNA template libraries to the Sequel Polymerase 2.0 in preparation for sequencing on the Sequel System. The result is a DNA polymerase/template complex. Sequel Binding Kit 1.0 should be used only with Sequel Sequencing Kit 2.0. Reagent quantities support 24 binding reactions." Tags="Binding Kit, BDK" Version="2.0" PartNumber="100-862-200" LotNumber="777777" Barcode="777777100862200062030" ExpirationDate="2030-06-20" ChipType="1mChip">
+                    <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                </pbmeta:BindingKit>
+                <pbmeta:SequencingKitPlate Name="Sequel® Dev Sequencing Plate" Description="The DNA Sequencing Kit contains a sequencing reagent plate with chemistry for single molecule real-time sequencing on the PacBio Sequel®. Reagent quantities support 8 sequencing reactions to be used in conjunction with SMRT® Cell 4Pac(s).  (8 Cells max/Each Row supplies reagents for 1 Sequel SMRT Cell)" Tags="Sequencing Kit, SQK" Version="3.0" PartNumber="999-861-800" LotNumber="010765" Barcode="010765999861800030818" ExpirationDate="2018-03-08" IsRestricted="true">
+                    <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                    <pbrk:ReagentTubes Name="Sequel® SMRT®Cell Oil" PartNumber="100-619-600" LotNumber="012197" Barcode="012197100619600033122" ExpirationDate="2022-03-31">
+                        <pbbase:Defaults xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+                    </pbrk:ReagentTubes>
+                </pbmeta:SequencingKitPlate>
+                <pbmeta:Primary>
+                    <pbmeta:AutomationName>SequelAlpha</pbmeta:AutomationName>
+                    <pbmeta:ConfigFileName>SqlPoC_SubCrf_2C2A-t2.xml</pbmeta:ConfigFileName>
+                    <pbmeta:OutputOptions>
+                        <pbmeta:ResultsFolder>326/3260208/r54075_20180905_221306/1_A01/</pbmeta:ResultsFolder>
+                        <pbmeta:CollectionPathUri>/pbi/collections/326/3260208/r54075_20180905_221306/1_A01/</pbmeta:CollectionPathUri>
+                        <pbmeta:CopyFiles>
+                            <pbmeta:CollectionFileCopy>Trace</pbmeta:CollectionFileCopy>
+                            <pbmeta:CollectionFileCopy>Fasta</pbmeta:CollectionFileCopy>
+                            <pbmeta:CollectionFileCopy>Bam</pbmeta:CollectionFileCopy>
+                            <pbmeta:CollectionFileCopy>StatsH5</pbmeta:CollectionFileCopy>
+                        </pbmeta:CopyFiles>
+                        <pbmeta:Readout>Pulses</pbmeta:Readout>
+                        <pbmeta:MetricsVerbosity>High</pbmeta:MetricsVerbosity>
+                        <pbmeta:TransferResource>
+                            <pbmeta:Id>srs-pbi-collections</pbmeta:Id>
+                            <pbmeta:TransferScheme>SRS</pbmeta:TransferScheme>
+                            <pbmeta:Name>PBI Collections Xfer test using Rsync+SSH</pbmeta:Name>
+                            <pbmeta:Description>Test Location for writing Transfer services to write to. Should be used by internal tools (PA SIM) and ICS tests</pbmeta:Description>
+                            <pbmeta:DestPath>/pbi/collections</pbmeta:DestPath>
+                        </pbmeta:TransferResource>
+                    </pbmeta:OutputOptions>
+                </pbmeta:Primary>
+                <pbmeta:Secondary>
+                    <pbmeta:AutomationName>NoRS_Standard_Edna.1</pbmeta:AutomationName>
+                    <pbmeta:AutomationParameters>
+                        <pbmeta:AutomationParameter Name="Reference" CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" ValueDataType="String" SimpleValue="EColi5k_001_BsaI_AS_tc6_scr_tc6_unrolled_circular_12x_l123900"/>
+                    </pbmeta:AutomationParameters>
+                    <pbmeta:CellCountInJob>0</pbmeta:CellCountInJob>
+                </pbmeta:Secondary>
+                <pbmeta:UserDefinedFields>
+                    <pbbase:DataEntities Name="LIMS_IMPORT" ValueDataType="String" SimpleValue="1234TestFolder"/>
+                    <pbbase:DataEntities Name="USER" ValueDataType="String" SimpleValue="TestUser"/>
+                    <pbbase:DataEntities ValueDataType="String"/>
+                    <pbbase:DataEntities ValueDataType="String"/>
+                    <pbbase:DataEntities ValueDataType="String"/>
+                    <pbbase:DataEntities ValueDataType="String"/>
+                </pbmeta:UserDefinedFields>
+                <pbmeta:ComponentVersions>
+                    <pbmeta:VersionInfo Name="ics" Version="6.0.0.SNAPSHOT39495"/>
+                    <pbmeta:VersionInfo Name="iui" Version="6.0.0.SNAPSHOT39495"/>
+                    <pbmeta:VersionInfo Name="chemistry" Version="6.0.0.SNAPSHOT39452"/>
+                    <pbmeta:VersionInfo Name="pa" Version="6.0.0.SNAPSHOT39495"/>
+                    <pbmeta:VersionInfo Name="paws" Version="6.0.0.SNAPSHOT39495"/>
+                    <pbmeta:VersionInfo Name="ppa" Version="6.0.0.SNAPSHOT39495"/>
+                    <pbmeta:VersionInfo Name="realtime" Version="6.0.0.SNAPSHOT39495"/>
+                    <pbmeta:VersionInfo Name="transfer" Version="6.0.0.SNAPSHOT39495"/>
+                    <pbmeta:VersionInfo Name="smrtlink-analysisservices-gui" Version="6.0.0.45618"/>
+                    <pbmeta:VersionInfo Name="smrtimisc" Version="6.0.0.45621"/>
+                    <pbmeta:VersionInfo Name="smrtlink" Version="6.0.0.45621"/>
+                    <pbmeta:VersionInfo Name="smrttools" Version="6.0.0.45580"/>
+                    <pbmeta:VersionInfo Name="smrtinub" Version="6.0.0.45580"/>
+                    <pbmeta:VersionInfo Name="smrtview" Version="6.0.0.45580"/>
+                </pbmeta:ComponentVersions>
+            </pbmeta:CollectionMetadata>
+        </pbmeta:Collections>
+    </pbds:DataSetMetadata>
+</pbds:SubreadSet>

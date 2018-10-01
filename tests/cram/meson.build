@@ -1,4 +1,6 @@
 pbmm2_cram_test_data = files([
+  'biosampleSubreads.t',
+  'biosampleConsensus.t',
   'baminput.t',
   'jsoninput.t',
   'nohpc.t',
