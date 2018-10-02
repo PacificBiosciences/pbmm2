@@ -66,6 +66,7 @@ private:
     mm_mapopt_t MapOpts;
     const int32_t NumThreads;
     std::unique_ptr<Index> Idx;
+    AlignmentMode alnMode_;
 };
 
 class AlignedRecord

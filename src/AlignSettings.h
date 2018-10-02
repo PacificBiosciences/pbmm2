@@ -36,6 +36,9 @@ struct AlignSettings : MM2Settings
     int SortThreads;
     int64_t SortMemory;
 
+    bool ZMW;
+    bool HQRegion;
+
     /// Parses the provided CLI::Results and retrieves a defined set of options.
     AlignSettings(const PacBio::CLI::Results& options);
 

@@ -74,7 +74,7 @@ const PlainOption AlignModeOpt{
     "  - \"ISOSEQ\" -k 15 -w 5 --no-hpc -d 2 -i 32 -D 1 -I 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000\n"
     "Default",
     CLI::Option::StringType("SUBREAD"),
-    {"SUBREAD", "CCS", "ISOSEQ"}
+    {"SUBREAD", "CCS", "ISOSEQ", "ZMW"}
 };
 const PlainOption ChunkSize{
     "chunk_size",
@@ -241,6 +241,20 @@ const PlainOption DisableHPC{
     "Disable homopolymer-compressed k-mer (hpc is only activated for SUBREAD mode).",
     CLI::Option::BoolType(false)
 };
+const PlainOption ZMW{
+    "zmw_mode",
+    { "zmw" },
+    "Process ZMW Reads",
+    "Process ZMW Reads, subreadset.xml input required.",
+    CLI::Option::BoolType(false)
+};
+const PlainOption HQRegion{
+    "hq_mode",
+    { "hqregion" },
+    "Process HQ Regions",
+    "Process HQ region of each ZMW, subreadset.xml input required.",
+    CLI::Option::BoolType(false)
+};
 // clang-format on
 }  // namespace OptionNames
 
@@ -256,6 +270,8 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     , ChunkSize(options[OptionNames::ChunkSize])
     , MedianFilter(options[OptionNames::MedianFilter])
     , Sort(options[OptionNames::Sort])
+    , ZMW(options[OptionNames::ZMW])
+    , HQRegion(options[OptionNames::HQRegion])
 {
     MM2Settings::Kmer = options[OptionNames::Kmer];
     MM2Settings::MinimizerWindowSize = options[OptionNames::MinimizerWindowSize];
@@ -384,8 +400,21 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
 
     const std::map<std::string, AlignmentMode> alignModeMap{{"SUBREAD", AlignmentMode::SUBREADS},
                                                             {"ISOSEQ", AlignmentMode::ISOSEQ},
-                                                            {"CCS", AlignmentMode::CCS}};
+                                                            {"CCS", AlignmentMode::CCS},
+                                                            {"UNROLLED", AlignmentMode::UNROLLED}};
+
     MM2Settings::AlignMode = alignModeMap.at(options[OptionNames::AlignModeOpt].get<std::string>());
+    if ((ZMW && MedianFilter) || (HQRegion && MedianFilter)) {
+        PBLOG_FATAL << "Options --zmw/--hqregion and --median-filter are mutually exclusive.";
+        std::exit(EXIT_FAILURE);
+    }
+    if (ZMW || HQRegion) {
+        if (ChunkSize != 100)
+            PBLOG_WARN << "Cannot change --chunk-size in --zmw/--hqregion mode. Parameters "
+                          "--chunk-size is forced to 1.";
+        ChunkSize = 1;
+        MM2Settings::AlignMode = AlignmentMode::UNROLLED;
+    }
 }
 
 int32_t AlignSettings::ThreadCount(int32_t n)
@@ -454,10 +483,15 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         OptionNames::SampleName
     });
 
-    i.AddGroup("Filter Options", {
+    i.AddGroup("Output Filter Options", {
         OptionNames::MinPercConcordance,
-        OptionNames::MinAlignmentLength,
+        OptionNames::MinAlignmentLength
+    });
+
+    i.AddGroup("Input Manipulation Options", {
         OptionNames::MedianFilter,
+        OptionNames::ZMW,
+        OptionNames::HQRegion,
     });
 
     i.AddPositionalArguments({

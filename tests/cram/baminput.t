@@ -183,6 +183,8 @@
   *Number of Alignments: 89 (glob)
   *Number of Bases: 231213 (glob)
   *Mean Concordance (mapped): 91.5015% (glob)
+  *Max mapped read length* (glob)
+  *Mean mapped read length* (glob)
   *Index Build/Read Time: * (glob)
   *Alignment Time: * (glob)
   *Sort Merge Time: * (glob)
