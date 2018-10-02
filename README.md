@@ -33,6 +33,8 @@ Version **0.10.0**:
   * Output run timings and peak memory
   * Change sort CLI UX
   * No overlapping query intervals
+  * Use BioSample or WellSample name from input dataset
+  * Drop fake @SQ checksum
 
 [Full changelog here](#full-changelog)
 
