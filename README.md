@@ -163,7 +163,8 @@ If you have suggestions for our default parameters or ideas for a new
 parameter set, please open a GitHub issue!
 
 ### What other special parameters are used implicitly?
-To achieve similar alignment behavior like blasr, we use
+To achieve similar alignment behavior like blasr, we implicitly use following
+minimap2 parameters:
 
  - soft clipping with `-Y`
  - long cigars for tag `CG` with `-L`
