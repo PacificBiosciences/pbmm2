@@ -176,11 +176,13 @@ std::unique_ptr<std::vector<AlignedRecord>> MM2Helper::Align(
     result->reserve(records->size());
 
     for (const auto& record : *records) {
+        std::vector<AlignedRecord> localResults;
         int numAlns;
         const auto seq = record.Sequence();
         const int qlen = seq.length();
         auto alns = mm_map(Idx->idx_, qlen, seq.c_str(), &numAlns, tbuf.tbuf_, &MapOpts, nullptr);
         bool aligned = false;
+        std::vector<int> used;
         for (int i = 0; i < numAlns; ++i) {
             auto aln = alns[i];
             // if no alignment, continue
@@ -198,10 +200,40 @@ std::unique_ptr<std::vector<AlignedRecord>> MM2Helper::Align(
             mapped.Impl().SetSupplementaryAlignment(aln.sam_pri == 0);
             AlignedRecord alnRec{std::move(mapped)};
             if (filter(alnRec)) {
-                result->emplace_back(std::move(alnRec));
+                used.emplace_back(i);
+                localResults.emplace_back(std::move(alnRec));
                 if (alnMode_ == AlignmentMode::UNROLLED) break;
             }
         }
+        if (used.size() > 1) {
+            for (size_t i = 0; i < used.size(); ++i) {
+                std::ostringstream sa;
+                mm_reg1_t* r = &alns[i];
+                for (size_t j = 0; j < used.size(); ++j) {
+                    if (i == j) continue;
+                    mm_reg1_t* q = &alns[j];
+                    int l_M, l_I = 0, l_D = 0, clip5 = 0, clip3 = 0;
+                    if (r == q || q->parent != q->id || q->p == 0) continue;
+                    if (q->qe - q->qs < q->re - q->rs)
+                        l_M = q->qe - q->qs, l_D = (q->re - q->rs) - l_M;
+                    else
+                        l_M = q->re - q->rs, l_I = (q->qe - q->qs) - l_M;
+                    clip5 = q->rev ? qlen - q->qe : q->qs;
+                    clip3 = q->rev ? q->qs : qlen - q->qe;
+                    sa << Idx->idx_->seq[q->rid].name << ',' << q->rs + 1 << ',' << "+-"[q->rev]
+                       << ',';
+                    if (clip5) sa << clip5 << 'S';
+                    if (l_M) sa << l_M << 'M';
+                    if (l_I) sa << l_I << 'I';
+                    if (l_D) sa << l_D << 'D';
+                    if (clip3) sa << clip3 << 'S';
+                    sa << ',' << q->mapq << ',' << q->blen - q->mlen + q->p->n_ambi << ';';
+                }
+                localResults[i].Record.Impl().AddTag("SA", sa.str());
+            }
+        }
+        for (auto&& a : localResults)
+            result->emplace_back(std::move(a));
         *alignedReads += aligned;
         // cleanup
         for (int i = 0; i < numAlns; ++i)

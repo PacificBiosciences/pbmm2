@@ -35,6 +35,7 @@ Version **0.10.0**:
   * No overlapping query intervals
   * Use BioSample or WellSample name from input dataset
   * Drop fake @SQ checksum
+  * Add `SA` tag
 
 [Full changelog here](#full-changelog)
 
@@ -276,9 +277,6 @@ In addition, sorting is always on per default, 4GB memory is used per sort threa
 provided number of threads is used for sorting (but no more than 8 threads), and
 the parameter preset is chosen implicitly by the input dataset. That means, if you
 have a ConsensusReadSet as input wrapped in a datastore, `CCS` preset is automatically used.
-
-## ToDo
- - Write `SA` tag
 
 ## Full Changelog
 
