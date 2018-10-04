@@ -183,8 +183,8 @@
   *Number of Alignments: 89 (glob)
   *Number of Bases: 231213 (glob)
   *Mean Concordance (mapped): 91.5015% (glob)
-  *Max mapped read length* (glob)
-  *Mean mapped read length* (glob)
+  *Max Mapped Read Length* (glob)
+  *Mean Mapped Read Length* (glob)
   *Index Build/Read Time: * (glob)
   *Alignment Time: * (glob)
   *Sort Merge Time: * (glob)
@@ -196,6 +196,8 @@
   *Requested more threads for alignment (500) than system-wide available* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/pass2.bam -j 1 -J 500 -m 500G
+  *Requested 500 threads for sorting, without specifying --sort. Please check your input. (glob)
+  *Requested 500G memory for sorting, without specifying --sort. Please check your input. (glob)
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail3.bam -j 1 -J 500 --sort
   *Requested more threads for sorting* (glob)
@@ -206,3 +208,33 @@
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail4.bam -j 1 -J 2 --sort -m 100G 2>&1
   *Trying to allocate more memory for sorting* (glob)
   [1]
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/default_parameters.bam --log-level DEBUG 2>&1| grep DEBUG
+  *Minimap2 parameters* (glob)
+  *Kmer size              : 19 (glob)
+  *Minimizer window size  : 10 (glob)
+  *Homopolymer compressed : true (glob)
+  *Gap open 1             : 5 (glob)
+  *Gap open 2             : 56 (glob)
+  *Gap extension 1        : 4 (glob)
+  *Gap extension 2        : 1 (glob)
+  *Match score            : 2 (glob)
+  *Mismatch penalty       : 5 (glob)
+  *Z-drop                 : 400 (glob)
+  *Z-drop inv             : 50 (glob)
+  *Bandwidth              : 2000 (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/default_overrides.bam --log-level DEBUG -o 5 -O 56 -e 4 -E 1 -k 19 -w 10 -A 2 -B 5 -z 400 -Z 50 -r 2000 2>&1| grep DEBUG
+  *Minimap2 parameters* (glob)
+  *Kmer size              : 19 (glob)
+  *Minimizer window size  : 10 (glob)
+  *Homopolymer compressed : true (glob)
+  *Gap open 1             : 5 (glob)
+  *Gap open 2             : 56 (glob)
+  *Gap extension 1        : 4 (glob)
+  *Gap extension 2        : 1 (glob)
+  *Match score            : 2 (glob)
+  *Mismatch penalty       : 5 (glob)
+  *Z-drop                 : 400 (glob)
+  *Z-drop inv             : 50 (glob)
+  *Bandwidth              : 2000 (glob)

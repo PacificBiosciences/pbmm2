@@ -96,9 +96,16 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
     bool fromSubreadset = false;
     bool fromConsensuReadSet = false;
     bool fromTranscriptSet = false;
+    const auto IsUnrolled = [&]() {
+        bool isUnrolled = settings->AlignMode == AlignmentMode::UNROLLED;
+        if (isUnrolled)
+            PBLOG_INFO << "Will not automatically set preset based on JSON input, because unrolled "
+                          "mode via --zmw or --hqregion has been set!";
+        return isUnrolled;
+    };
     switch (*inputType) {
         case BAM::DataSet::TypeEnum::SUBREAD: {
-            if (*isFromJson) {
+            if (*isFromJson && !IsUnrolled()) {
                 settings->AlignMode = AlignmentMode::SUBREADS;
                 PBLOG_INFO << "Setting to SUBREAD preset";
             }
@@ -106,7 +113,7 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
             break;
         }
         case BAM::DataSet::TypeEnum::CONSENSUS_READ: {
-            if (*isFromJson) {
+            if (*isFromJson && !IsUnrolled()) {
                 settings->AlignMode = AlignmentMode::CCS;
                 PBLOG_INFO << "Setting to CCS preset";
             }
@@ -114,7 +121,7 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
             break;
         }
         case BAM::DataSet::TypeEnum::TRANSCRIPT: {
-            if (*isFromJson) {
+            if (*isFromJson && !IsUnrolled()) {
                 settings->AlignMode = AlignmentMode::ISOSEQ;
                 PBLOG_INFO << "Setting to ISOSEQ preset";
             }
@@ -898,8 +905,8 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     PBLOG_INFO << "Number of Alignments: " << s.NumAlns;
     PBLOG_INFO << "Number of Bases: " << s.Bases;
     PBLOG_INFO << "Mean Concordance (mapped): " << meanMappedConcordance << "%";
-    PBLOG_INFO << "Max mapped read length : " << maxMappedLength;
-    PBLOG_INFO << "Mean mapped read length : " << (1.0 * s.Bases / s.NumAlns);
+    PBLOG_INFO << "Max Mapped Read Length : " << maxMappedLength;
+    PBLOG_INFO << "Mean Mapped Read Length : " << (1.0 * s.Bases / s.NumAlns);
 
     PBLOG_INFO << "Index Build/Read Time: " << indexTime.ElapsedTime();
     PBLOG_INFO << "Alignment Time: " << alignmentTime.ElapsedTime();

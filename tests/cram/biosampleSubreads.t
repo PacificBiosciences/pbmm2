@@ -6,19 +6,19 @@
   $ samtools view -H $CRAMTMP/out.bam | grep "@RG"
   *\tSM:UnnamedSample\t* (glob)
 
-  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/out2.bam --sample-name testSample
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/out2.bam --sample testSample
   $ samtools view -H $CRAMTMP/out2.bam | grep "@RG"
   *\tSM:testSample\t* (glob)
 
-  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/out3.bam --sample-name "   TEST bla   "
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/out3.bam --sample "   TEST bla   "
   $ samtools view -H $CRAMTMP/out3.bam | grep "@RG"
   *\tSM:TEST_bla\t* (glob)
 
-  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/out4.bam --sample-name "      "
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/out4.bam --sample "      "
   $ samtools view -H $CRAMTMP/out4.bam | grep "@RG"
   *\tSM:UnnamedSample\t* (glob)
 
-  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/out5.bam --sample-name ""
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/out5.bam --sample ""
   $ samtools view -H $CRAMTMP/out5.bam | grep "@RG"
   *\tSM:UnnamedSample\t* (glob)
 
@@ -28,7 +28,7 @@
   *\tSM:test_test\t* (glob)
   *\tSM:UCLA_1023\t* (glob)
 
-  $ $__PBTEST_PBMM2_EXE align $MERGED $REF $CRAMTMP/out7.bam --sample-name testSample
+  $ $__PBTEST_PBMM2_EXE align $MERGED $REF $CRAMTMP/out7.bam --sample testSample
   $ samtools view -H $CRAMTMP/out7.bam | grep "@RG"
   *\tSM:testSample\t* (glob)
   *\tSM:testSample\t* (glob)

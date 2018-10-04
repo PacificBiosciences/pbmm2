@@ -49,6 +49,7 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
             IdxOpts.w = 5;
             break;
         case AlignmentMode::UNROLLED:
+            IdxOpts.flag |= MM_I_HPC;
             IdxOpts.k = 15;
             IdxOpts.w = 15;
             break;
@@ -69,8 +70,10 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
     MapOpts.flag |= MM_F_NO_PRINT_2ND;
     MapOpts.flag |= MM_F_HARD_MLEVEL;
     MapOpts.mask_level = 0;
+    std::string preset;
     switch (settings.AlignMode) {
         case AlignmentMode::SUBREADS:
+            preset = "SUBREADS";
             MapOpts.a = 2;
             MapOpts.q = 5;
             MapOpts.q2 = 56;
@@ -82,6 +85,7 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
             MapOpts.bw = 2000;
             break;
         case AlignmentMode::CCS:
+            preset = "CCS";
             MapOpts.a = 2;
             MapOpts.q = 5;
             MapOpts.q2 = 56;
@@ -93,6 +97,7 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
             MapOpts.bw = 2000;
             break;
         case AlignmentMode::ISOSEQ:
+            preset = "ISOSEQ";
             MapOpts.flag |= MM_F_SPLICE | MM_F_SPLICE_FOR | MM_F_SPLICE_FLANK;
             MapOpts.max_gap = 2000;
             MapOpts.max_gap_ref = 200000;
@@ -108,6 +113,7 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
             MapOpts.noncan = 5;
             break;
         case AlignmentMode::UNROLLED:
+            preset = "UNROLLED";
             MapOpts.flag |= MM_F_SPLICE | MM_F_SPLICE_FOR;
             MapOpts.max_gap = 10000;
             MapOpts.max_gap_ref = 2000;
@@ -128,10 +134,10 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
             PBLOG_FATAL << "No AlignmentMode --preset selected!";
             std::exit(EXIT_FAILURE);
     }
-    if (settings.GapOpenDelete > 0) MapOpts.q = settings.GapOpenDelete;
-    if (settings.GapOpenInsert > 0) MapOpts.q2 = settings.GapOpenInsert;
-    if (settings.GapExtensionDelete > 0) MapOpts.e = settings.GapExtensionDelete;
-    if (settings.GapExtensionInsert > 0) MapOpts.e2 = settings.GapExtensionInsert;
+    if (settings.GapOpen1 > 0) MapOpts.q = settings.GapOpen1;
+    if (settings.GapOpen2 > 0) MapOpts.q2 = settings.GapOpen2;
+    if (settings.GapExtension1 > 0) MapOpts.e = settings.GapExtension1;
+    if (settings.GapExtension2 > 0) MapOpts.e2 = settings.GapExtension2;
     if (settings.MatchScore > 0) MapOpts.a = settings.MatchScore;
     if (settings.MismatchPenalty > 0) MapOpts.b = settings.MismatchPenalty;
     if (settings.Zdrop > 0) MapOpts.zdrop = settings.Zdrop;
@@ -143,15 +149,16 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
 
     Idx = std::make_unique<Index>(refs, IdxOpts, NumThreads, outputMmi);
     mm_mapopt_update(&MapOpts, Idx->idx_);
-    PBLOG_DEBUG << "Minimap2 parameters";
+    PBLOG_DEBUG << "Minimap2 parameters based on preset: " << preset;
     PBLOG_DEBUG << "Kmer size              : " << Idx->idx_->k;
     PBLOG_DEBUG << "Minimizer window size  : " << Idx->idx_->w;
-    PBLOG_DEBUG << "Homopolymer compressed : " << (Idx->idx_->flag & MM_I_HPC);
+    PBLOG_DEBUG << "Homopolymer compressed : " << std::boolalpha
+                << static_cast<bool>(Idx->idx_->flag & MM_I_HPC);
     if (outputMmi.empty()) {
-        PBLOG_DEBUG << "Deletion gap open      : " << MapOpts.q;
-        PBLOG_DEBUG << "Insertion gap open     : " << MapOpts.q2;
-        PBLOG_DEBUG << "Deletion gap extension : " << MapOpts.e;
-        PBLOG_DEBUG << "Insertion gap extension: " << MapOpts.e2;
+        PBLOG_DEBUG << "Gap open 1             : " << MapOpts.q;
+        PBLOG_DEBUG << "Gap open 2             : " << MapOpts.q2;
+        PBLOG_DEBUG << "Gap extension 1        : " << MapOpts.e;
+        PBLOG_DEBUG << "Gap extension 2        : " << MapOpts.e2;
         PBLOG_DEBUG << "Match score            : " << MapOpts.a;
         PBLOG_DEBUG << "Mismatch penalty       : " << MapOpts.b;
         PBLOG_DEBUG << "Z-drop                 : " << MapOpts.zdrop;
@@ -174,11 +181,13 @@ std::unique_ptr<std::vector<AlignedRecord>> MM2Helper::Align(
     result->reserve(records->size());
 
     for (const auto& record : *records) {
+        std::vector<AlignedRecord> localResults;
         int numAlns;
         const auto seq = record.Sequence();
         const int qlen = seq.length();
         auto alns = mm_map(Idx->idx_, qlen, seq.c_str(), &numAlns, tbuf.tbuf_, &MapOpts, nullptr);
         bool aligned = false;
+        std::vector<int> used;
         for (int i = 0; i < numAlns; ++i) {
             auto aln = alns[i];
             // if no alignment, continue
@@ -196,10 +205,41 @@ std::unique_ptr<std::vector<AlignedRecord>> MM2Helper::Align(
             mapped.Impl().SetSupplementaryAlignment(aln.sam_pri == 0);
             AlignedRecord alnRec{std::move(mapped)};
             if (filter(alnRec)) {
-                result->emplace_back(std::move(alnRec));
+                used.emplace_back(i);
+                localResults.emplace_back(std::move(alnRec));
                 if (alnMode_ == AlignmentMode::UNROLLED) break;
             }
         }
+        if (used.size() > 1) {
+            for (size_t i = 0; i < used.size(); ++i) {
+                std::ostringstream sa;
+                mm_reg1_t* r = &alns[i];
+                for (size_t j = 0; j < used.size(); ++j) {
+                    if (i == j) continue;
+                    mm_reg1_t* q = &alns[j];
+                    int l_M, l_I = 0, l_D = 0, clip5 = 0, clip3 = 0;
+                    if (r == q || q->parent != q->id || q->p == 0) continue;
+                    if (q->qe - q->qs < q->re - q->rs)
+                        l_M = q->qe - q->qs, l_D = (q->re - q->rs) - l_M;
+                    else
+                        l_M = q->re - q->rs, l_I = (q->qe - q->qs) - l_M;
+                    clip5 = q->rev ? qlen - q->qe : q->qs;
+                    clip3 = q->rev ? q->qs : qlen - q->qe;
+                    sa << Idx->idx_->seq[q->rid].name << ',' << q->rs + 1 << ',' << "+-"[q->rev]
+                       << ',';
+                    if (clip5) sa << clip5 << 'S';
+                    if (l_M) sa << l_M << 'M';
+                    if (l_I) sa << l_I << 'I';
+                    if (l_D) sa << l_D << 'D';
+                    if (clip3) sa << clip3 << 'S';
+                    sa << ',' << q->mapq << ',' << q->blen - q->mlen + q->p->n_ambi << ';';
+                }
+                const auto sastr = sa.str();
+                if (!sastr.empty()) localResults[i].Record.Impl().AddTag("SA", sastr);
+            }
+        }
+        for (auto&& a : localResults)
+            result->emplace_back(std::move(a));
         *alignedReads += aligned;
         // cleanup
         for (int i = 0; i < numAlns; ++i)
@@ -252,7 +292,6 @@ void AlignedRecord::ComputeAccuracyBases()
     int32_t ins = 0;
     int32_t del = 0;
     int32_t mismatch = 0;
-    int32_t n = 0;
     int32_t match = 0;
     for (const auto& cigar : Record.CigarData()) {
         int32_t len = cigar.Length();

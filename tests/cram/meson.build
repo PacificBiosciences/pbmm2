@@ -5,7 +5,8 @@ pbmm2_cram_test_data = files([
   'jsoninput.t',
   'nohpc.t',
   'refxml.t',
-  'unrolled.t'])
+  'unrolled.t',
+  'sa.t'])
 
 test(
   'pbmm2_cram test',

@@ -14,10 +14,10 @@ struct MM2Settings
     int32_t NumThreads = -1;
     int32_t Kmer = -1;
     int32_t MinimizerWindowSize = -1;
-    int32_t GapOpenDelete = -1;
-    int32_t GapOpenInsert = -1;
-    int32_t GapExtensionDelete = -1;
-    int32_t GapExtensionInsert = -1;
+    int32_t GapOpen1 = -1;
+    int32_t GapOpen2 = -1;
+    int32_t GapExtension1 = -1;
+    int32_t GapExtension2 = -1;
     int32_t MatchScore = -1;
     int32_t MismatchPenalty = -1;
     int32_t Zdrop = -1;

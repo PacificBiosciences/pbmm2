@@ -6,19 +6,19 @@
   $ samtools view -H $CRAMTMP/ccs.bam | grep "@RG"
   *\tSM:UnnamedSample\t* (glob)
 
-  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/ccs2.bam --sample-name testSample
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/ccs2.bam --sample testSample
   $ samtools view -H $CRAMTMP/ccs2.bam | grep "@RG"
   *\tSM:testSample\t* (glob)
 
-  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/ccs3.bam --sample-name "   TEST bla   "
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/ccs3.bam --sample "   TEST bla   "
   $ samtools view -H $CRAMTMP/ccs3.bam | grep "@RG"
   *\tSM:TEST_bla\t* (glob)
 
-  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/ccs4.bam --sample-name "      "
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/ccs4.bam --sample "      "
   $ samtools view -H $CRAMTMP/ccs4.bam | grep "@RG"
   *\tSM:UnnamedSample\t* (glob)
 
-  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/ccs5.bam --sample-name ""
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/ccs5.bam --sample ""
   $ samtools view -H $CRAMTMP/ccs5.bam | grep "@RG"
   *\tSM:UnnamedSample\t* (glob)
 
@@ -28,7 +28,7 @@
   *\tSM:test_test\t* (glob)
   *\tSM:3260208_188nM-GTAC_4xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494\t* (glob)
 
-  $ $__PBTEST_PBMM2_EXE align $MERGED $REF $CRAMTMP/ccs7.bam --sample-name testSample
+  $ $__PBTEST_PBMM2_EXE align $MERGED $REF $CRAMTMP/ccs7.bam --sample testSample
   $ samtools view -H $CRAMTMP/ccs7.bam | grep "@RG"
   *\tSM:testSample\t* (glob)
   *\tSM:testSample\t* (glob)
