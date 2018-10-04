@@ -291,7 +291,6 @@ void AlignedRecord::ComputeAccuracyBases()
     int32_t ins = 0;
     int32_t del = 0;
     int32_t mismatch = 0;
-    int32_t n = 0;
     int32_t match = 0;
     for (const auto& cigar : Record.CigarData()) {
         int32_t len = cigar.Length();
