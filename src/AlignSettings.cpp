@@ -332,6 +332,19 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
             PlainOption::SizeStringToInt(options[OptionNames::SortMemory].get<std::string>());
         SortThreads = options[OptionNames::SortThreads];
     }
+
+    if (!Sort) {
+        if (SortThreads != 1)
+            PBLOG_WARN
+                << "Requested " << SortThreads
+                << " threads for sorting, without specifying --sort. Please check your input.";
+        const std::string pureMemory = options[OptionNames::SortMemory];
+        if (pureMemory != "768M")
+            PBLOG_WARN
+                << "Requested " << pureMemory
+                << " memory for sorting, without specifying --sort. Please check your input.";
+    }
+
     MM2Settings::NumThreads = ThreadCount(requestedNThreads);
 
     int numAvailableCores = std::thread::hardware_concurrency();

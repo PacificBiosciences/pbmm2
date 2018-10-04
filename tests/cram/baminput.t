@@ -196,6 +196,8 @@
   *Requested more threads for alignment (500) than system-wide available* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/pass2.bam -j 1 -J 500 -m 500G
+  *Requested 500 threads for sorting, without specifying --sort. Please check your input. (glob)
+  *Requested 500G memory for sorting, without specifying --sort. Please check your input. (glob)
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail3.bam -j 1 -J 500 --sort
   *Requested more threads for sorting* (glob)
