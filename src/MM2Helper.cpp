@@ -234,7 +234,8 @@ std::unique_ptr<std::vector<AlignedRecord>> MM2Helper::Align(
                     if (clip3) sa << clip3 << 'S';
                     sa << ',' << q->mapq << ',' << q->blen - q->mlen + q->p->n_ambi << ';';
                 }
-                localResults[i].Record.Impl().AddTag("SA", sa.str());
+                const auto sastr = sa.str();
+                if (!sastr.empty()) localResults[i].Record.Impl().AddTag("SA", sastr);
             }
         }
         for (auto&& a : localResults)
