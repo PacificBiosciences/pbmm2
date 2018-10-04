@@ -108,13 +108,13 @@ pbmm2 align movie.subreadset.xml hg38.referenceset.xml movie.hg38.alignmentset.x
 ConsensusReadSet ⟶ ConsensusAlignmentSet
 
 ```
-pbmm2 align movie.consensusreadset.xml hg38.referenceset.xml movie.hg38.consensusalignmentset.xml
+pbmm2 align movie.consensusreadset.xml hg38.referenceset.xml movie.hg38.consensusalignmentset.xml --preset CCS
 ```
 
 TranscriptSet ⟶ TranscriptAlignmentSet
 
 ```
-pbmm2 align movie.transcriptset.xml hg38.referenceset.xml movie.hg38.transcriptalignmentset.xml
+pbmm2 align movie.transcriptset.xml hg38.referenceset.xml movie.hg38.transcriptalignmentset.xml --preset ISOSEQ
 ```
 
 ## FAQ
