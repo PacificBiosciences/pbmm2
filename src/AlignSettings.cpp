@@ -512,6 +512,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     tcTask.AddOption(OptionNames::MinAlignmentLength);
     tcTask.AddOption(OptionNames::SortMemoryTC);
     tcTask.AddOption(OptionNames::SampleName);
+    tcTask.AddOption(OptionNames::ZMW);
 
     tcTask.InputFileTypes({
         {

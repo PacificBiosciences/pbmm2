@@ -70,8 +70,10 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
     MapOpts.flag |= MM_F_NO_PRINT_2ND;
     MapOpts.flag |= MM_F_HARD_MLEVEL;
     MapOpts.mask_level = 0;
+    std::string preset;
     switch (settings.AlignMode) {
         case AlignmentMode::SUBREADS:
+            preset = "SUBREADS";
             MapOpts.a = 2;
             MapOpts.q = 5;
             MapOpts.q2 = 56;
@@ -83,6 +85,7 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
             MapOpts.bw = 2000;
             break;
         case AlignmentMode::CCS:
+            preset = "CCS";
             MapOpts.a = 2;
             MapOpts.q = 5;
             MapOpts.q2 = 56;
@@ -94,6 +97,7 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
             MapOpts.bw = 2000;
             break;
         case AlignmentMode::ISOSEQ:
+            preset = "ISOSEQ";
             MapOpts.flag |= MM_F_SPLICE | MM_F_SPLICE_FOR | MM_F_SPLICE_FLANK;
             MapOpts.max_gap = 2000;
             MapOpts.max_gap_ref = 200000;
@@ -109,6 +113,7 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
             MapOpts.noncan = 5;
             break;
         case AlignmentMode::UNROLLED:
+            preset = "UNROLLED";
             MapOpts.flag |= MM_F_SPLICE | MM_F_SPLICE_FOR;
             MapOpts.max_gap = 10000;
             MapOpts.max_gap_ref = 2000;
@@ -144,7 +149,7 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
 
     Idx = std::make_unique<Index>(refs, IdxOpts, NumThreads, outputMmi);
     mm_mapopt_update(&MapOpts, Idx->idx_);
-    PBLOG_DEBUG << "Minimap2 parameters";
+    PBLOG_DEBUG << "Minimap2 parameters based on preset: " << preset;
     PBLOG_DEBUG << "Kmer size              : " << Idx->idx_->k;
     PBLOG_DEBUG << "Minimizer window size  : " << Idx->idx_->w;
     PBLOG_DEBUG << "Homopolymer compressed : " << std::boolalpha

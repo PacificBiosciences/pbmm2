@@ -208,7 +208,7 @@
   [1]
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/default_parameters.bam --log-level DEBUG 2>&1| grep DEBUG
-  *Minimap2 parameters (glob)
+  *Minimap2 parameters* (glob)
   *Kmer size              : 19 (glob)
   *Minimizer window size  : 10 (glob)
   *Homopolymer compressed : true (glob)
@@ -223,7 +223,7 @@
   *Bandwidth              : 2000 (glob)
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/default_overrides.bam --log-level DEBUG -o 5 -O 56 -e 4 -E 1 -k 19 -w 10 -A 2 -B 5 -z 400 -Z 50 -r 2000 2>&1| grep DEBUG
-  *Minimap2 parameters (glob)
+  *Minimap2 parameters* (glob)
   *Kmer size              : 19 (glob)
   *Minimizer window size  : 10 (glob)
   *Homopolymer compressed : true (glob)
