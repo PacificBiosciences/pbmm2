@@ -27,11 +27,11 @@ for information on Installation, Support, License, Copyright, and Disclaimer.
 
 Version **0.10.0**:
   * Add `--preset CCS`
-  * Allow disabling of homopolymer-compressed k-mer `--no-hpc`
+  * Allow disabling of homopolymer-compressed k-mer `-u`
   * Adjust concordance metric to be identical to SMRT Link
   * Add reference fasta to dataset output
   * Output run timings and peak memory
-  * Change sort CLI UX
+  * Change CLI UX
   * No overlapping query intervals
   * Use BioSample or WellSample name from input dataset
   * Drop fake @SQ checksum
@@ -70,8 +70,8 @@ Usage: pbmm2 index [options] <ref.fa|xml> <out.mmi>
 ```
 
 **Notes:**
- - If you use an index file, you can't override parameters `-k`, `-w`, nor `--no-hpc` in `pbmm2 align`!
- - Minimap2 parameter `-H` (homopolymer-compressed k-mer) is always on and can be disabled with `--no-hpc`.
+ - If you use an index file, you can't override parameters `-k`, `-w`, nor `-u` in `pbmm2 align`!
+ - Minimap2 parameter `-H` (homopolymer-compressed k-mer) is always on and can be disabled with `-u`.
  - You can also use existing minimap2 `.mmi` files in `pbmm2 align`.
 
 ### Align
@@ -88,7 +88,7 @@ The memory allocated per sort thread can be defined with `-m,--sort-memory`, acc
 
 Benchmarks on human data have shown that 4 threads are recommended, but no more
 than 8 threads can be effectively leveraged, even with 70 cores used for alignment.
-It is recommended to provide more memory to each of a few sort threads, to avoid disk IO,
+It is recommended to provide more memory to each of a few sort threads, to avoid disk IO pressure,
 than providing less memory to each of many sort threads.
 
 #### Alignment Parallelization
@@ -127,9 +127,10 @@ of possible combinations. For this, we currently offer:
 
 ```
   --preset  Set alignment mode:
-             - "SUBREAD" -k 19 -w 10 -d 5 -i 56 -D 4 -I 1 -A 2 -B 5 -z 400 -Z 50 -r 2000
-             - "CCS" -k 19 -w 10 --no-hpc -d 5 -i 56 -D 4 -I 1 -A 2 -B 5 -z 400 -Z 50 -r 2000
-             - "ISOSEQ" -k 15 -w 5 --no-hpc -d 2 -i 32 -D 1 -I 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000
+             - "SUBREAD" -k 19 -w 10 -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000
+             - "CCS" -k 19 -w 10 -u -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000
+             - "ISOSEQ" -k 15 -w 5 -u -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000
+             - "UNROLLED" -k 15 -w 15 -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 2000
             Default ["SUBREAD"]
 ```
 
@@ -137,18 +138,24 @@ If you want to override any of the parameters of your chosen set,
 please use the respective options:
 
 ```
-  -k        k-mer size (no larger than 28). [-1]
-  -w        Minizer window size. [-1]
-  --no-hpc  Disable homopolymer-compressed k-mer (hpc is only activated for SUBREAD mode)
-  -A        Matching score. [-1]
-  -B        Mismatch penalty. [-1]
-  -d        Deletion gap open penalty. [-1]
-  -i        Insertion gap open penalty. [-1]
-  -D        Deletion gap extension penalty. [-1]
-  -I        Insertion gap extension penalty. [-1]
-  -z        Z-drop score. [-1]
-  -Z        Z-drop inversion score. [-1]
-  -r        Bandwidth used in chaining and DP-based alignment. [-1]
+  -k   k-mer size (no larger than 28). [-1]
+  -w   Minizer window size. [-1]
+  -u   Disable homopolymer-compressed k-mer (compression is activate for SUBREAD & UNROLLED presets).
+  -A   Matching score. [-1]
+  -B   Mismatch penalty. [-1]
+  -z   Z-drop score. [-1]
+  -Z   Z-drop inversion score. [-1]
+  -r   Bandwidth used in chaining and DP-based alignment. [-1]
+```
+
+For the piece-wise linear gap penalties, use the following overrides, whereas
+a k-long gap costs min{o+k*e,O+k*E}:
+
+```
+  -o,--gap-open-1     Gap open penalty 1. [-1]
+  -O,--gap-open-2     Gap open penalty 2. [-1]
+  -e,--gap-extend-1   Gap extension penalty 1. [-1]
+  -E,--gap-extend-2   Gap extension penalty 2. [-1]
 ```
 
 For `ISOSEQ`, you can override additional parameters:
@@ -213,6 +220,8 @@ Number of Aligned Reads: 1529671
 Number of Alignments: 3087717
 Number of Bases: 28020786811
 Mean Concordance (mapped): 88.4%
+Max Mapped Read Length : 122989
+Mean Mapped Read Length : 35597.9
 ```
 
 ### Is there any benchmark information, like timings and peak memory consumption?
@@ -251,6 +260,14 @@ No. Please use [minimap2](https://github.com/lh3/minimap2) for that.
 If you are interested in unrolled alignments that is, align the full-length
 ZMW read or the HQ region of a ZMW against an unrolled template, please use
 `--zmw` or `--hqregion`. This is beta feature and still in development.
+
+### How can I set the sample name?
+You can override the sample name (SM field in RG tag) for all read groups
+with `--sample`.
+If not provided, sample names derive from the dataset input with order of
+precedence: biosample name, well sample name, `UnnamedSample`.
+If the input is a BAM file and `--sample` has not been used, the SM field will
+be populated with `UnnamedSample`.
 
 ### How does _pbmm2_ get invoked in pbsmrtpipe?
 The goal was to simplify the interface of _pbmm2_ with pbsmrtpipe.

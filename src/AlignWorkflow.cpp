@@ -898,8 +898,8 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     PBLOG_INFO << "Number of Alignments: " << s.NumAlns;
     PBLOG_INFO << "Number of Bases: " << s.Bases;
     PBLOG_INFO << "Mean Concordance (mapped): " << meanMappedConcordance << "%";
-    PBLOG_INFO << "Max mapped read length : " << maxMappedLength;
-    PBLOG_INFO << "Mean mapped read length : " << (1.0 * s.Bases / s.NumAlns);
+    PBLOG_INFO << "Max Mapped Read Length : " << maxMappedLength;
+    PBLOG_INFO << "Mean Mapped Read Length : " << (1.0 * s.Bases / s.NumAlns);
 
     PBLOG_INFO << "Index Build/Read Time: " << indexTime.ElapsedTime();
     PBLOG_INFO << "Alignment Time: " << alignmentTime.ElapsedTime();

@@ -60,7 +60,7 @@ const PlainOption MinAlignmentLength{
 };
 const PlainOption SampleName{
     "biosample_name",
-    { "sample-name" },
+    { "sample" },
     "Sample Name",
     "Override sample name (SM field in RG tag) for all read groups. If not provided, sample names derive from the datasets with order of precedence: biosample name, well sample name, \"UnnamedSample\".",
     CLI::Option::StringType()
@@ -69,12 +69,13 @@ const PlainOption AlignModeOpt{
     "align_mode",
     { "preset" },
     "Alignment mode",
-    "Set alignment mode:\n  - \"SUBREAD\" -k 19 -w 10 -d 5 -i 56 -D 4 -I 1 -A 2 -B 5 -z 400 -Z 50 -r 2000\n"
-    "  - \"CCS\" -k 19 -w 10 --no-hpc -d 5 -i 56 -D 4 -I 1 -A 2 -B 5 -z 400 -Z 50 -r 2000\n"
-    "  - \"ISOSEQ\" -k 15 -w 5 --no-hpc -d 2 -i 32 -D 1 -I 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000\n"
+    "Set alignment mode:\n  - \"SUBREAD\" -k 19 -w 10 -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000\n"
+    "  - \"CCS\" -k 19 -w 10 -u -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000\n"
+    "  - \"ISOSEQ\" -k 15 -w 5 -u -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000\n"
+    "  - \"UNROLLED\" -k 15 -w 15 -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 2000\n"
     "Default",
     CLI::Option::StringType("SUBREAD"),
-    {"SUBREAD", "CCS", "ISOSEQ", "ZMW"}
+    {"SUBREAD", "CCS", "ISOSEQ", "UNROLLED"}
 };
 const PlainOption ChunkSize{
     "chunk_size",
@@ -97,32 +98,32 @@ const PlainOption MinimizerWindowSize{
     "Minizer window size.",
     CLI::Option::IntType(-1)
 };
-const PlainOption GapOpenDelete{
-    "gap_open_del",
-    { "d" },
-    "Deletion Gap Open Penalty",
-    "Deletion gap open penalty.",
+const PlainOption GapOpen1{
+    "gap_open_1",
+    { "o", "gap-open-1" },
+    "Gap Open Penalty 1",
+    "Gap open penalty 1.",
     CLI::Option::IntType(-1)
 };
-const PlainOption GapOpenInsert{
-    "gap_open_ins",
-    { "i" },
-    "Insertion Gap Open Penalty",
-    "Insertion gap open penalty.",
+const PlainOption GapOpen2{
+    "gap_open_2",
+    { "O", "gap-open-2" },
+    "Gap Open Penalty 2",
+    "Gap open penalty 2.",
     CLI::Option::IntType(-1)
 };
-const PlainOption GapExtensionDelete{
-    "gap_extension_del",
-    { "D" },
-    "Deletion Gap Extension Penalty",
-    "Deletion gap extension penalty.",
+const PlainOption GapExtension1{
+    "gap_extension_1",
+    { "e", "gap-extend-1" },
+    "Gap Extension Penalty 1",
+    "Gap extension penalty 1.",
     CLI::Option::IntType(-1)
 };
-const PlainOption GapExtensionInsert{
+const PlainOption GapExtension2{
     "gap_extension_ins",
-    { "I" },
-    "Insertion Gap Extension Penalty",
-    "Insertion gap extension penalty.",
+    { "E", "gap-extend-2" },
+    "Gap Extension Penalty 2",
+    "Gap extension penalty 2.",
     CLI::Option::IntType(-1)
 };
 const PlainOption MatchScore{
@@ -163,21 +164,21 @@ const PlainOption Bandwidth{
 const PlainOption MaxIntronLength{
     "max_intron_length",
     { "G" },
-    "Max Intron Length (effective in ISOSEQ mode; changing bandwidth)",
+    "Max Intron Length (effective in ISOSEQ preset; changing bandwidth)",
     "Max intron length (changes -r).",
     CLI::Option::IntType(-1)
 };
 const PlainOption NonCanon{
     "non_canon",
     { "C" },
-    "Cost For a Non-Canonical GT-AG Splicing (effective in ISOSEQ mode)",
+    "Cost For a Non-Canonical GT-AG Splicing (effective in ISOSEQ preset)",
     "Cost for a non-canonical GT-AG splicing.",
     CLI::Option::IntType(-1)
 };
 const PlainOption NoSpliceFlank{
     "no_splice_flank",
     { "no-splice-flank" },
-    "Do Not Prefer Splice Flanks GT-AG (effective in ISOSEQ mode)",
+    "Do Not Prefer Splice Flanks GT-AG (effective in ISOSEQ preset)",
     "Do not prefer splice flanks GT-AG.",
     CLI::Option::BoolType(false)
 };
@@ -236,23 +237,23 @@ const PlainOption SortMemoryTC{
 };
 const PlainOption DisableHPC{
     "disable_hpc",
-    { "no-hpc" },
+    { "u", "no-kmer-compression" },
     "Disable Homopolymer-Compressed seeding",
-    "Disable homopolymer-compressed k-mer (hpc is only activated for SUBREAD mode).",
+    "Disable homopolymer-compressed k-mer (compression is activate for SUBREAD & UNROLLED presets).",
     CLI::Option::BoolType(false)
 };
 const PlainOption ZMW{
     "zmw_mode",
     { "zmw" },
     "Process ZMW Reads",
-    "Process ZMW Reads, subreadset.xml input required.",
+    "Process ZMW Reads, subreadset.xml input required (activates UNROLLED preset).",
     CLI::Option::BoolType(false)
 };
 const PlainOption HQRegion{
     "hq_mode",
     { "hqregion" },
     "Process HQ Regions",
-    "Process HQ region of each ZMW, subreadset.xml input required.",
+    "Process HQ region of each ZMW, subreadset.xml input required (activates UNROLLED preset).",
     CLI::Option::BoolType(false)
 };
 // clang-format on
@@ -275,10 +276,10 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
 {
     MM2Settings::Kmer = options[OptionNames::Kmer];
     MM2Settings::MinimizerWindowSize = options[OptionNames::MinimizerWindowSize];
-    MM2Settings::GapOpenDelete = options[OptionNames::GapOpenDelete];
-    MM2Settings::GapOpenInsert = options[OptionNames::GapOpenInsert];
-    MM2Settings::GapExtensionDelete = options[OptionNames::GapExtensionDelete];
-    MM2Settings::GapExtensionInsert = options[OptionNames::GapExtensionInsert];
+    MM2Settings::GapOpen1 = options[OptionNames::GapOpen1];
+    MM2Settings::GapOpen2 = options[OptionNames::GapOpen2];
+    MM2Settings::GapExtension1 = options[OptionNames::GapExtension1];
+    MM2Settings::GapExtension2 = options[OptionNames::GapExtension2];
     MM2Settings::MatchScore = options[OptionNames::MatchScore];
     MM2Settings::MismatchPenalty = options[OptionNames::MismatchPenalty];
     MM2Settings::Zdrop = options[OptionNames::Zdrop];
@@ -404,8 +405,9 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
                                                             {"UNROLLED", AlignmentMode::UNROLLED}};
 
     MM2Settings::AlignMode = alignModeMap.at(options[OptionNames::AlignModeOpt].get<std::string>());
-    if ((ZMW && MedianFilter) || (HQRegion && MedianFilter)) {
-        PBLOG_FATAL << "Options --zmw/--hqregion and --median-filter are mutually exclusive.";
+    int inputFilterCounts = ZMW + MedianFilter + HQRegion;
+    if (inputFilterCounts > 1) {
+        PBLOG_FATAL << "Options --zmw, --hqregion and --median-filter are mutually exclusive.";
         std::exit(EXIT_FAILURE);
     }
     if (ZMW || HQRegion) {
@@ -464,13 +466,16 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         OptionNames::DisableHPC,
         OptionNames::MatchScore,
         OptionNames::MismatchPenalty,
-        OptionNames::GapOpenDelete,
-        OptionNames::GapOpenInsert,
-        OptionNames::GapExtensionDelete,
-        OptionNames::GapExtensionInsert,
         OptionNames::Zdrop,
         OptionNames::ZdropInv,
         OptionNames::Bandwidth,
+    });
+
+    i.AddGroup("Gap Parameter Override Options (a k-long gap costs min{o+k*e,O+k*E})", {
+        OptionNames::GapOpen1,
+        OptionNames::GapOpen2,
+        OptionNames::GapExtension1,
+        OptionNames::GapExtension2,
     });
 
     i.AddGroup("IsoSeq Parameter Override Options", {
@@ -488,7 +493,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         OptionNames::MinAlignmentLength
     });
 
-    i.AddGroup("Input Manipulation Options", {
+    i.AddGroup("Input Manipulation Options (mutually exclusive)", {
         OptionNames::MedianFilter,
         OptionNames::ZMW,
         OptionNames::HQRegion,

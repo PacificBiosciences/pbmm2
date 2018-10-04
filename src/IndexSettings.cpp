@@ -67,9 +67,9 @@ const PlainOption MinimizerWindowSize{
 };
 const PlainOption DisableHPC{
     "disable_hpc",
-    { "no-hpc" },
+    { "u", "no-kmer-compression" },
     "Disable Homopolymer-Compressed seeding",
-    "Disable homopolymer-compressed k-mer (hpc is only activated for SUBREAD mode).",
+    "Disable homopolymer-compressed k-mer (compression is activate for SUBREAD & UNROLLED presets).",
     CLI::Option::BoolType(false)
 };
 // clang-format on

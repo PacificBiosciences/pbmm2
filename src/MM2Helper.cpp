@@ -49,6 +49,7 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
             IdxOpts.w = 5;
             break;
         case AlignmentMode::UNROLLED:
+            IdxOpts.flag |= MM_I_HPC;
             IdxOpts.k = 15;
             IdxOpts.w = 15;
             break;
@@ -128,10 +129,10 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
             PBLOG_FATAL << "No AlignmentMode --preset selected!";
             std::exit(EXIT_FAILURE);
     }
-    if (settings.GapOpenDelete > 0) MapOpts.q = settings.GapOpenDelete;
-    if (settings.GapOpenInsert > 0) MapOpts.q2 = settings.GapOpenInsert;
-    if (settings.GapExtensionDelete > 0) MapOpts.e = settings.GapExtensionDelete;
-    if (settings.GapExtensionInsert > 0) MapOpts.e2 = settings.GapExtensionInsert;
+    if (settings.GapOpen1 > 0) MapOpts.q = settings.GapOpen1;
+    if (settings.GapOpen2 > 0) MapOpts.q2 = settings.GapOpen2;
+    if (settings.GapExtension1 > 0) MapOpts.e = settings.GapExtension1;
+    if (settings.GapExtension2 > 0) MapOpts.e2 = settings.GapExtension2;
     if (settings.MatchScore > 0) MapOpts.a = settings.MatchScore;
     if (settings.MismatchPenalty > 0) MapOpts.b = settings.MismatchPenalty;
     if (settings.Zdrop > 0) MapOpts.zdrop = settings.Zdrop;
@@ -146,12 +147,13 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
     PBLOG_DEBUG << "Minimap2 parameters";
     PBLOG_DEBUG << "Kmer size              : " << Idx->idx_->k;
     PBLOG_DEBUG << "Minimizer window size  : " << Idx->idx_->w;
-    PBLOG_DEBUG << "Homopolymer compressed : " << (Idx->idx_->flag & MM_I_HPC);
+    PBLOG_DEBUG << "Homopolymer compressed : " << std::boolalpha
+                << static_cast<bool>(Idx->idx_->flag & MM_I_HPC);
     if (outputMmi.empty()) {
-        PBLOG_DEBUG << "Deletion gap open      : " << MapOpts.q;
-        PBLOG_DEBUG << "Insertion gap open     : " << MapOpts.q2;
-        PBLOG_DEBUG << "Deletion gap extension : " << MapOpts.e;
-        PBLOG_DEBUG << "Insertion gap extension: " << MapOpts.e2;
+        PBLOG_DEBUG << "Gap open 1             : " << MapOpts.q;
+        PBLOG_DEBUG << "Gap open 2             : " << MapOpts.q2;
+        PBLOG_DEBUG << "Gap extension 1        : " << MapOpts.e;
+        PBLOG_DEBUG << "Gap extension 2        : " << MapOpts.e2;
         PBLOG_DEBUG << "Match score            : " << MapOpts.a;
         PBLOG_DEBUG << "Mismatch penalty       : " << MapOpts.b;
         PBLOG_DEBUG << "Z-drop                 : " << MapOpts.zdrop;
