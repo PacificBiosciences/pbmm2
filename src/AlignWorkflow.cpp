@@ -479,7 +479,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         pipeName = outFile + ".pipe";
         int pipe = mkfifo(pipeName.c_str(), 0666);
         if (pipe == -1) {
-            PBLOG_FATAL << "Could not open pipe! File name: " << pipeName << errno;
+            PBLOG_FATAL << "Could not open pipe! File name: " << pipeName;
             if (errno == EACCES) {
                 PBLOG_FATAL
                     << "Pipe error: "
@@ -728,7 +728,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                                             std::tie(r.FullLength, r.Length);
                                  });
                 size_t mid = tmp.size() / 2;
-                if (logLevel == Logging::LogLevel::DEBUG) {
+                if (logLevel == Logging::LogLevel::TRACE) {
                     std::ostringstream ss;
                     for (size_t x = 0; x < tmp.size(); ++x) {
                         const auto& ra = tmp[x];
@@ -737,7 +737,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                         if (x == mid) ss << ']';
                         ss << ' ';
                     }
-                    PBLOG_DEBUG << "Median filter " << tmp.at(mid).Record.MovieName() << '/'
+                    PBLOG_TRACE << "Median filter " << tmp.at(mid).Record.MovieName() << '/'
                                 << tmp.at(mid).Record.HoleNumber() << ": " << ss.str();
                 }
                 return tmp.at(mid).Record;
