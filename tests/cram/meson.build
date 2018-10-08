@@ -6,7 +6,8 @@ pbmm2_cram_test_data = files([
   'nohpc.t',
   'refxml.t',
   'unrolled.t',
-  'sa.t'])
+  'sa.t',
+  'idempotence.t'])
 
 test(
   'pbmm2_cram test',
