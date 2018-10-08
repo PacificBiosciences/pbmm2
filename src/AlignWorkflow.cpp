@@ -58,7 +58,7 @@ struct Summary
 
 std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
     const std::vector<std::string>& args, AlignSettings* settings, bool* isFromJson,
-    bool* isFromXML, BAM::DataSet::TypeEnum* inputType)
+    bool* isFromXML, BAM::DataSet::TypeEnum* inputType, bool* isAlignedInput)
 {
     if (args.size() < 2) {
         PBLOG_FATAL << "Please provide at least the input arguments: input reference output!";
@@ -103,7 +103,14 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
                           "mode via --zmw or --hqregion has been set!";
         return isUnrolled;
     };
+    const auto AlignedInput = [&]() {
+        *isAlignedInput = true;
+        PBLOG_WARN << "Input is aligned reads. Only primary alignments will be "
+                      "respected to allow idempotence!";
+    };
     switch (*inputType) {
+        case BAM::DataSet::TypeEnum::ALIGNMENT:
+            AlignedInput();
         case BAM::DataSet::TypeEnum::SUBREAD: {
             if (*isFromJson && !IsUnrolled()) {
                 settings->AlignMode = AlignmentMode::SUBREADS;
@@ -112,6 +119,8 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
             fromSubreadset = true;
             break;
         }
+        case BAM::DataSet::TypeEnum::CONSENSUS_ALIGNMENT:
+            AlignedInput();
         case BAM::DataSet::TypeEnum::CONSENSUS_READ: {
             if (*isFromJson && !IsUnrolled()) {
                 settings->AlignMode = AlignmentMode::CCS;
@@ -120,6 +129,8 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
             fromConsensuReadSet = true;
             break;
         }
+        case BAM::DataSet::TypeEnum::TRANSCRIPT_ALIGNMENT:
+            AlignedInput();
         case BAM::DataSet::TypeEnum::TRANSCRIPT: {
             if (*isFromJson && !IsUnrolled()) {
                 settings->AlignMode = AlignmentMode::ISOSEQ;
@@ -127,9 +138,7 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
             }
             fromTranscriptSet = true;
             break;
-        } break;
-        case BAM::DataSet::TypeEnum::ALIGNMENT:
-        case BAM::DataSet::TypeEnum::CONSENSUS_ALIGNMENT:
+        }
         case BAM::DataSet::TypeEnum::BARCODE:
         case BAM::DataSet::TypeEnum::REFERENCE:
         default:
@@ -237,7 +246,7 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
     }
 
     return std::tuple<std::string, std::string, std::string>{inputFile, reference, out};
-}
+}  // namespace
 
 std::unique_ptr<BAM::internal::IQuery> BamQuery(const BAM::DataSet& ds)
 {
@@ -441,14 +450,24 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     std::string alnFile{"-"};
     bool isFromJson;
     bool isFromXML;
+    bool isAlignedInput;
     BAM::DataSet::TypeEnum inputType;
 
-    std::tie(inFile, refFile, outFile) = CheckPositionalArgs(
-        options.PositionalArguments(), &settings, &isFromJson, &isFromXML, &inputType);
+    std::tie(inFile, refFile, outFile) =
+        CheckPositionalArgs(options.PositionalArguments(), &settings, &isFromJson, &isFromXML,
+                            &inputType, &isAlignedInput);
 
-    if (settings.ZMW && inputType != BAM::DataSet::TypeEnum::SUBREAD) {
+    if (settings.ZMW && (inputType != BAM::DataSet::TypeEnum::SUBREAD &&
+                         inputType != BAM::DataSet::TypeEnum::ALIGNMENT)) {
         PBLOG_FATAL << "Option --zmw can only be used with a subreadset.xml containing subread + "
                        "scraps BAM files.";
+        std::exit(EXIT_FAILURE);
+    }
+    if (settings.HQRegion && (inputType != BAM::DataSet::TypeEnum::SUBREAD &&
+                              inputType != BAM::DataSet::TypeEnum::ALIGNMENT)) {
+        PBLOG_FATAL
+            << "Option --hqregion can only be used with a subreadset.xml containing subread + "
+               "scraps BAM files.";
         std::exit(EXIT_FAILURE);
     }
 
@@ -700,7 +719,26 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             waiting--;
         };
 
-        if (settings.MedianFilter) {
+        if (isAlignedInput) {
+            if (settings.MedianFilter)
+                PBLOG_WARN << "Option --median-filter is ignored with aligned input!";
+            if (settings.ZMW) PBLOG_WARN << "Option --zmw is ignored with aligned input!";
+            if (settings.HQRegion) PBLOG_WARN << "Option --hqregion is ignored with aligned input!";
+
+            auto reader = BamQuery(inFile);
+            BAM::BamRecord tmp;
+            while (reader->GetNext(tmp)) {
+                if (tmp.Impl().IsSupplementaryAlignment()) continue;
+                (*records)[i++] = std::move(tmp);
+                tmp = BAM::BamRecord();
+                if (i >= chunkSize) {
+                    waiting++;
+                    faf.ProduceWith(Submit, std::move(records));
+                    records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
+                    i = 0;
+                }
+            }
+        } else if (settings.MedianFilter) {
             struct RecordAnnotated
             {
                 RecordAnnotated(BAM::BamRecord record)

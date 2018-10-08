@@ -180,16 +180,23 @@ std::unique_ptr<std::vector<AlignedRecord>> MM2Helper::Align(
     auto result = std::make_unique<std::vector<AlignedRecord>>();
     result->reserve(records->size());
 
-    for (const auto& record : *records) {
+    for (auto& record : *records) {
         std::vector<AlignedRecord> localResults;
         int numAlns;
-        const auto seq = record.Sequence();
+        const auto seq = record.Sequence(BAM::Orientation::NATIVE);
+        if (record.IsMapped() && record.Impl().IsReverseStrand()) {
+            record.Impl().SetSequenceAndQualities(
+                seq, record.Qualities(BAM::Orientation::NATIVE).Fastq());
+            record.Impl().SetReverseStrand(false);
+            record.Impl().SetMapped(false);
+            record.Impl().CigarData("");
+        }
         const int qlen = seq.length();
         auto alns = mm_map(Idx->idx_, qlen, seq.c_str(), &numAlns, tbuf.tbuf_, &MapOpts, nullptr);
         bool aligned = false;
         std::vector<int> used;
         for (int i = 0; i < numAlns; ++i) {
-            auto aln = alns[i];
+            auto& aln = alns[i];
             // if no alignment, continue
             if (aln.p == nullptr) continue;
             // secondary alignment
@@ -235,7 +242,12 @@ std::unique_ptr<std::vector<AlignedRecord>> MM2Helper::Align(
                     sa << ',' << q->mapq << ',' << q->blen - q->mlen + q->p->n_ambi << ';';
                 }
                 const auto sastr = sa.str();
-                if (!sastr.empty()) localResults[i].Record.Impl().AddTag("SA", sastr);
+                if (!sastr.empty()) {
+                    if (localResults[i].Record.Impl().HasTag("SA"))
+                        localResults[i].Record.Impl().EditTag("SA", sastr);
+                    else
+                        localResults[i].Record.Impl().AddTag("SA", sastr);
+                }
             }
         }
         for (auto&& a : localResults)
