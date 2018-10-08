@@ -394,6 +394,22 @@ std::string OutputFilePrefix(const std::string& outputFile)
     }
     return prefix;
 }
+
+static std::string CreateTmpFile(const std::string& outFile)
+{
+    std::string pipeName;
+    int counter = 0;
+    do {
+        pipeName = std::tmpnam(nullptr);
+        if (++counter == 100) break;
+        PBLOG_DEBUG << "Trying pipe " << pipeName;
+    } while (Utility::FileExists(pipeName));
+    if (counter == 100) {
+        pipeName = outFile + ".pbmm2.pipe";
+        PBLOG_DEBUG << "Trying pipe " << pipeName;
+    }
+    return pipeName;
+}
 }  // namespace
 
 int AlignWorkflow::Runner(const CLI::Results& options)
@@ -476,7 +492,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     std::unique_ptr<std::thread> sortThread;
     std::string pipeName;
     if (settings.Sort) {
-        pipeName = outFile + ".pipe";
+        pipeName = CreateTmpFile(outFile);
         int pipe = mkfifo(pipeName.c_str(), 0666);
         if (pipe == -1) {
             PBLOG_FATAL << "Could not open pipe! File name: " << pipeName;
