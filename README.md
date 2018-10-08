@@ -24,20 +24,7 @@ Please refer to our [official pbbioconda page](https://github.com/PacificBioscie
 for information on Installation, Support, License, Copyright, and Disclaimer.
 
 ## Latest Version
-
-Version **0.10.0**:
-  * Add `--preset CCS`
-  * Allow disabling of homopolymer-compressed k-mer `-u`
-  * Adjust concordance metric to be identical to SMRT Link
-  * Add reference fasta to dataset output
-  * Output run timings and peak memory
-  * Change CLI UX
-  * No overlapping query intervals
-  * Use BioSample or WellSample name from input dataset
-  * Drop fake @SQ checksum
-  * Add `SA` tag
-
-[Full changelog here](#full-changelog)
+Version **0.10.1**: [Full changelog here](#full-changelog)
 
 ## Usage
 _pbmm2_ offers following tools
@@ -279,6 +266,23 @@ the parameter preset is chosen implicitly by the input dataset. That means, if y
 have a ConsensusReadSet as input wrapped in a datastore, `CCS` preset is automatically used.
 
 ## Full Changelog
+
+ * **0.10.1**:
+   * Idempotence. Alignment of alignments results in identical alignments
+   * Use different technique to get tmpfile pipe
+   * Median filter does not log to DEBUG
+
+ * 0.10.0:
+   * Add `--preset CCS`
+   * Allow disabling of homopolymer-compressed k-mer `-u`
+   * Adjust concordance metric to be identical to SMRT Link
+   * Add reference fasta to dataset output
+   * Output run timings and peak memory
+   * Change CLI UX
+   * No overlapping query intervals
+   * Use BioSample or WellSample name from input dataset
+   * Drop fake @SQ checksum
+   * Add `SA` tag
 
  * 0.9.0:
    * Add `--sort`
