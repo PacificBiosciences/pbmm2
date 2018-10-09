@@ -1,7 +1,7 @@
 project(
   'pbmm2',
   ['c', 'cpp'],
-  version : '0.10.1',
+  version : '0.11.0',
   default_options : [
     'buildtype=release',
     'warning_level=3',
@@ -76,6 +76,9 @@ pbmm2_lib_deps = [
   pbmm2_pbcopper_dep,
   pbmm2_minimap2_dep]
 
+# include
+subdir('include')
+
 # sources
 subdir('src')
 
@@ -86,3 +89,21 @@ if not meson.is_subproject()
     subdir('tests')
   endif
 endif
+
+# dependency info
+
+if (not meson.is_subproject())
+  import('pkgconfig').generate(
+    libraries : pbmm2_lib,
+    version : meson.project_version(),
+    name : 'pbmm2',
+    filebase : 'pbmm2',
+    description : 'PacBio C++ library wrapping minimap2 for PacBio native data formats')
+endif
+
+pbmm2_dep = declare_dependency(
+  include_directories : pbmm2_include_directories,
+  link_with : pbmm2_lib,
+  dependencies : pbmm2_lib_deps,
+  version : meson.project_version(),
+  compile_args : pbmm2_flags)

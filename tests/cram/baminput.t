@@ -179,10 +179,10 @@
   *Start reading/building index (glob)
   *Finished reading/building index (glob)
   *Merged sorted output from 0 files and 1 in-memory blocks (glob)
-  *Number of Aligned Reads: 52 (glob)
-  *Number of Alignments: 89 (glob)
-  *Number of Bases: 231213 (glob)
-  *Mean Concordance (mapped): 91.5015% (glob)
+  *Mapped Reads: 52 (glob)
+  *Alignments: 89 (glob)
+  *Mapped Bases: 231213 (glob)
+  *Mean Mapped Concordance: 91.5015% (glob)
   *Max Mapped Read Length* (glob)
   *Mean Mapped Read Length* (glob)
   *Index Build/Read Time: * (glob)
@@ -205,7 +205,7 @@
   *Trying to allocate more memory for sorting* (glob)
   [1]
 
-  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail4.bam -j 1 -J 2 --sort -m 100G 2>&1
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail4.bam -j 1 -J 2 --sort -m 1000G 2>&1
   *Trying to allocate more memory for sorting* (glob)
   [1]
 
@@ -238,3 +238,9 @@
   *Z-drop                 : 400 (glob)
   *Z-drop inv             : 50 (glob)
   *Bandwidth              : 2000 (glob)
+
+Test bam_sort
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sorted_small.bam --sort -J 1 -m 1M --log-level TRACE --log-file $CRAMTMP/sorted_small.txt
+
+Test that median filter does not fail
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/median_output.bam --median-filter

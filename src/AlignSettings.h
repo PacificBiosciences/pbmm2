@@ -9,7 +9,7 @@
 
 #include "PlainOption.h"
 
-#include "MM2Settings.h"
+#include <pbmm2/MM2Settings.h>
 
 namespace PacBio {
 namespace minimap2 {

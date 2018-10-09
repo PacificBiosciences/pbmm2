@@ -6,8 +6,8 @@
 #include <vector>
 
 #include <pbcopper/cli/CLI.h>
+#include <pbmm2/MM2Settings.h>
 
-#include "MM2Settings.h"
 #include "PlainOption.h"
 
 namespace PacBio {

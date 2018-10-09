@@ -21,11 +21,29 @@ pbmm2_version_sources = [
     output : 'Pbmm2Version.cpp',
     configuration : pbmm2_config)]
 
-pbmm2_src_include_directories = include_directories('.')
+pbmm2_lib_cpp_sources = files(['MM2Helper.cpp'])
+
+pbmm2_install = not meson.is_subproject()
+
+pbmm2_lib = library(
+  'pbmm2',
+  pbmm2_lib_cpp_sources,
+  install : pbmm2_install,
+  soversion : meson.project_version(),
+  version : meson.project_version(),
+  dependencies : [
+    pbmm2_zlib_dep,
+    pbmm2_pbbam_dep,
+    pbmm2_pbcopper_dep,
+    pbmm2_minimap2_dep,
+    pbmm2_boost_dep],
+  include_directories : pbmm2_include_directories,
+  cpp_args : pbmm2_flags)
+
+pbmm2_src_include_directories = include_directories('.', '../third-party')
 
 pbmm2_cpp_sources = files([
-  'bam_sort.c',
-  'MM2Helper.cpp',
+  '../third-party/bam_sort.c',
   'AlignSettings.cpp',
   'AlignWorkflow.cpp',
   'IndexSettings.cpp',
@@ -34,22 +52,13 @@ pbmm2_cpp_sources = files([
 
 pbmm2_cpp_sources += pbmm2_version_sources
 
-pbmm2_lib = static_library(
-  'pbmm2',
-  pbmm2_cpp_sources,
-  install : false,
-  dependencies : pbmm2_lib_deps,
-  include_directories : pbmm2_src_include_directories,
-  cpp_args : pbmm2_flags)
-
-
 # executables
 ## pbmm2
 if not meson.is_subproject()
-  pbmm2_main = executable('pbmm2', files(['main.cpp']),
-  install : true,
+  pbmm2_main = executable('pbmm2', files(['main.cpp']) + pbmm2_cpp_sources,
+  install : pbmm2_install,
   dependencies : pbmm2_lib_deps,
-  include_directories : pbmm2_src_include_directories,
+  include_directories : [pbmm2_include_directories, pbmm2_src_include_directories],
   link_with : pbmm2_lib,
   cpp_args : pbmm2_flags)
 endif
