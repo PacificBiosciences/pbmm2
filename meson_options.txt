@@ -2,3 +2,8 @@ option('sse41',
     type : 'boolean',
     value : true,
     description : 'Enable SSE4 codepaths')
+
+option('tests',
+    type : 'boolean',
+    value : true,
+    description : 'Enable dependencies required for testing')

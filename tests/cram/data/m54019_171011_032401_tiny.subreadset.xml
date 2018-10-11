@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pbds:SubreadSet CreatedAt="2017-11-14T13:55:58" MetaType="PacBio.DataSet.SubreadSet" Name="pacbio_dataset_subreadset-171114_215558341" Tags="" TimeStampedName="pacbio_dataset_subreadset-171114_215558341" UniqueId="e7ba4479-979e-39fe-1071-b85b1366b89f" Version="3.0.1" xmlns:pbbase="http://pacificbiosciences.com/PacBioBaseDataModel.xsd" xmlns:pbds="http://pacificbiosciences.com/PacBioDatasets.xsd" xmlns:pbmeta="http://pacificbiosciences.com/PacBioCollectionMetadata.xsd" xmlns:pbrk="http://pacificbiosciences.com/PacBioReagentKit.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pacificbiosciences.com/PacBioDataModel.xsd">
+	<pbbase:ExternalResources>
+		<pbbase:ExternalResource MetaType="PacBio.SubreadFile.SubreadBamFile" ResourceId="m54019_171011_032401_tiny.subreads.bam" TimeStampedName="pacbio_subreadfile_subreadbamfile-171114_215558340" UniqueId="f3acea3f-3dbd-472a-91bc-84f7bb051563">
+			<pbbase:FileIndices>
+				<pbbase:FileIndex MetaType="PacBio.Index.PacBioIndex" ResourceId="m54019_171011_032401_tiny.subreads.bam.pbi" TimeStampedName="pacbio_index_pacbioindex-171114_215558340" UniqueId="e98791d2-9840-4f7e-9750-fb3b5642755f"/>
+			</pbbase:FileIndices>
+			<pbbase:ExternalResources>
+				<pbbase:ExternalResource MetaType="PacBio.SubreadFile.ScrapsBamFile" ResourceId="m54019_171011_032401_tiny.scraps.bam" TimeStampedName="pacbio_subreadfile_scrapsbamfile-171114_215558340" UniqueId="7519dd05-3eaf-4727-88a4-7ab6a1d7009f"/>
+				<pbbase:ExternalResource MetaType="PacBio.SubreadFile.ChipStatsFile" ResourceId="m54019_171011_032401_tiny.sts.xml" TimeStampedName="pacbio_subreadfile_chipstatsfile-171114_215558756" UniqueId="2d0cd2cc-2b8c-4583-a097-c4fc4542e390"/>
+			</pbbase:ExternalResources>
+		</pbbase:ExternalResource>
+	</pbbase:ExternalResources>
+	<pbds:DataSetMetadata>
+		<pbds:TotalLength>2463572</pbds:TotalLength>
+		<pbds:NumRecords>2392</pbds:NumRecords>
+		<pbmeta:Collections>
+			<pbmeta:CollectionMetadata Context="m54019_171011_032401" CreatedAt="2017-10-10T21:14:36.886Z" InstrumentId="54019" InstrumentName="54019" MetaType="CollectionMetadata" ModifiedAt="0001-01-01T00:00:00" Status="Ready" TimeStampedName="54019-CollectionMetadata-2017-14-10T21:14:45.414Z" UniqueId="8bd87e83-7762-4e5c-bd11-057c2cbcb074">
+				<pbmeta:InstCtrlVer>5.0.0.12545</pbmeta:InstCtrlVer>
+				<pbmeta:SigProcVer>5.0.0.6236</pbmeta:SigProcVer>
+				<pbmeta:RunDetails>
+					<pbmeta:TimeStampedName>r54019_20171010_211445</pbmeta:TimeStampedName>
+					<pbmeta:Name>20171010_Backfill_ecoli_ALP_10hr</pbmeta:Name>
+					<pbmeta:CreatedBy>lchern</pbmeta:CreatedBy>
+					<pbmeta:WhenCreated>2017-10-10T21:14:36.886Z</pbmeta:WhenCreated>
+					<pbmeta:StartedBy>unknown</pbmeta:StartedBy>
+					<pbmeta:WhenStarted>0001-01-01T00:00:00</pbmeta:WhenStarted>
+				</pbmeta:RunDetails>
+				<pbmeta:WellSample CreatedAt="2017-10-10T21:14:36.886Z" ModifiedAt="0001-01-01T00:00:00" Name="10-10-2017_14hr_Lambda_Digest_16509P_SA-SG1_DS_4hr">
+					<pbmeta:WellName>B01</pbmeta:WellName>
+					<pbmeta:Concentration>0</pbmeta:Concentration>
+					<pbmeta:InsertSize>8000</pbmeta:InsertSize>
+					<pbmeta:SampleReuseEnabled>false</pbmeta:SampleReuseEnabled>
+					<pbmeta:StageHotstartEnabled>false</pbmeta:StageHotstartEnabled>
+					<pbmeta:SizeSelectionEnabled>true</pbmeta:SizeSelectionEnabled>
+					<pbmeta:UseCount>0</pbmeta:UseCount>
+				</pbmeta:WellSample>
+				<pbmeta:Automation Name="Workflow_Diffusion.py">
+					<pbbase:AutomationParameters>
+						<pbbase:AutomationParameter CreatedAt="2017-10-10T21:14:36.886Z" ModifiedAt="0001-01-01T00:00:00" Name="MovieLength" SimpleValue="840" ValueDataType="Double"/>
+						<pbbase:AutomationParameter CreatedAt="2017-10-10T21:14:36.886Z" ModifiedAt="0001-01-01T00:00:00" Name="ExtensionTime" SimpleValue="240" ValueDataType="Double"/>
+						<pbbase:AutomationParameter CreatedAt="2017-10-10T21:14:36.886Z" ModifiedAt="0001-01-01T00:00:00" Name="ExtendFirst" SimpleValue="True" ValueDataType="Boolean"/>
+						<pbbase:AutomationParameter Name="GentleWash" SimpleValue="True" ValueDataType="Boolean"/>
+						<pbbase:AutomationParameter Name="ImmobilizationTime" SimpleValue="120.0" ValueDataType="Double"/>
+						<pbbase:AutomationParameter Name="CellNFCIndex" SimpleValue="1" ValueDataType="Int32"/>
+						<pbbase:AutomationParameter Name="ExtraIMWashes" SimpleValue="2" ValueDataType="Int32"/>
+						<pbbase:AutomationParameter Name="CollectionNumber" SimpleValue="1" ValueDataType="Int32"/>
+						<pbbase:AutomationParameter Name="UseStageHotStart" SimpleValue="False" ValueDataType="Boolean"/>
+						<pbbase:AutomationParameter Name="InsertSize" SimpleValue="8000" ValueDataType="Int32"/>
+						<pbbase:AutomationParameter Name="HasN2Switch" SimpleValue="False" ValueDataType="Boolean"/>
+						<pbbase:AutomationParameter Name="SNRCut" SimpleValue="3.75" ValueDataType="Double"/>
+					</pbbase:AutomationParameters>
+				</pbmeta:Automation>
+				<pbmeta:CollectionNumber>1</pbmeta:CollectionNumber>
+				<pbmeta:CellIndex>1</pbmeta:CellIndex>
+				<pbmeta:CellPac Barcode="BA116996" Description="The Sequel SMRT Cell 1M (4/Pack) are nanofabricated consumables each patterned with 1,000,000 wells called zero-mode waveguides (ZMWs). They are packaged together in a streamlined 4 SMRT Cell format (4/tray). One SMRT Cell is utilized in each sequencing reaction, and experiments can be run in single or in batch mode, giving your projects a greater level of flexibility." ExpirationDate="2018-04-13" LotNumber="322327" Name="SMRT®Cell 1M (4/Pack)" PartNumber="101-008-000" Version="2.0"/>
+				<pbmeta:TemplatePrepKit Barcode="DM1117100259100111716" Description="The SMRTbell™ Template Prep Kit contains reagent supplies to perform SMRTbell library preparations of primer-annealed SMRTbell libraries for insert sizes ranging from 500 bp to over 20 kb." ExpirationDate="2016-11-17" LotNumber="DM1117" MaxInsertSize="20000" MinInsertSize="500" Name="SMRTbell™ Template Prep Kit" PartNumber="100-259-100" Tags="Template Prep Kit, TPK" Version="1.0">
+					<pbbase:LeftAdaptorSequence>ATCTCTCTCAACAACAACAACGGAGGAGGAGGAAAAGAGAGAGAT</pbbase:LeftAdaptorSequence>
+					<pbbase:LeftPrimerSequence>aacggaggaggagga</pbbase:LeftPrimerSequence>
+					<pbbase:RightAdaptorSequence>ATCTCTCTCAACAACAACAACGGAGGAGGAGGAAAAGAGAGAGAT</pbbase:RightAdaptorSequence>
+					<pbbase:RightPrimerSequence>aacggaggaggagga</pbbase:RightPrimerSequence>
+				</pbmeta:TemplatePrepKit>
+				<pbmeta:BindingKit Barcode="DM1234100862200123120" Description="The Sequel Binding Kit 2.0 contains reagent supplies to bind prepared DNA template libraries to the Sequel Polymerase 1.0 in preparation for sequencing on the Sequel System. The result is a DNA polymerase/template complex. Sequel Binding Kit 1.0 should be used only with Sequel Sequencing Kit 1.0. Reagent quantities support 24 binding reactions." ExpirationDate="2020-12-31" LotNumber="DM1234" Name="Sequel™ Binding Kit 2.0" PartNumber="100-862-200" Tags="Binding Kit, BDK" Version="1.0"/>
+				<pbmeta:SequencingKitPlate ActiveHours="0" Barcode="010966101309400051818" Description="The DNA Sequencing Kit contains a sequencing reagent plate with chemistry for single molecule real-time sequencing on the PacBio RS. Reagent quantities support 4 sequencing reactions to be used in conjunction with SMRT® Cell 4Pac(s).  (4 Cells max/Each Row supplies reagents for 1 Sequel SMRT Cell)" ExpirationDate="2018-05-18" LotNumber="010966" MaxCollections="4" Name="Sequel™ Sequencing Plate 2.1, (4Rxn)" PartNumber="101-309-400" Tags="Sequencing Kit, SQK" Version="2.1">
+					<pbrk:ReagentTubes ActiveHours="0" Barcode="009017100619700122718" ExpirationDate="2018-12-27" LotNumber="009017" Name="Sequel™ OS Enzyme" PartNumber="100-619-700"/>
+					<pbrk:ReagentTubes ActiveHours="0" Barcode="010762100619600063021" ExpirationDate="2021-06-30" LotNumber="010762" Name="Sequel™ SMRT®Cell Oil" PartNumber="100-619-600"/>
+				</pbmeta:SequencingKitPlate>
+				<pbmeta:Primary>
+					<pbmeta:AutomationName>Default</pbmeta:AutomationName>
+					<pbmeta:ConfigFileName>SqlPoC_SubCrf_2C2A-t2.xml</pbmeta:ConfigFileName>
+					<pbmeta:SequencingCondition>DefaultPrimarySequencingCondition</pbmeta:SequencingCondition>
+					<pbmeta:OutputOptions>
+						<pbmeta:ResultsFolder>318/3180366/r54019_20171010_211445/2_B01/</pbmeta:ResultsFolder>
+						<pbmeta:CollectionPathUri>/pbi/collections/318/3180366/r54019_20171010_211445/2_B01/</pbmeta:CollectionPathUri>
+						<pbmeta:CopyFiles>
+							<pbmeta:CollectionFileCopy>Trace</pbmeta:CollectionFileCopy>
+							<pbmeta:CollectionFileCopy>Fasta</pbmeta:CollectionFileCopy>
+							<pbmeta:CollectionFileCopy>Bam</pbmeta:CollectionFileCopy>
+							<pbmeta:CollectionFileCopy>StatsH5</pbmeta:CollectionFileCopy>
+						</pbmeta:CopyFiles>
+						<pbmeta:Readout>Bases_Without_QVs</pbmeta:Readout>
+						<pbmeta:MetricsVerbosity>Minimal</pbmeta:MetricsVerbosity>
+						<pbmeta:TransferResource>
+							<pbmeta:Id>srs-pbi-collections</pbmeta:Id>
+							<pbmeta:TransferScheme>SRS</pbmeta:TransferScheme>
+							<pbmeta:Name>PBI Collections Xfer test using Rsync+SSH</pbmeta:Name>
+							<pbmeta:Description>Test Location for writing Transfer services to write to. Should be used by internal tools (PA SIM) and ICS tests</pbmeta:Description>
+							<pbmeta:DestPath>/pbi/collections</pbmeta:DestPath>
+						</pbmeta:TransferResource>
+					</pbmeta:OutputOptions>
+				</pbmeta:Primary>
+				<pbmeta:Secondary>
+					<pbmeta:AutomationName>DefaultSecondaryAutomationName</pbmeta:AutomationName>
+					<pbmeta:AutomationParameters>
+						<pbmeta:AutomationParameter CreatedAt="0001-01-01T00:00:00" ModifiedAt="0001-01-01T00:00:00" Name="Reference" SimpleValue="DefaultSecondaryAnalysisReferenceName" ValueDataType="String"/>
+					</pbmeta:AutomationParameters>
+					<pbmeta:CellCountInJob>0</pbmeta:CellCountInJob>
+				</pbmeta:Secondary>
+				<pbmeta:UserDefinedFields>
+					<pbbase:DataEntities Name=" LIMS_IMPORT " SimpleValue="DefaultUserDefinedFieldLIMS" ValueDataType="String"/>
+				</pbmeta:UserDefinedFields>
+				<pbmeta:ComponentVersions>
+					<pbmeta:VersionInfo Name="ics" Version="5.0.0.12545"/>
+					<pbmeta:VersionInfo Name="iui" Version="5.0.0.6235"/>
+					<pbmeta:VersionInfo Name="pa" Version="5.0.0.6236"/>
+					<pbmeta:VersionInfo Name="paws" Version="5.0.0.6236"/>
+					<pbmeta:VersionInfo Name="ppa" Version="5.0.0.6236"/>
+					<pbmeta:VersionInfo Name="realtime" Version="5.0.0.6236"/>
+					<pbmeta:VersionInfo Name="transfer" Version="5.0.0.6236"/>
+					<pbmeta:VersionInfo Name="smrtlink" Version="5.1.0.SNAPSHOT13617"/>
+					<pbmeta:VersionInfo Name="smrtlink-analysisservices-gui" Version="5.1.0.SNAPSHOT13599"/>
+					<pbmeta:VersionInfo Name="smrtview" Version="5.1.0.SNAPSHOT13599"/>
+					<pbmeta:VersionInfo Name="smrtimisc" Version="5.1.0.SNAPSHOT13617"/>
+					<pbmeta:VersionInfo Name="smrttools" Version="5.1.0.SNAPSHOT13600"/>
+					<pbmeta:VersionInfo Name="smrtinub" Version="5.1.0.SNAPSHOT13599"/>
+				</pbmeta:ComponentVersions>
+			</pbmeta:CollectionMetadata>
+		</pbmeta:Collections>
+	</pbds:DataSetMetadata>
+</pbds:SubreadSet>
