@@ -1,6 +1,6 @@
 // Author: Armin Töpfer
 
-#include "MM2Helper.h"
+#include <pbmm2/MM2Helper.h>
 
 namespace PacBio {
 namespace minimap2 {
@@ -32,6 +32,21 @@ PacBio::BAM::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const i
 MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
                      const std::string& outputMmi)
     : NumThreads{settings.NumThreads}, alnMode_(settings.AlignMode)
+{
+    std::string preset;
+    PreInit(settings, &preset);
+    Idx = std::make_unique<Index>(refs, IdxOpts, NumThreads, outputMmi);
+    PostInit(settings, preset, outputMmi.empty());
+}
+MM2Helper::MM2Helper(const std::vector<BAM::FastaSequence>& refs, const MM2Settings& settings)
+    : NumThreads{settings.NumThreads}, alnMode_(settings.AlignMode)
+{
+    std::string preset;
+    PreInit(settings, &preset);
+    Idx = std::make_unique<Index>(refs, IdxOpts, NumThreads);
+    PostInit(settings, preset, true);
+}
+void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
 {
     mm_idxopt_init(&IdxOpts);
     switch (settings.AlignMode) {
@@ -70,10 +85,10 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
     MapOpts.flag |= MM_F_NO_PRINT_2ND;
     MapOpts.flag |= MM_F_HARD_MLEVEL;
     MapOpts.mask_level = 0;
-    std::string preset;
+
     switch (settings.AlignMode) {
         case AlignmentMode::SUBREADS:
-            preset = "SUBREADS";
+            *preset = "SUBREADS";
             MapOpts.a = 2;
             MapOpts.q = 5;
             MapOpts.q2 = 56;
@@ -85,7 +100,7 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
             MapOpts.bw = 2000;
             break;
         case AlignmentMode::CCS:
-            preset = "CCS";
+            *preset = "CCS";
             MapOpts.a = 2;
             MapOpts.q = 5;
             MapOpts.q2 = 56;
@@ -97,7 +112,7 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
             MapOpts.bw = 2000;
             break;
         case AlignmentMode::ISOSEQ:
-            preset = "ISOSEQ";
+            *preset = "ISOSEQ";
             MapOpts.flag |= MM_F_SPLICE | MM_F_SPLICE_FOR | MM_F_SPLICE_FLANK;
             MapOpts.max_gap = 2000;
             MapOpts.max_gap_ref = 200000;
@@ -113,7 +128,7 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
             MapOpts.noncan = 5;
             break;
         case AlignmentMode::UNROLLED:
-            preset = "UNROLLED";
+            *preset = "UNROLLED";
             MapOpts.flag |= MM_F_SPLICE | MM_F_SPLICE_FOR;
             MapOpts.max_gap = 10000;
             MapOpts.max_gap_ref = 2000;
@@ -146,15 +161,18 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
     if (settings.MaxIntronLength > 0) mm_mapopt_max_intron_len(&MapOpts, settings.MaxIntronLength);
     if (settings.Bandwidth > 0) MapOpts.bw = settings.Bandwidth;
     if (settings.NoSpliceFlank) MapOpts.flag &= ~MM_F_SPLICE_FLANK;
+}
 
-    Idx = std::make_unique<Index>(refs, IdxOpts, NumThreads, outputMmi);
+void MM2Helper::PostInit(const MM2Settings& settings, const std::string& preset,
+                         const bool postAlignParameter)
+{
     mm_mapopt_update(&MapOpts, Idx->idx_);
     PBLOG_DEBUG << "Minimap2 parameters based on preset: " << preset;
     PBLOG_DEBUG << "Kmer size              : " << Idx->idx_->k;
     PBLOG_DEBUG << "Minimizer window size  : " << Idx->idx_->w;
     PBLOG_DEBUG << "Homopolymer compressed : " << std::boolalpha
                 << static_cast<bool>(Idx->idx_->flag & MM_I_HPC);
-    if (outputMmi.empty()) {
+    if (postAlignParameter) {
         PBLOG_DEBUG << "Gap open 1             : " << MapOpts.q;
         PBLOG_DEBUG << "Gap open 2             : " << MapOpts.q2;
         PBLOG_DEBUG << "Gap extension 1        : " << MapOpts.e;
@@ -175,96 +193,147 @@ std::unique_ptr<std::vector<AlignedRecord>> MM2Helper::Align(
     const std::unique_ptr<std::vector<BAM::BamRecord>>& records, const FilterFunc& filter,
     int32_t* alignedReads) const
 {
-    using namespace PacBio::BAM;
-    ThreadBuffer tbuf;
+    auto tbuf = std::make_unique<ThreadBuffer>();
     auto result = std::make_unique<std::vector<AlignedRecord>>();
     result->reserve(records->size());
 
     for (auto& record : *records) {
-        std::vector<AlignedRecord> localResults;
-        int numAlns;
-        const auto seq = record.Sequence(BAM::Orientation::NATIVE);
-        if (record.IsMapped() && record.Impl().IsReverseStrand()) {
-            record.Impl().SetSequenceAndQualities(
-                seq, record.Qualities(BAM::Orientation::NATIVE).Fastq());
-            record.Impl().SetReverseStrand(false);
-            record.Impl().SetMapped(false);
-            record.Impl().CigarData("");
-        }
-        const int qlen = seq.length();
-        auto alns = mm_map(Idx->idx_, qlen, seq.c_str(), &numAlns, tbuf.tbuf_, &MapOpts, nullptr);
-        bool aligned = false;
-        std::vector<int> used;
-        for (int i = 0; i < numAlns; ++i) {
-            auto& aln = alns[i];
-            // if no alignment, continue
-            if (aln.p == nullptr) continue;
-            // secondary alignment
-            if (aln.id != aln.parent) continue;
+        std::vector<AlignedRecord> localResults = Align(record, filter, tbuf);
+        *alignedReads += !localResults.empty();
 
-            aligned = true;
-            const int32_t refId = aln.rid;
-            const Position refStart = aln.rs;
-            const Strand strand = aln.rev ? Strand::REVERSE : Strand::FORWARD;
-            const Cigar cigar = RenderCigar(&aln, qlen, MapOpts.flag);
-            const uint8_t mapq = aln.mapq;
-            auto mapped = BamRecord::Mapped(record, refId, refStart, strand, cigar, mapq);
-            mapped.Impl().SetSupplementaryAlignment(aln.sam_pri == 0);
-            AlignedRecord alnRec{std::move(mapped)};
-            if (filter(alnRec)) {
-                used.emplace_back(i);
-                localResults.emplace_back(std::move(alnRec));
-                if (alnMode_ == AlignmentMode::UNROLLED) break;
-            }
-        }
-        if (used.size() > 1) {
-            for (size_t i = 0; i < used.size(); ++i) {
-                std::ostringstream sa;
-                mm_reg1_t* r = &alns[i];
-                for (size_t j = 0; j < used.size(); ++j) {
-                    if (i == j) continue;
-                    mm_reg1_t* q = &alns[j];
-                    int l_M, l_I = 0, l_D = 0, clip5 = 0, clip3 = 0;
-                    if (r == q || q->parent != q->id || q->p == 0) continue;
-                    if (q->qe - q->qs < q->re - q->rs)
-                        l_M = q->qe - q->qs, l_D = (q->re - q->rs) - l_M;
-                    else
-                        l_M = q->re - q->rs, l_I = (q->qe - q->qs) - l_M;
-                    clip5 = q->rev ? qlen - q->qe : q->qs;
-                    clip3 = q->rev ? q->qs : qlen - q->qe;
-                    sa << Idx->idx_->seq[q->rid].name << ',' << q->rs + 1 << ',' << "+-"[q->rev]
-                       << ',';
-                    if (clip5) sa << clip5 << 'S';
-                    if (l_M) sa << l_M << 'M';
-                    if (l_I) sa << l_I << 'I';
-                    if (l_D) sa << l_D << 'D';
-                    if (clip3) sa << clip3 << 'S';
-                    sa << ',' << q->mapq << ',' << q->blen - q->mlen + q->p->n_ambi << ';';
-                }
-                const auto sastr = sa.str();
-                if (!sastr.empty()) {
-                    if (localResults[i].Record.Impl().HasTag("SA"))
-                        localResults[i].Record.Impl().EditTag("SA", sastr);
-                    else
-                        localResults[i].Record.Impl().AddTag("SA", sastr);
-                }
-            }
-        }
         for (auto&& a : localResults)
             result->emplace_back(std::move(a));
-        *alignedReads += aligned;
-        // cleanup
-        for (int i = 0; i < numAlns; ++i)
-            if (alns[i].p) free(alns[i].p);
-        free(alns);
     }
 
     return result;
 }
 
+std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const FilterFunc& filter,
+                                            std::unique_ptr<ThreadBuffer>& tbuf) const
+{
+    std::vector<AlignedRecord> localResults;
+    if (record.IsMapped() && record.Impl().IsSupplementaryAlignment()) return localResults;
+
+    std::unique_ptr<ThreadBuffer> tbufLocal;
+    if (!tbuf) tbufLocal = std::make_unique<ThreadBuffer>();
+
+    int numAlns;
+    const auto seq = record.Sequence(BAM::Orientation::NATIVE);
+    std::unique_ptr<BAM::BamRecord> unalignedCopy;
+    if (record.IsMapped() && record.Impl().IsReverseStrand()) {
+        unalignedCopy = std::make_unique<BAM::BamRecord>(record);
+        unalignedCopy->Impl().SetSequenceAndQualities(
+            seq, record.Qualities(BAM::Orientation::NATIVE).Fastq());
+        unalignedCopy->Impl().SetReverseStrand(false);
+        unalignedCopy->Impl().SetMapped(false);
+        unalignedCopy->Impl().CigarData("");
+    }
+    const int qlen = seq.length();
+    auto alns = mm_map(Idx->idx_, qlen, seq.c_str(), &numAlns,
+                       tbufLocal ? tbufLocal->tbuf_ : tbuf->tbuf_, &MapOpts, nullptr);
+    std::vector<int> used;
+    for (int i = 0; i < numAlns; ++i) {
+        auto& aln = alns[i];
+        // if no alignment, continue
+        if (aln.p == nullptr) continue;
+        // secondary alignment
+        if (aln.id != aln.parent) continue;
+
+        const int32_t refId = aln.rid;
+        const BAM::Position refStart = aln.rs;
+        const BAM::Strand strand = aln.rev ? BAM::Strand::REVERSE : BAM::Strand::FORWARD;
+        const BAM::Cigar cigar = RenderCigar(&aln, qlen, MapOpts.flag);
+        const uint8_t mapq = aln.mapq;
+        auto mapped = BAM::BamRecord::Mapped(unalignedCopy ? *unalignedCopy : record, refId,
+                                             refStart, strand, cigar, mapq);
+        mapped.Impl().SetSupplementaryAlignment(aln.sam_pri == 0);
+        AlignedRecord alnRec{std::move(mapped)};
+        if (filter(alnRec)) {
+            used.emplace_back(i);
+            localResults.emplace_back(std::move(alnRec));
+            if (alnMode_ == AlignmentMode::UNROLLED) break;
+        }
+    }
+    if (used.size() > 1) {
+        for (size_t i = 0; i < used.size(); ++i) {
+            std::ostringstream sa;
+            mm_reg1_t* r = &alns[i];
+            for (size_t j = 0; j < used.size(); ++j) {
+                if (i == j) continue;
+                mm_reg1_t* q = &alns[j];
+                int l_M, l_I = 0, l_D = 0, clip5 = 0, clip3 = 0;
+                if (r == q || q->parent != q->id || q->p == 0) continue;
+                if (q->qe - q->qs < q->re - q->rs)
+                    l_M = q->qe - q->qs, l_D = (q->re - q->rs) - l_M;
+                else
+                    l_M = q->re - q->rs, l_I = (q->qe - q->qs) - l_M;
+                clip5 = q->rev ? qlen - q->qe : q->qs;
+                clip3 = q->rev ? q->qs : qlen - q->qe;
+                sa << Idx->idx_->seq[q->rid].name << ',' << q->rs + 1 << ',' << "+-"[q->rev] << ',';
+                if (clip5) sa << clip5 << 'S';
+                if (l_M) sa << l_M << 'M';
+                if (l_I) sa << l_I << 'I';
+                if (l_D) sa << l_D << 'D';
+                if (clip3) sa << clip3 << 'S';
+                sa << ',' << q->mapq << ',' << q->blen - q->mlen + q->p->n_ambi << ';';
+            }
+            const auto sastr = sa.str();
+            if (!sastr.empty()) {
+                if (localResults[i].Record.Impl().HasTag("SA"))
+                    localResults[i].Record.Impl().EditTag("SA", sastr);
+                else
+                    localResults[i].Record.Impl().AddTag("SA", sastr);
+            }
+        }
+    }
+    // cleanup
+    for (int i = 0; i < numAlns; ++i)
+        if (alns[i].p) free(alns[i].p);
+    free(alns);
+
+    return localResults;
+}
+
+std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record) const
+{
+    auto tbuf = std::make_unique<ThreadBuffer>();
+    const auto noopFilter = [](const AlignedRecord&) { return true; };
+    return Align(record, noopFilter, tbuf);
+}
+
+std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record,
+                                            const FilterFunc& filter) const
+{
+    auto tbuf = std::make_unique<ThreadBuffer>();
+    return Align(record, filter, tbuf);
+}
+
+std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record,
+                                            std::unique_ptr<ThreadBuffer>& tbuf) const
+{
+    const auto noopFilter = [](const AlignedRecord&) { return true; };
+    return Align(record, noopFilter, tbuf);
+}
+
 std::vector<PacBio::BAM::SequenceInfo> MM2Helper::SequenceInfos() const
 {
     return Idx->SequenceInfos();
+}
+
+Index::Index(const std::vector<BAM::FastaSequence>& refs, const mm_idxopt_t& opts,
+             const int32_t& numThreads)
+{
+    const auto numRefs = refs.size();
+    const char** seq;
+    seq = (const char**)calloc(numRefs + 1, sizeof(char*));
+    for (size_t i = 0; i < numRefs; ++i)
+        seq[i] = refs[i].Bases().c_str();
+    const char** name;
+    name = (const char**)calloc(numRefs + 1, sizeof(char*));
+    for (size_t i = 0; i < numRefs; ++i)
+        name[i] = refs[i].Name().c_str();
+
+    idx_ = mm_idx_str(opts.w, opts.k, opts.flag & MM_I_HPC, 0, numRefs, numThreads, seq, name);
 }
 
 Index::Index(const std::string& fname, const mm_idxopt_t& opts, const int32_t& numThreads,

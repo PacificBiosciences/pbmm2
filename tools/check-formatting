@@ -6,7 +6,7 @@ CLANGFORMAT="clang-format -style=file"
 
 if [ "$1" == "--all" ]
 then
-    find src \( -name *.cpp -or -name *.h \) -print0 \
+    find src include \( -name *.cpp -or -name *.h \) -print0 \
     | xargs -n1 -0 ${CLANGFORMAT} -output-replacements-xml \
     | grep -c "<replacement " > /dev/null
     grepCode=$?

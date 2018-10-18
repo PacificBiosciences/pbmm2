@@ -1,0 +1,11 @@
+// Author: Armin Töpfer
+
+#pragma once
+
+#include <string>
+
+namespace tests {
+
+const std::string DataDir("@PBMM2_TestsDir@/../cram/data");
+
+} // namespace tests

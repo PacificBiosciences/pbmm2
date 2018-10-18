@@ -4,13 +4,13 @@
 
 #include <cstdint>
 
-#include "AlignmentMode.h"
+#include <pbmm2/AlignmentMode.h>
 
 namespace PacBio {
 namespace minimap2 {
 struct MM2Settings
 {
-    AlignmentMode AlignMode;
+    AlignmentMode AlignMode = AlignmentMode::SUBREADS;
     int32_t NumThreads = -1;
     int32_t Kmer = -1;
     int32_t MinimizerWindowSize = -1;

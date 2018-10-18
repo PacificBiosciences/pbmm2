@@ -8,14 +8,15 @@ native PacBio BAM in ⇨ native PacBio BAM out.</p>
 _pbmm2_ is a SMRT wrapper for [minimap2](https://github.com/lh3/minimap2).
 Its purpose is to support native PacBio BAM in- and output, provide sets of
 recommended parameters, and generate sorted output on-the-fly.
-Extensive testing is yet to be performed before _pbmm2_ becomes an officially
-recommended PacBio aligner; until then, please use BLASR if you need
-ISO compliant tools and official PacBio support.
+Sorted output can be used directly for polishing using GenomicConsensus.
+Preliminary testing showed that _pbmm2_ outperforms BLASR in mapped concordance
+and number of bases mapped.
+In a future SMRT Link release, _pbmm2_ will replace BLASR as the default PacBio
+aligner; until then, please use BLASR if you need ISO compliant tools and
+official PacBio support.
 
 **This is an early beta!** Expect extreme changes and different output between
 versions until release of the first stable release.
-Furthermore, the command-line options are not stable yet,
-and can change at any point, do not rely on it yet.
 
 ## Availability
 Latest version can be installed via bioconda package `pbmm2`.
@@ -72,36 +73,36 @@ Usage: pbmm2 align [options] <in.bam|xml> <ref.fa|xml|mmi> [out.aligned.bam|xml]
 Sorted output can be generated using `--sort`.
 
 In addition, `-J,--sort-threads` defines the number of threads used for on-the-fly sorting.
-The memory allocated per sort thread can be defined with `-m,--sort-memory`, accepting suffixes `K,M,G`.
+The memory allocated per sort thread can be defined with `-m,--sort-memory`, accepting suffixes `M,G`.
 
-Benchmarks on human data have shown that 4 threads are recommended, but no more
+Benchmarks on human data have shown that 4 sort threads are recommended, but no more
 than 8 threads can be effectively leveraged, even with 70 cores used for alignment.
 It is recommended to provide more memory to each of a few sort threads, to avoid disk IO pressure,
 than providing less memory to each of many sort threads.
 
 #### Alignment Parallelization
-The number of alignment threads can be specified with `-j` or `--alignment-threads`.
+The number of alignment threads can be specified with `-j,--alignment-threads`.
 If not specified, the maximum number of threads will be used, minus one thread for BAM IO
 and minus the number of threads specified for sorting.
 
-#### Following datasets combinations are allowed:
+#### Following dataset IO combinations are allowed:
 
 SubreadSet ⟶ AlignmentSet
 
 ```
-pbmm2 align movie.subreadset.xml hg38.referenceset.xml movie.hg38.alignmentset.xml
+pbmm2 align movie.subreadset.xml hg38.referenceset.xml hg38.movie.alignmentset.xml
 ```
 
 ConsensusReadSet ⟶ ConsensusAlignmentSet
 
 ```
-pbmm2 align movie.consensusreadset.xml hg38.referenceset.xml movie.hg38.consensusalignmentset.xml --preset CCS
+pbmm2 align movie.consensusreadset.xml hg38.referenceset.xml hg38.movie.consensusalignmentset.xml --preset CCS
 ```
 
 TranscriptSet ⟶ TranscriptAlignmentSet
 
 ```
-pbmm2 align movie.transcriptset.xml hg38.referenceset.xml movie.hg38.transcriptalignmentset.xml --preset ISOSEQ
+pbmm2 align movie.transcriptset.xml hg38.referenceset.xml hg38.movie.transcriptalignmentset.xml --preset ISOSEQ
 ```
 
 ## FAQ
@@ -204,10 +205,10 @@ If you use `--log-level INFO`, after alignment is done, you get following
 alignment metrics:
 
 ```
-Number of Aligned Reads: 1529671
-Number of Alignments: 3087717
-Number of Bases: 28020786811
-Mean Concordance (mapped): 88.4%
+Mapped Reads: 1529671
+Alignments: 3087717
+Mapped Bases: 28020786811
+Mean Mapped Concordance: 88.4%
 Max Mapped Read Length : 122989
 Mean Mapped Read Length : 35597.9
 ```
@@ -247,7 +248,9 @@ No. Please use [minimap2](https://github.com/lh3/minimap2) for that.
 ### Can I perform unrolled alignment?
 If you are interested in unrolled alignments that is, align the full-length
 ZMW read or the HQ region of a ZMW against an unrolled template, please use
-`--zmw` or `--hqregion`. This is beta feature and still in development.
+`--zmw` or `--hqregion` with `*.subreadset.xml` as input that contains
+one `*.subreads.bam` and one `*.scraps.bam` file.
+This is beta feature and still in development.
 
 ### How can I set the sample name?
 You can override the sample name (SM field in RG tag) for all read groups
@@ -261,13 +264,57 @@ be populated with `UnnamedSample`.
 The goal was to simplify the interface of _pbmm2_ with pbsmrtpipe.
 The input is polymorphic and the input dataset has to be wrapped into a JSON datastore.
 In addition, sorting is always on per default, 4GB memory is used per sort thread, 25% of the
-provided number of threads is used for sorting (but no more than 8 threads), and
+provided number of threads are used for sorting (but no more than 8 threads), and
 the parameter preset is chosen implicitly by the input dataset. That means, if you
 have a ConsensusReadSet as input wrapped in a datastore, `CCS` preset is automatically used.
 
+Following options are available:
+
+| ID | Description | Default |
+| - | - | - |
+| `pbmm2_align.task_options.biosample_name` | Override sample name | `""` |
+| `pbmm2_align.task_options.median_filter` | Pick One Read per ZMW of Median Length | `false` |
+| `pbmm2_align.task_options.min_perc_concordance` | Minimum Concordance (%) | `70` |
+| `pbmm2_align.task_options.minalnlength` | Minimum Length | `50` |
+| `pbmm2_align.task_options.sort_memory_tc` | Memory per thread for sorting | `4G` |
+| `pbmm2_align.task_options.zmw_mode` | Process ZMW Reads | `false` |
+
+Following an example for an input datastore that wraps a `subreadset.xml`.
+Exactly *one* entry in `files` is allowed and only `path` is parsed by _pbmm2_.
+Always use absolute file paths to avoid failures:
+
+```json
+{
+    "createdAt": "2018-09-11T08:00:37.27Z",
+    "files": [
+        {
+            "createdAt": "2018-09-11T08:00:37.27Z",
+            "description": "Input for pbmm2",
+            "fileSize": 629317,
+            "fileTypeId": "PacBio.DataSet.SubreadSet",
+            "isChunked": false,
+            "modifiedAt": "2018-09-11T08:00:37.27Z",
+            "name": "Input",
+            "path": "/path/to/m54075_180905_233034.subreadset.xml",
+            "sourceId": "bla",
+            "uniqueId": "c11812a8-b5c4-489c-9dc6-059166d09c28"
+        }
+    ],
+    "updatedAt": "2018-09-11T08:00:37.27Z",
+    "version": "0.2.2"
+}
+```
+
+Minimal accepted version:
+```json
+{"files":[{"path":"/path/to/m54075_180905_233034.subreadset.xml"}]}
+```
+
 ## Full Changelog
 
- * **0.10.1**:
+ * **0.11.0**:
+   * Library API access
+ * 0.10.1:
    * Idempotence. Alignment of alignments results in identical alignments
    * Use different technique to get tmpfile pipe
    * Median filter does not log to DEBUG

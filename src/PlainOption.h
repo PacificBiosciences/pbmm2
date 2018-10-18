@@ -17,10 +17,6 @@ public:
         if (isalpha(s[s.size() - 1])) {
             int64_t size = std::stoll(s.substr(0, s.size() - 1));
             switch (s[s.size() - 1]) {
-                case 'k':
-                case 'K':
-                    size <<= 10;
-                    break;
                 case 'm':
                 case 'M':
                     size <<= 20;
