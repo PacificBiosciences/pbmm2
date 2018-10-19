@@ -632,11 +632,9 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         BAM::BamHeader hdr;
         if ((settings.HQRegion || settings.ZMW) && !isAlignedInput) {
             BAM::ZmwReadStitcher reader(inFile);
-            hdr = reader.PrimaryHeader();
-            hdr += reader.ScrapsHeader();
             if (reader.HasNext()) {
                 auto r = reader.Next();
-                hdr += r.Header();
+                hdr = r.Header();
             }
         } else {
             const auto bamFiles = inFile.BamFiles();
