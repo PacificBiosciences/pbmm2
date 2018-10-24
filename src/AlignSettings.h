@@ -39,6 +39,8 @@ struct AlignSettings : MM2Settings
     bool ZMW;
     bool HQRegion;
 
+    bool Strip;
+
     /// Parses the provided CLI::Results and retrieves a defined set of options.
     AlignSettings(const PacBio::CLI::Results& options);
 

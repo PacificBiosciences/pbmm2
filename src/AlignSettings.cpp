@@ -256,6 +256,15 @@ const PlainOption HQRegion{
     "Process HQ region of each ZMW, subreadset.xml input required (activates UNROLLED preset).",
     CLI::Option::BoolType(false)
 };
+const PlainOption Strip{
+    "strip",
+    { "strip" },
+    "Strip metadata",
+    "Remove all pacbio kinetic and extra QV tags. Polishing of this output ",
+    CLI::Option::BoolType(false),
+    JSON::Json(nullptr),
+    CLI::OptionFlags::HIDE_FROM_HELP
+};
 // clang-format on
 }  // namespace OptionNames
 
@@ -273,6 +282,7 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     , Sort(options[OptionNames::Sort])
     , ZMW(options[OptionNames::ZMW])
     , HQRegion(options[OptionNames::HQRegion])
+    , Strip(options[OptionNames::Strip])
 {
     MM2Settings::Kmer = options[OptionNames::Kmer];
     MM2Settings::MinimizerWindowSize = options[OptionNames::MinimizerWindowSize];
@@ -456,6 +466,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
 
         // hidden
         OptionNames::SortMemoryTC,
+        OptionNames::Strip,
     });
 
     i.AddGroup("Sorting Options", {
@@ -527,6 +538,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     tcTask.AddOption(OptionNames::SampleName);
     tcTask.AddOption(OptionNames::ZMW);
     tcTask.AddOption(OptionNames::MedianFilter);
+    tcTask.AddOption(OptionNames::Strip);
 
     tcTask.InputFileTypes({
         {

@@ -576,8 +576,6 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     };
 
     {
-        auto qryRdr = BamQuery();
-
         static const std::string fallbackSampleName{"UnnamedSample"};
         const auto SanitizeSampleName = [](const std::string& in) {
             if (in.empty()) return fallbackSampleName;
@@ -696,6 +694,17 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         const auto firstTime = std::chrono::steady_clock::now();
         auto lastTime = std::chrono::steady_clock::now();
         auto Submit = [&](const std::unique_ptr<std::vector<BAM::BamRecord>>& recs) {
+            if (settings.Strip) {
+                const auto Strip = [](BAM::BamRecord& record) {
+                    auto& impl = record.Impl();
+                    for (const auto& t :
+                         {"dq", "dt", "ip", "iq", "mq", "pa", "pc", "pd", "pe", "pg", "pm", "pq",
+                          "pt", "pv", "pw", "px", "sf", "sq", "st"})
+                        impl.RemoveTag(t);
+                };
+                for (auto& r : *recs)
+                    Strip(r);
+            }
             int32_t aligned = 0;
             auto output = mm2helper.Align(recs, filter, &aligned);
             if (output) {
