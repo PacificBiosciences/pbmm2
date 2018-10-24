@@ -257,10 +257,10 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
     if (used.size() > 1) {
         for (size_t i = 0; i < used.size(); ++i) {
             std::ostringstream sa;
-            mm_reg1_t* r = &alns[i];
+            mm_reg1_t* r = &alns[used[i]];
             for (size_t j = 0; j < used.size(); ++j) {
                 if (i == j) continue;
-                mm_reg1_t* q = &alns[j];
+                mm_reg1_t* q = &alns[used[j]];
                 int l_M, l_I = 0, l_D = 0, clip5 = 0, clip3 = 0;
                 if (r == q || q->parent != q->id || q->p == 0) continue;
                 if (q->qe - q->qs < q->re - q->rs)
