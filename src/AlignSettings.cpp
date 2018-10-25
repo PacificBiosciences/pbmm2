@@ -259,8 +259,8 @@ const PlainOption HQRegion{
 const PlainOption Strip{
     "strip",
     { "strip" },
-    "Strip metadata",
-    "Remove all pacbio kinetic and extra QV tags. Polishing of this output ",
+    "Strip Base Tags",
+    "Remove all kinetic and extra QV tags. Output cannot be polished.",
     CLI::Option::BoolType(false),
     JSON::Json(nullptr),
     CLI::OptionFlags::HIDE_FROM_HELP
