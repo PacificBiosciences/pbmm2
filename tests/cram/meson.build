@@ -8,7 +8,8 @@ pbmm2_cram_test_data = files([
   'nohpc.t',
   'refxml.t',
   'sa.t',
-  'unrolled.t'
+  'unrolled.t',
+  'strip.t'
   ])
 
 test(
