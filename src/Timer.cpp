@@ -7,18 +7,6 @@
 namespace PacBio {
 Timer::Timer() { Restart(); }
 
-float Timer::ElapsedMilliseconds() const
-{
-    if (frozen_) {
-        return std::chrono::duration_cast<std::chrono::milliseconds>(tock_ - tick_).count();
-    } else {
-        auto tock = std::chrono::steady_clock::now();
-        return std::chrono::duration_cast<std::chrono::milliseconds>(tock - tick_).count();
-    }
-}
-
-float Timer::ElapsedSeconds() const { return ElapsedMilliseconds() / 1000; }
-
 std::string Timer::ElapsedTime() const
 {
     std::chrono::time_point<std::chrono::steady_clock> tock;

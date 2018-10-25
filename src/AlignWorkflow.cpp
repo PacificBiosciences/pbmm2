@@ -38,8 +38,8 @@
 
 #include <mmpriv.h>
 
+#include <pbmm2/MM2Helper.h>
 #include "AlignSettings.h"
-#include "MM2Helper.h"
 #include "Timer.h"
 #include "bam_sort.h"
 
@@ -117,8 +117,7 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
                 PBLOG_INFO << "Setting to SUBREAD preset";
             }
             fromSubreadset = true;
-            break;
-        }
+        } break;
         case BAM::DataSet::TypeEnum::CONSENSUS_ALIGNMENT:
             AlignedInput();
         case BAM::DataSet::TypeEnum::CONSENSUS_READ: {
@@ -127,8 +126,7 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
                 PBLOG_INFO << "Setting to CCS preset";
             }
             fromConsensuReadSet = true;
-            break;
-        }
+        } break;
         case BAM::DataSet::TypeEnum::TRANSCRIPT_ALIGNMENT:
             AlignedInput();
         case BAM::DataSet::TypeEnum::TRANSCRIPT: {
@@ -137,8 +135,7 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
                 PBLOG_INFO << "Setting to ISOSEQ preset";
             }
             fromTranscriptSet = true;
-            break;
-        }
+        } break;
         case BAM::DataSet::TypeEnum::BARCODE:
         case BAM::DataSet::TypeEnum::REFERENCE:
         default:
@@ -247,17 +244,6 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
 
     return std::tuple<std::string, std::string, std::string>{inputFile, reference, out};
 }  // namespace
-
-std::unique_ptr<BAM::internal::IQuery> BamQuery(const BAM::DataSet& ds)
-{
-    const auto filter = BAM::PbiFilter::FromDataSet(ds);
-    std::unique_ptr<BAM::internal::IQuery> query(nullptr);
-    if (filter.IsEmpty())
-        query = std::make_unique<BAM::EntireFileQuery>(ds);
-    else
-        query = std::make_unique<BAM::PbiFilterQuery>(filter, ds);
-    return query;
-}
 
 std::string CreateDataSet(const BAM::DataSet& dsIn, const std::string& refFile,
                           const bool isFromXML, const std::string& outputFile,
@@ -448,23 +434,24 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     std::string refFile;
     std::string outFile;
     std::string alnFile{"-"};
-    bool isFromJson;
-    bool isFromXML;
-    bool isAlignedInput;
+    bool isFromJson = false;
+    bool isFromXML = false;
+    bool isAlignedInput = false;
     BAM::DataSet::TypeEnum inputType;
 
     std::tie(inFile, refFile, outFile) =
         CheckPositionalArgs(options.PositionalArguments(), &settings, &isFromJson, &isFromXML,
                             &inputType, &isAlignedInput);
-
-    if (settings.ZMW && (inputType != BAM::DataSet::TypeEnum::SUBREAD &&
-                         inputType != BAM::DataSet::TypeEnum::ALIGNMENT)) {
+    if (settings.ZMW && !isAlignedInput &&
+        (!isFromXML || (inputType != BAM::DataSet::TypeEnum::SUBREAD &&
+                        inputType != BAM::DataSet::TypeEnum::ALIGNMENT))) {
         PBLOG_FATAL << "Option --zmw can only be used with a subreadset.xml containing subread + "
                        "scraps BAM files.";
         std::exit(EXIT_FAILURE);
     }
-    if (settings.HQRegion && (inputType != BAM::DataSet::TypeEnum::SUBREAD &&
-                              inputType != BAM::DataSet::TypeEnum::ALIGNMENT)) {
+    if (settings.HQRegion && !isAlignedInput &&
+        (!isFromXML || (inputType != BAM::DataSet::TypeEnum::SUBREAD &&
+                        inputType != BAM::DataSet::TypeEnum::ALIGNMENT))) {
         PBLOG_FATAL
             << "Option --hqregion can only be used with a subreadset.xml containing subread + "
                "scraps BAM files.";
@@ -578,8 +565,18 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         });
     }
 
+    const auto BamQuery = [&inFile]() {
+        const auto filter = BAM::PbiFilter::FromDataSet(inFile);
+        std::unique_ptr<BAM::internal::IQuery> query(nullptr);
+        if (filter.IsEmpty())
+            query = std::make_unique<BAM::EntireFileQuery>(inFile);
+        else
+            query = std::make_unique<BAM::PbiFilterQuery>(filter, inFile);
+        return query;
+    };
+
     {
-        auto qryRdr = BamQuery(inFile);
+        auto qryRdr = BamQuery();
 
         static const std::string fallbackSampleName{"UnnamedSample"};
         const auto SanitizeSampleName = [](const std::string& in) {
@@ -632,10 +629,22 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             }
         }
 
-        const auto bamFiles = inFile.BamFiles();
-        auto hdr = bamFiles.front().Header();
-        for (size_t i = 1; i < bamFiles.size(); ++i)
-            hdr += bamFiles.at(i).Header();
+        BAM::BamHeader hdr;
+        if ((settings.HQRegion || settings.ZMW) && !isAlignedInput) {
+            BAM::ZmwReadStitcher reader(inFile);
+            if (reader.HasNext()) {
+                auto r = reader.Next();
+                hdr = r.Header();
+            }
+        } else {
+            const auto bamFiles = inFile.BamFiles();
+            hdr = bamFiles.front().Header();
+            for (size_t i = 1; i < bamFiles.size(); ++i)
+                hdr += bamFiles.at(i).Header();
+        }
+        if (isAlignedInput) {
+            hdr.ClearSequences();
+        }
 
         bool performOverrideSampleName = !settings.SampleName.empty();
         std::string overridingSampleName = SanitizeSampleName(settings.SampleName);
@@ -725,7 +734,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             if (settings.ZMW) PBLOG_WARN << "Option --zmw is ignored with aligned input!";
             if (settings.HQRegion) PBLOG_WARN << "Option --hqregion is ignored with aligned input!";
 
-            auto reader = BamQuery(inFile);
+            auto reader = BamQuery();
             BAM::BamRecord tmp;
             while (reader->GetNext(tmp)) {
                 if (tmp.Impl().IsSupplementaryAlignment()) continue;
@@ -801,7 +810,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             const auto Flush = [&]() {
                 if (!ras.empty()) (*records)[i++] = PickMedian(std::move(ras));
             };
-            auto reader = BamQuery(inFile);
+            auto reader = BamQuery();
             for (auto& record : *reader) {
                 const auto nextHoleNumber = record.HoleNumber();
                 const auto nextMovieName = record.MovieName();
@@ -855,7 +864,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                 }
             }
         } else {
-            auto reader = BamQuery(inFile);
+            auto reader = BamQuery();
             while (reader->GetNext((*records)[i++])) {
                 if (i >= chunkSize) {
                     waiting++;
@@ -955,12 +964,12 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         }
     }
 
-    PBLOG_INFO << "Number of Aligned Reads: " << alignedReads;
-    PBLOG_INFO << "Number of Alignments: " << s.NumAlns;
-    PBLOG_INFO << "Number of Bases: " << s.Bases;
-    PBLOG_INFO << "Mean Concordance (mapped): " << meanMappedConcordance << "%";
-    PBLOG_INFO << "Max Mapped Read Length : " << maxMappedLength;
-    PBLOG_INFO << "Mean Mapped Read Length : " << (1.0 * s.Bases / s.NumAlns);
+    PBLOG_INFO << "Mapped Reads: " << alignedReads;
+    PBLOG_INFO << "Alignments: " << s.NumAlns;
+    PBLOG_INFO << "Mapped Bases: " << s.Bases;
+    PBLOG_INFO << "Mean Mapped Concordance: " << meanMappedConcordance << "%";
+    PBLOG_INFO << "Max Mapped Read Length: " << maxMappedLength;
+    PBLOG_INFO << "Mean Mapped Read Length: " << (1.0 * s.Bases / s.NumAlns);
 
     PBLOG_INFO << "Index Build/Read Time: " << indexTime.ElapsedTime();
     PBLOG_INFO << "Alignment Time: " << alignmentTime.ElapsedTime();
@@ -973,6 +982,6 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     PBLOG_INFO << "Peak RSS: " << (peakrss() / 1024.0 / 1024.0 / 1024.0) << " GB";
 
     return EXIT_SUCCESS;
-}  // namespace minimap2
+}
 }  // namespace minimap2
 }  // namespace PacBio

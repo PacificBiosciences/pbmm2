@@ -2,8 +2,8 @@
   $ REF=$TESTDIR/data/lambdaNEB_BsaAI_allFrags_incLeftRightEnds_unrolled_250k.fasta
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/hqregion.alignmentset.xml --log-level INFO --hqregion 2>&1| grep INFO | grep "Mapped Read Length"
-  *Max Mapped Read Length : 125134 (glob)
-  *Mean Mapped Read Length : 82755.1 (glob)
+  *Max Mapped Read Length: 17670 (glob)
+  *Mean Mapped Read Length: 15659 (glob)
 
   $ cd $TESTDIR/data
   $ $__PBTEST_PBMM2_EXE align unrolled.json lambdaNEB_BsaAI_allFrags_incLeftRightEnds_unrolled_250k.fasta $CRAMTMP/zmw_json.alignmentset.xml --log-level DEBUG --zmw 2>&1| grep -v "#Reads, #Aln, #RPM"
@@ -24,12 +24,12 @@
   *Z-drop                 : 200 (glob)
   *Z-drop inv             : 100 (glob)
   *Bandwidth              : 2000 (glob)
-  *Number of Aligned Reads: 31 (glob)
-  *Number of Alignments: 31 (glob)
-  *Number of Bases: 3891791 (glob)
-  *Mean Concordance (mapped): 83.84% (glob)
-  *Max Mapped Read Length : 156345 (glob)
-  *Mean Mapped Read Length : 125542 (glob)
+  *Mapped Reads: 2 (glob)
+  *Alignments: 2 (glob)
+  *Mapped Bases: 55704 (glob)
+  *Mean Mapped Concordance: 82.0908% (glob)
+  *Max Mapped Read Length: 39629 (glob)
+  *Mean Mapped Read Length: 27852 (glob)
   *Index Build/Read Time:* (glob)
   *Alignment Time:* (glob)
   *PBI Generation Time:* (glob)

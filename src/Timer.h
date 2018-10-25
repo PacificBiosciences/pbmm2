@@ -11,8 +11,6 @@ class Timer
 public:
     Timer();
 
-    float ElapsedMilliseconds() const;
-    float ElapsedSeconds() const;
     std::string ElapsedTime() const;
     void Restart();
     void Freeze();

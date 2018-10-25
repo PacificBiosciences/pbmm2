@@ -1,13 +1,15 @@
 pbmm2_cram_test_data = files([
-  'biosampleSubreads.t',
-  'biosampleConsensus.t',
   'baminput.t',
+  'biosampleConsensus.t',
+  'biosampleSubreads.t',
+  'idempotence.t',
   'jsoninput.t',
+  'misc.t',
   'nohpc.t',
   'refxml.t',
-  'unrolled.t',
   'sa.t',
-  'idempotence.t'])
+  'unrolled.t'
+  ])
 
 test(
   'pbmm2_cram test',

@@ -10,13 +10,13 @@
 #include <boost/algorithm/string.hpp>
 
 #include <pbbam/BamRecord.h>
-#include <pbbam/FastaReader.h>
+#include <pbbam/FastaSequence.h>
 #include <pbbam/MD5.h>
 #include <pbbam/SequenceInfo.h>
 #include <pbcopper/PbcopperMakeUnique.h>
 #include <pbcopper/logging/Logging.h>
 
-#include "MM2Settings.h"
+#include <pbmm2/MM2Settings.h>
 
 #include <minimap.h>
 
@@ -30,6 +30,8 @@ using FilterFunc = std::function<bool(const AlignedRecord&)>;
 
 struct Index
 {
+    Index(const std::vector<BAM::FastaSequence>& refs, const mm_idxopt_t& opts,
+          const int32_t& numThreads);
     Index(const std::string& fname, const mm_idxopt_t& opts, const int32_t& numThreads,
           const std::string& outputMmi = "");
 
@@ -52,6 +54,7 @@ struct ThreadBuffer
 class MM2Helper
 {
 public:
+    MM2Helper(const std::vector<BAM::FastaSequence>& refs, const MM2Settings& settings);
     MM2Helper(const std::string& refs, const MM2Settings& settings,
               const std::string& outputMmi = "");
 
@@ -59,7 +62,20 @@ public:
     std::unique_ptr<std::vector<AlignedRecord>> Align(
         const std::unique_ptr<std::vector<BAM::BamRecord>>& records, const FilterFunc& filter,
         int32_t* alignedReads) const;
+
+    std::vector<AlignedRecord> Align(const BAM::BamRecord& record) const;
+    std::vector<AlignedRecord> Align(const BAM::BamRecord& record, const FilterFunc& filter) const;
+    std::vector<AlignedRecord> Align(const BAM::BamRecord& record,
+                                     std::unique_ptr<ThreadBuffer>& tbuf) const;
+    std::vector<AlignedRecord> Align(const BAM::BamRecord& record, const FilterFunc& filter,
+                                     std::unique_ptr<ThreadBuffer>& tbuf) const;
+
     std::vector<PacBio::BAM::SequenceInfo> SequenceInfos() const;
+
+private:
+    void PreInit(const MM2Settings& settings, std::string* preset);
+    void PostInit(const MM2Settings& settings, const std::string& preset,
+                  const bool postAlignParameter);
 
 private:
     mm_idxopt_t IdxOpts;
