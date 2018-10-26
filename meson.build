@@ -14,7 +14,6 @@ project(
 pbmm2_flags = []
 cpp = meson.get_compiler('cpp')
 foreach cflag: [
-  '-Wno-terminate',
   '-Wno-missing-field-initializers',
   '-Wno-c99-extensions']
     if cpp.has_argument(cflag)

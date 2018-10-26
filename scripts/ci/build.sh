@@ -5,6 +5,7 @@ set -euo pipefail
 echo "# LOAD MODULES"
 source /mnt/software/Modules/current/init/bash
 
+module purge
 module load gcc git ccache boost htslib ninja meson gtest zlib cram bedtools datamash samtools minimap2 gcovr pbbam pbcopper
 meson -Db_coverage=true build .
 ninja -C build test
