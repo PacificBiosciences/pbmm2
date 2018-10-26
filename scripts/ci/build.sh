@@ -12,6 +12,7 @@ meson \
   --default-library shared \
   --libdir lib \
   --unity "${ENABLED_UNITY_BUILD:-off}" \
+  --wrap-mode nofallback \
   --prefix "${PREFIX_ARG:-/usr/local}" \
   -Db_coverage="${ENABLED_COVERAGE:-true}" \
   -Dtests="${ENABLED_TESTS:-false}" \
