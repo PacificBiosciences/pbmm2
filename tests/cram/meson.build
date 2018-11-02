@@ -9,7 +9,12 @@ pbmm2_cram_test_data = files([
   'refxml.t',
   'sa.t',
   'unrolled.t',
-  'strip.t'
+  'strip.t',
+  'splitsample.t',
+  'splitsamplesorted.t',
+  'splitsamplejson.t',
+  'splitsamplejsonsorted.t',
+  'splitsamplesamename.t'
   ])
 
 test(

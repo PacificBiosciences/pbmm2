@@ -30,6 +30,7 @@
 
 #include <pbcopper/parallel/FireAndForget.h>
 #include <pbcopper/parallel/WorkQueue.h>
+#include <pbcopper/utility/Stopwatch.h>
 
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -182,6 +183,11 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
         out = args[2];
     else
         out = "-";
+
+    if (out == "-" && settings->SplitBySample) {
+        PBLOG_FATAL << "Cannot split by sample and use output pipe!";
+        std::exit(EXIT_FAILURE);
+    }
 
     if (args.size() == 3) {
         std::string outlc = boost::algorithm::to_lower_copy(out);
@@ -405,6 +411,292 @@ static std::string CreateTmpFile(const std::string& outFile)
     }
     return pipeName;
 }
+
+static void PrintErrorAndAbort(int error)
+{
+    if (error == EACCES) {
+        PBLOG_FATAL << "Pipe error: "
+                    << "A component of the path prefix denies search permission, or write "
+                       "permission is denied on the parent directory of the FIFO to be "
+                       "created.";
+    }
+    if (error == EEXIST) {
+        PBLOG_FATAL << "Pipe error: "
+                    << "The named file already exists. Please remove file!";
+    }
+    if (error == ELOOP) {
+        PBLOG_FATAL << "Pipe error: "
+                    << "A loop exists in symbolic links encountered during resolution of "
+                       "the path argument.";
+    }
+    if (error == ENAMETOOLONG) {
+        PBLOG_FATAL << "Pipe error: "
+                    << "The length of the path argument exceeds {PATH_MAX} or a pathname "
+                       "component is longer than {NAME_MAX}.";
+    }
+    if (error == ENOENT) {
+        PBLOG_FATAL << "Pipe error: "
+                    << "A component of the path prefix specified by path does not name an "
+                       "existing directory or path is an empty string.";
+    }
+    if (error == ENOSPC) {
+        PBLOG_FATAL << "Pipe error: "
+                    << "The directory that would contain the new file cannot be extended "
+                       "or the file system is out of file-allocation resources.";
+    }
+    if (error == ENOTDIR) {
+        PBLOG_FATAL << "Pipe error: "
+                    << "A component of the path prefix is not a directory.";
+    }
+    if (error == EROFS) {
+        PBLOG_FATAL << "Pipe error: "
+                    << "The named file resides on a read-only file system.";
+    }
+    if (error == ELOOP) {
+        PBLOG_FATAL << "Pipe error: "
+                    << "More than {SYMLOOP_MAX} symbolic links were encountered during "
+                       "resolution of the path argument.";
+    }
+    if (error == ENAMETOOLONG) {
+        PBLOG_FATAL << "Pipe error: "
+                    << "As a result of encountering a symbolic link in resolution of the "
+                       "path argument, the length of the substituted pathname string "
+                       "exceeded {PATH_MAX}";
+    }
+    std::exit(EXIT_FAILURE);
+}
+
+struct StreamWriter
+{
+    StreamWriter(BAM::BamHeader header, const std::string& outPrefix, bool sort, int sortThreads,
+                 int numThreads, int64_t sortMemory, const std::string& sample = "",
+                 const std::string& infix = "")
+        : sort_(sort)
+        , sample_(sample)
+        , outPrefix_(outPrefix)
+        , sortThreads_(sortThreads)
+        , numThreads_(numThreads)
+        , sortMemory_(sortMemory)
+        , header_(std::move(header))
+    {
+        if (outPrefix_ != "-") {
+            if (sample_.empty())
+                finalOutputPrefix_ = outPrefix_;
+            else
+                finalOutputPrefix_ = outPrefix_ + '.' + infix;
+            finalOutputName_ = finalOutputPrefix_ + ".bam";
+        }
+
+        if (!sample_.empty()) {
+            auto rgs = header_.ReadGroups();
+            header_.ClearReadGroups();
+            for (auto& rg : rgs)
+                if (rg.Sample() == sample_) header_.AddReadGroup(rg);
+        }
+
+        BAM::BamWriter::Config bamWriterConfig;
+        std::string outputFile;
+        if (sort_) {
+            pipeName_ = CreateTmpFile(finalOutputName_);
+            int pipe = mkfifo(pipeName_.c_str(), 0666);
+            if (pipe == -1) {
+                int error = errno;
+                PBLOG_FATAL << "Could not open pipe! File name: " << pipeName_;
+                PrintErrorAndAbort(error);
+            }
+
+            sortThread_ = std::make_unique<std::thread>([&]() {
+                int numFiles = 0;
+                int numBlocks = 0;
+                bam_sort(pipeName_.c_str(), finalOutputName_.c_str(), sortThreads_,
+                         sortThreads_ + numThreads_, sortMemory_, &numFiles, &numBlocks);
+                PBLOG_INFO << "Merged sorted output from " << numFiles << " files and " << numBlocks
+                           << " in-memory blocks";
+            });
+
+            outputFile = pipeName_;
+            bamWriterConfig.useTempFile = false;
+        } else {
+            outputFile = finalOutputName_;
+            bamWriterConfig.useTempFile = true;
+        }
+        bamWriter_ = std::make_unique<BAM::BamWriter>(outputFile, header_, bamWriterConfig);
+    }
+
+    void Write(const BAM::BamRecord& r) const
+    {
+        if (!bamWriter_) {
+            PBLOG_FATAL << "Nullpointer BamWriter";
+            std::exit(EXIT_FAILURE);
+        }
+        bamWriter_->Write(r);
+    }
+
+    int64_t Close()
+    {
+        bamWriter_.reset();
+        if (sort_) {
+            Utility::Stopwatch sortTime;
+            unlink(pipeName_.c_str());
+            if (sortThread_) sortThread_->join();
+            return sortTime.ElapsedMilliseconds();
+        } else {
+            return 0;
+        }
+    }
+
+    std::string FinalOutputName() { return finalOutputName_; }
+    std::string FinalOutputPrefix() { return finalOutputPrefix_; }
+
+private:
+    bool sort_;
+    std::string sample_;
+    std::string outPrefix_;
+    int sortThreads_;
+    int numThreads_;
+    int64_t sortMemory_;
+    std::string pipeName_;
+    std::unique_ptr<BAM::BamWriter> bamWriter_;
+    std::unique_ptr<std::thread> sortThread_;
+
+public:
+    std::string finalOutputName_{"-"};
+    std::string finalOutputPrefix_{"-"};
+    BAM::BamHeader header_;
+};
+struct StreamWriters
+{
+    StreamWriters(BAM::BamHeader& header, const std::string& outPrefix, bool splitBySample,
+                  bool sort, int sortThreads, int numThreads, int64_t sortMemory)
+        : header_(header.DeepCopy())
+        , outPrefix_(outPrefix)
+        , splitBySample_(splitBySample)
+        , sort_(sort)
+        , sortThreads_(sortThreads)
+        , numThreads_(numThreads)
+        , sortMemory_(sortMemory){};
+
+    StreamWriter& at(const std::string& infix, const std::string& sample)
+    {
+        static const std::string unsplit = "unsplit";
+        if (!splitBySample_) {
+            if (sampleNameToStreamWriter.find(unsplit) == sampleNameToStreamWriter.cend())
+                sampleNameToStreamWriter.emplace(
+                    unsplit,
+                    std::make_unique<StreamWriter>(header_.DeepCopy(), outPrefix_, sort_,
+                                                   sortThreads_, numThreads_, sortMemory_));
+
+            return *sampleNameToStreamWriter.at(unsplit);
+        } else {
+            if (sampleNameToStreamWriter.find(sample) == sampleNameToStreamWriter.cend())
+                sampleNameToStreamWriter.emplace(
+                    sample, std::make_unique<StreamWriter>(header_.DeepCopy(), outPrefix_, sort_,
+                                                           sortThreads_, numThreads_, sortMemory_,
+                                                           sample, infix));
+            return *sampleNameToStreamWriter.at(sample);
+        }
+    }
+
+    std::string WriteDatasetsJson(const BAM::DataSet& inFile, const std::string& origOutFile,
+                                  const std::string& refFile, const bool isFromXML,
+                                  const bool outputIsJson, const Summary& s,
+                                  const std::string& outputFilePrefix, const bool splitSample)
+    {
+        std::string pbiTiming;
+        Timer pbiTimer;
+        std::vector<std::string> xmlNames;
+        std::vector<std::string> ids;
+        for (auto& sample_sw : sampleNameToStreamWriter) {
+            BAM::BamFile validationBam(sample_sw.second->FinalOutputName());
+            BAM::PbiFile::CreateFrom(validationBam);
+
+            std::string id;
+            const auto xmlName =
+                CreateDataSet(inFile, refFile, isFromXML, sample_sw.second->FinalOutputPrefix(),
+                              origOutFile, &id, s.NumAlns, s.Bases);
+            xmlNames.emplace_back(xmlName);
+            ids.emplace_back(id);
+        }
+        pbiTiming = pbiTimer.ElapsedTime();
+
+        if (outputIsJson || splitSample) {
+            JSON::Json datastore;
+            datastore["createdAt"] = BAM::ToIso8601(std::chrono::system_clock::now());
+            datastore["updatedAt"] = BAM::ToIso8601(std::chrono::system_clock::now());
+            datastore["version"] = "0.2.2";
+            std::vector<JSON::Json> files;
+            int i = 0;
+            for (auto& sample_sw : sampleNameToStreamWriter) {
+                JSON::Json datastoreFile;
+                datastoreFile["createdAt"] = BAM::ToIso8601(std::chrono::system_clock::now());
+                datastoreFile["description"] = "Aligned and sorted reads as BAM";
+                std::ifstream file(sample_sw.second->finalOutputName_,
+                                   std::ios::binary | std::ios::ate);
+                datastoreFile["fileSize"] = static_cast<int>(file.tellg());
+
+                switch (inFile.Type()) {
+                    case BAM::DataSet::TypeEnum::SUBREAD:
+                        datastoreFile["fileTypeId"] = "PacBio.DataSet.AlignmentSet";
+                        break;
+                    case BAM::DataSet::TypeEnum::CONSENSUS_READ:
+                        datastoreFile["fileTypeId"] = "PacBio.DataSet.ConsensusAlignmentSet";
+                        break;
+                    case BAM::DataSet::TypeEnum::TRANSCRIPT:
+                        datastoreFile["fileTypeId"] = "PacBio.DataSet.TranscriptAlignmentSet";
+                        break;
+                    default:
+                        throw std::runtime_error("Unsupported input type");
+                }
+
+                datastoreFile["isChunked"] = false;
+                datastoreFile["modifiedAt"] = BAM::ToIso8601(std::chrono::system_clock::now());
+                datastoreFile["name"] = "Aligned reads";
+                datastoreFile["path"] = xmlNames[i];
+                datastoreFile["sourceId"] = "mapping.tasks.pbmm2_align-out-1";
+                boost::uuids::random_generator gen;
+                datastoreFile["uniqueId"] = ids[i];
+                ++i;
+                files.emplace_back(datastoreFile);
+            }
+            datastore["files"] = files;
+            std::ofstream datastoreStream(outputFilePrefix + ".json");
+            datastoreStream << datastore.dump(2);
+        }
+        return pbiTiming;
+    }
+
+    std::string Close()
+    {
+        CreateEmptyIfNoOutput();
+        int64_t ms = 0;
+        for (auto& sample_sw : sampleNameToStreamWriter) {
+            ms += sample_sw.second->Close();
+        }
+        if (!sort_)
+            return "";
+        else
+            return Timer::ElapsedTimeFromSeconds(ms * 1e6);
+    }
+
+    void CreateEmptyIfNoOutput()
+    {
+        if (sampleNameToStreamWriter.empty()) {
+            splitBySample_ = false;
+            this->at("", "");
+        }
+    }
+
+private:
+    BAM::BamHeader header_;
+    const std::string& outPrefix_;
+    bool splitBySample_;
+    bool sort_;
+    int sortThreads_;
+    int numThreads_;
+    int64_t sortMemory_;
+    std::map<std::string, std::string> movieNameToSampleName;
+    std::map<std::string, std::unique_ptr<StreamWriter>> sampleNameToStreamWriter;
+};
 }  // namespace
 
 int AlignWorkflow::Runner(const CLI::Results& options)
@@ -433,7 +725,6 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     BAM::DataSet inFile;
     std::string refFile;
     std::string outFile;
-    std::string alnFile{"-"};
     bool isFromJson = false;
     bool isFromXML = false;
     bool isAlignedInput = false;
@@ -458,26 +749,21 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         std::exit(EXIT_FAILURE);
     }
 
-    std::string outputFilePrefix;
+    std::string outputFilePrefix{"-"};
     bool outputIsXML = false;
     bool outputIsJson = false;
-    bool outputIsSortedStream = false;
     if (outFile != "-") {
         outputFilePrefix = OutputFilePrefix(outFile);
         const auto ext = Utility::FileExtension(outFile);
         outputIsXML = ext == "xml";
         outputIsJson = ext == "json";
-        if (outputIsXML || outputIsJson)
-            alnFile = outputFilePrefix + ".bam";
-        else
-            alnFile = outFile;
+        std::string alnFile = outFile;
+        if (outputIsXML || outputIsJson) alnFile = outputFilePrefix + ".bam";
 
         if (Utility::FileExists(alnFile))
             PBLOG_WARN << "Warning: Overwriting existing output file: " << alnFile;
         if (alnFile != outFile && Utility::FileExists(outFile))
             PBLOG_WARN << "Warning: Overwriting existing output file: " << outFile;
-    } else if (settings.Sort) {
-        outputIsSortedStream = true;
     }
 
     const FilterFunc filter = [&settings](const AlignedRecord& aln) {
@@ -495,76 +781,6 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     Summary s;
     int64_t alignedReads = 0;
 
-    std::unique_ptr<std::thread> sortThread;
-    std::string pipeName;
-    if (settings.Sort) {
-        pipeName = CreateTmpFile(outFile);
-        int pipe = mkfifo(pipeName.c_str(), 0666);
-        if (pipe == -1) {
-            PBLOG_FATAL << "Could not open pipe! File name: " << pipeName;
-            if (errno == EACCES) {
-                PBLOG_FATAL
-                    << "Pipe error: "
-                    << "A component of the path prefix denies search permission, or write "
-                       "permission is denied on the parent directory of the FIFO to be created.";
-            }
-            if (errno == EEXIST) {
-                PBLOG_FATAL << "Pipe error: "
-                            << "The named file already exists. Please remove file!";
-            }
-            if (errno == ELOOP) {
-                PBLOG_FATAL << "Pipe error: "
-                            << "A loop exists in symbolic links encountered during resolution of "
-                               "the path argument.";
-            }
-            if (errno == ENAMETOOLONG) {
-                PBLOG_FATAL << "Pipe error: "
-                            << "The length of the path argument exceeds {PATH_MAX} or a pathname "
-                               "component is longer than {NAME_MAX}.";
-            }
-            if (errno == ENOENT) {
-                PBLOG_FATAL << "Pipe error: "
-                            << "A component of the path prefix specified by path does not name an "
-                               "existing directory or path is an empty string.";
-            }
-            if (errno == ENOSPC) {
-                PBLOG_FATAL << "Pipe error: "
-                            << "The directory that would contain the new file cannot be extended "
-                               "or the file system is out of file-allocation resources.";
-            }
-            if (errno == ENOTDIR) {
-                PBLOG_FATAL << "Pipe error: "
-                            << "A component of the path prefix is not a directory.";
-            }
-            if (errno == EROFS) {
-                PBLOG_FATAL << "Pipe error: "
-                            << "The named file resides on a read-only file system.";
-            }
-            if (errno == ELOOP) {
-                PBLOG_FATAL << "Pipe error: "
-                            << "More than {SYMLOOP_MAX} symbolic links were encountered during "
-                               "resolution of the path argument.";
-            }
-            if (errno == ENAMETOOLONG) {
-                PBLOG_FATAL << "Pipe error: "
-                            << "As a result of encountering a symbolic link in resolution of the "
-                               "path argument, the length of the substituted pathname string "
-                               "exceeded {PATH_MAX}";
-            }
-            std::exit(EXIT_FAILURE);
-        }
-
-        sortThread = std::make_unique<std::thread>([&]() {
-            int numFiles = 0;
-            int numBlocks = 0;
-            bam_sort(pipeName.c_str(), outputIsSortedStream ? "-" : alnFile.c_str(),
-                     settings.SortThreads, settings.SortThreads + settings.NumThreads,
-                     settings.SortMemory, &numFiles, &numBlocks);
-            PBLOG_INFO << "Merged sorted output from " << numFiles << " files and " << numBlocks
-                       << " in-memory blocks";
-        });
-    }
-
     const auto BamQuery = [&inFile]() {
         const auto filter = BAM::PbiFilter::FromDataSet(inFile);
         std::unique_ptr<BAM::internal::IQuery> query(nullptr);
@@ -575,6 +791,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         return query;
     };
 
+    std::unique_ptr<StreamWriters> writers;
     {
         static const std::string fallbackSampleName{"UnnamedSample"};
         const auto SanitizeSampleName = [](const std::string& in) {
@@ -584,15 +801,24 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             if (trimmed.empty()) return fallbackSampleName;
             std::string sanitizedName;
             for (const char& c : trimmed) {
-                if (c < '!' || c > '~') {
+                if (c < '!' || c > '~')
                     sanitizedName += '_';
-                } else
+                else
+                    sanitizedName += c;
+            }
+            return sanitizedName;
+        };
+        const auto SanitizeFileInfix = [](const std::string& in) {
+            std::string sanitizedName;
+            for (const char& c : in) {
+                if (c == '_' || c == '-' || c == '.' || (c >= '0' && c <= '9') ||
+                    (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
                     sanitizedName += c;
             }
             return sanitizedName;
         };
 
-        std::map<std::string, std::string> movieNameToSampleName;
+        std::map<std::string, std::pair<std::string, std::string>> movieNameToSampleAndInfix;
         const auto md = inFile.Metadata();
         if (md.HasChild("Collections")) {
             using DataSetElement = PacBio::BAM::internal::DataSetElement;
@@ -622,8 +848,28 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                     finalName = bioSampleName;
                 else if (!wellSampleName.empty())
                     finalName = wellSampleName;
+                finalName = SanitizeSampleName(finalName);
 
-                movieNameToSampleName[movieName] = SanitizeSampleName(finalName);
+                movieNameToSampleAndInfix[movieName] = {finalName, SanitizeFileInfix(finalName)};
+            }
+        }
+        std::map<std::string, std::set<std::string>> infixToSamples;
+        for (const auto& movie_sampleInfix : movieNameToSampleAndInfix)
+            infixToSamples[movie_sampleInfix.second.second].insert(movie_sampleInfix.second.first);
+
+        for (const auto& infix_samples : infixToSamples) {
+            auto& infix = infix_samples.first;
+            if (infix_samples.second.size() > 1) {
+                int infixCounter = 0;
+                for (const auto& sample : infix_samples.second) {
+                    std::string newInfix = infix + '-' + std::to_string(infixCounter);
+                    for (auto& movie_sampleInfix : movieNameToSampleAndInfix) {
+                        if (movie_sampleInfix.second.first == sample) {
+                            movie_sampleInfix.second.second = newInfix;
+                        }
+                    }
+                    ++infixCounter;
+                }
             }
         }
 
@@ -652,8 +898,9 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             if (performOverrideSampleName) {
                 rg.Sample(overridingSampleName);
             } else if (isFromXML || isFromJson) {
-                if (movieNameToSampleName.find(rg.MovieName()) != movieNameToSampleName.cend()) {
-                    rg.Sample(movieNameToSampleName[rg.MovieName()]);
+                if (movieNameToSampleAndInfix.find(rg.MovieName()) !=
+                    movieNameToSampleAndInfix.cend()) {
+                    rg.Sample(movieNameToSampleAndInfix[rg.MovieName()].first);
                 } else {
                     PBLOG_INFO << "Cannot find biosample name for movie name " << rg.MovieName()
                                << "! Will use fallback.";
@@ -673,16 +920,9 @@ int AlignWorkflow::Runner(const CLI::Results& options)
 
         PacBio::Parallel::FireAndForget faf(settings.NumThreads, 3);
 
-        BAM::BamWriter::Config bamWriterConfig;
-        std::string bamOutputFileName;
-        if (settings.Sort) {
-            bamOutputFileName = pipeName;
-            bamWriterConfig.useTempFile = false;
-        } else {
-            bamOutputFileName = alnFile;
-            bamWriterConfig.useTempFile = true;
-        }
-        BAM::BamWriter out(bamOutputFileName, hdr, bamWriterConfig);
+        writers = std::make_unique<StreamWriters>(hdr, outputFilePrefix, settings.SplitBySample,
+                                                  settings.Sort, settings.SortThreads,
+                                                  settings.NumThreads, settings.SortMemory);
 
         int32_t i = 0;
         const int32_t chunkSize = settings.ChunkSize;
@@ -715,7 +955,10 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                     s.Bases += aln.NumAlignedBases;
                     s.Concordance += aln.Concordance;
                     ++s.NumAlns;
-                    out.Write(aln.Record);
+                    writers
+                        ->at(movieNameToSampleAndInfix[aln.Record.MovieName()].second,
+                             movieNameToSampleAndInfix[aln.Record.MovieName()].first)
+                        .Write(aln.Record);
                     if (++alignedRecords % settings.ChunkSize == 0) {
                         const auto now = std::chrono::steady_clock::now();
                         auto elapsedSecs =
@@ -901,13 +1144,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     }
 
     alignmentTime.Freeze();
-    std::string sortTiming;
-    if (settings.Sort) {
-        Timer sortTime;
-        unlink(pipeName.c_str());
-        sortThread->join();
-        sortTiming = sortTime.ElapsedTime();
-    }
+    std::string sortTiming = writers->Close();
 
     int32_t maxMappedLength = 0;
     for (const auto& l : s.Lengths) {
@@ -925,53 +1162,9 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     }
 
     std::string pbiTiming;
-    if (outputIsXML || outputIsJson) {
-        Timer pbiTimer;
-        BAM::BamFile validationBam(alnFile);
-        BAM::PbiFile::CreateFrom(validationBam);
-        pbiTiming = pbiTimer.ElapsedTime();
-
-        std::string id;
-        const auto xmlName = CreateDataSet(inFile, refFile, isFromXML, outputFilePrefix, outFile,
-                                           &id, s.NumAlns, s.Bases);
-
-        if (outputIsJson) {
-            JSON::Json datastore;
-            datastore["createdAt"] = BAM::ToIso8601(std::chrono::system_clock::now());
-            datastore["updatedAt"] = BAM::ToIso8601(std::chrono::system_clock::now());
-            datastore["version"] = "0.2.2";
-            JSON::Json datastoreFile;
-            datastoreFile["createdAt"] = BAM::ToIso8601(std::chrono::system_clock::now());
-            datastoreFile["description"] = "Aligned and sorted reads as BAM";
-            std::ifstream file(alnFile, std::ios::binary | std::ios::ate);
-            datastoreFile["fileSize"] = static_cast<int>(file.tellg());
-
-            switch (inFile.Type()) {
-                case BAM::DataSet::TypeEnum::SUBREAD:
-                    datastoreFile["fileTypeId"] = "PacBio.DataSet.AlignmentSet";
-                    break;
-                case BAM::DataSet::TypeEnum::CONSENSUS_READ:
-                    datastoreFile["fileTypeId"] = "PacBio.DataSet.ConsensusAlignmentSet";
-                    break;
-                case BAM::DataSet::TypeEnum::TRANSCRIPT:
-                    datastoreFile["fileTypeId"] = "PacBio.DataSet.TranscriptAlignmentSet";
-                    break;
-                default:
-                    throw std::runtime_error("Unsupported input type");
-            }
-
-            datastoreFile["isChunked"] = false;
-            datastoreFile["modifiedAt"] = BAM::ToIso8601(std::chrono::system_clock::now());
-            datastoreFile["name"] = "Aligned reads";
-            datastoreFile["path"] = xmlName;
-            datastoreFile["sourceId"] = "mapping.tasks.pbmm2_align-out-1";
-            boost::uuids::random_generator gen;
-            datastoreFile["uniqueId"] = id;
-            datastore["files"] = std::vector<JSON::Json>{datastoreFile};
-            std::ofstream datastoreStream(outputFilePrefix + ".json");
-            datastoreStream << datastore.dump(2);
-        }
-    }
+    if (outputIsXML || outputIsJson)
+        pbiTiming = writers->WriteDatasetsJson(inFile, outFile, refFile, isFromXML, outputIsJson, s,
+                                               outputFilePrefix, settings.SplitBySample);
 
     PBLOG_INFO << "Mapped Reads: " << alignedReads;
     PBLOG_INFO << "Alignments: " << s.NumAlns;
