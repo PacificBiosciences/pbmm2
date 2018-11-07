@@ -536,8 +536,8 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     });
 
     i.AddPositionalArguments({
-        { "in.bam|xml", "Input BAM or DataSet XML", "<in.bam|xml>" },
         { "ref.fa|xml|mmi", "Reference FASTA, ReferenceSet XML, or Reference Index", "<ref.fa|xml|mmi>" },
+        { "in.bam|xml", "Input BAM or DataSet XML", "<in.bam|xml>" },
         { "out.aligned.bam|xml", "Output BAM or DataSet XML", "[out.aligned.bam|xml]" }
     });
 

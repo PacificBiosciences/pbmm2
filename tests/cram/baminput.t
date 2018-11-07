@@ -176,6 +176,8 @@
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sorted.bam --sort -j 2 -J 2 -m 100M --log-level INFO 2>&1| grep INFO
   *Using 2 threads for alignments, 2 threads for sorting, and 200M bytes RAM for sorting. (glob)
+  *READ input file: *median.bam* (glob)
+  *REF  input file: *ecoliK12_pbi_March2013.fasta* (glob)
   *Start reading/building index (glob)
   *Finished reading/building index (glob)
   *Merged sorted output from 0 files and 1 in-memory blocks (glob)

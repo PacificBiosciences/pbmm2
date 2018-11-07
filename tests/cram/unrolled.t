@@ -8,6 +8,8 @@
   $ cd $TESTDIR/data
   $ $__PBTEST_PBMM2_EXE align unrolled.json lambdaNEB_BsaAI_allFrags_incLeftRightEnds_unrolled_250k.fasta $CRAMTMP/zmw_json.alignmentset.xml --log-level DEBUG --zmw 2>&1| grep -v "#Reads, #Aln, #RPM"
   *for alignments. (glob)
+  *READ input file: *unrolled.json* (glob)
+  *REF  input file: *lambdaNEB_BsaAI_allFrags_incLeftRightEnds_unrolled_250k.fasta* (glob)
   *Will not automatically set preset based on JSON input, because unrolled mode via --zmw or --hqregion has been set! (glob)
   *Start reading/building index (glob)
   *Finished reading/building index (glob)

@@ -40,16 +40,16 @@ Tools:
 ```
 A. Generate index file for reference and reuse it to align reads
   $ pbmm2 index ref.fasta ref.mmi
-  $ pbmm2 align movie.subreads.bam ref.mmi ref.movie.bam
+  $ pbmm2 align ref.mmi movie.subreads.bam ref.movie.bam
 
 B. Align reads and sort on-the-fly, with 4 alignment and 2 sort threads
-  $ pbmm2 align movie.subreads.bam ref.fasta ref.movie.bam --sort -j 4 -J 2
+  $ pbmm2 align ref.fasta movie.subreads.bam ref.movie.bam --sort -j 4 -J 2
 
 C. Align reads, sort on-the-fly, and create PBI
-  $ pbmm2 align movie.subreadset.xml ref.fasta ref.movie.alignmentset.xml --sort
+  $ pbmm2 align ref.fasta movie.subreadset.xml ref.movie.alignmentset.xml --sort
 
 D. Omit output file and stream BAM output to stdout
-  $ pbmm2 align movie1.subreadset.xml hg38.mmi | samtools sort > hg38.movie1.sorted.bam
+  $ pbmm2 align hg38.mmi movie1.subreadset.xml | samtools sort > hg38.movie1.sorted.bam
 ```
 
 ### Index
@@ -314,6 +314,11 @@ Minimal accepted version:
 
  * **0.11.0**:
    * Library API access
+   * Add -—split-by-sample
+   * Add --strip
+   * Fix `SA` tag
+   * Fix BAM header for idempotence
+
  * 0.10.1:
    * Idempotence. Alignment of alignments results in identical alignments
    * Use different technique to get tmpfile pipe

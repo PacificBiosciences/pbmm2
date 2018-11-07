@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
         std::make_pair("align",
             Tool{"pbmm2_align",
                  "Align PacBio reads to reference sequences",
-                 "movie.subreadset.xml ref.referenceset.xml ref.movie.alignmentset.xml",
+                 "ref.referenceset.xml movie.subreadset.xml ref.movie.alignmentset.xml",
                  PacBio::minimap2::AlignSettings::CreateCLI(),
                  &PacBio::minimap2::AlignWorkflow::Runner}));
     tools.insert(
@@ -91,16 +91,16 @@ int main(int argc, char* argv[])
         std::cout << R"(Typical workflows:
   A. Generate index file for reference and reuse it to align reads
     $ pbmm2 index ref.fasta ref.mmi
-    $ pbmm2 align movie.subreads.bam ref.mmi ref.movie.bam
+    $ pbmm2 align ref.mmi movie.subreads.bam ref.movie.bam
 
   B. Align reads and sort on-the-fly, with 4 alignment and 2 sort threads
-    $ pbmm2 align movie.subreads.bam ref.fasta ref.movie.bam --sort -j 4 -J 2
+    $ pbmm2 align ref.fasta movie.subreads.bam ref.movie.bam --sort -j 4 -J 2
 
   C. Align reads, sort on-the-fly, and create PBI
-    $ pbmm2 align movie.subreadset.xml ref.fasta ref.movie.alignmentset.xml --sort
+    $ pbmm2 align ref.fasta movie.subreadset.xml ref.movie.alignmentset.xml --sort
 
   D. Omit output file and stream BAM output to stdout
-    $ pbmm2 align movie1.subreadset.xml hg38.mmi | samtools sort > hg38.movie1.sorted.bam)"
+    $ pbmm2 align hg38.mmi movie1.subreadset.xml | samtools sort > hg38.movie1.sorted.bam)"
                   << std::endl;
         return EXIT_SUCCESS;
     }

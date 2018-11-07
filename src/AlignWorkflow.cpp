@@ -57,6 +57,61 @@ struct Summary
     std::vector<int32_t> Lengths;
 };
 
+static std::string UnpackJson(const std::string& jsonInputFile)
+{
+    std::ifstream ifs(jsonInputFile);
+    JSON::Json j;
+    ifs >> j;
+    std::string inputFile;
+    const auto panic = [](const std::string& error) {
+        PBLOG_FATAL << "JSON Datastore: " << error;
+        std::exit(EXIT_FAILURE);
+    };
+    if (j.empty()) panic("Empty file!");
+    if (j.count("files") == 0) panic("Could not find files element!");
+    if (j.count("files") > 1) panic("More than ONE files element!");
+    if (j["files"].empty()) panic("files element is empty!");
+    if (j["files"].size() > 1) panic("files element contains more than ONE entry!");
+    for (const auto& file : j["files"]) {
+        if (file.count("path") == 0) panic("Could not find path element!");
+        inputFile = file["path"].get<std::string>();
+    }
+    return inputFile;
+}
+
+enum class InputType : int
+{
+    READ = 0,
+    REF
+};
+
+static InputType DetermineInputType(std::string inputFile)
+{
+    if (!Utility::FileExists(inputFile)) {
+        PBLOG_FATAL << "Input data file does not exist: " << inputFile;
+        std::exit(EXIT_FAILURE);
+    }
+    if (Utility::FileExtension(inputFile) == "json") inputFile = UnpackJson(inputFile);
+    if (boost::algorithm::ends_with(inputFile, ".mmi")) return InputType::REF;
+    BAM::DataSet dsInput(inputFile);
+    switch (dsInput.Type()) {
+        case BAM::DataSet::TypeEnum::ALIGNMENT:
+        case BAM::DataSet::TypeEnum::SUBREAD:
+        case BAM::DataSet::TypeEnum::CONSENSUS_ALIGNMENT:
+        case BAM::DataSet::TypeEnum::CONSENSUS_READ:
+        case BAM::DataSet::TypeEnum::TRANSCRIPT_ALIGNMENT:
+        case BAM::DataSet::TypeEnum::TRANSCRIPT:
+            return InputType::READ;
+        case BAM::DataSet::TypeEnum::BARCODE:
+        case BAM::DataSet::TypeEnum::REFERENCE:
+            return InputType::REF;
+        default:
+            PBLOG_FATAL << "Unsupported input data file " << inputFile << " of type "
+                        << BAM::DataSet::TypeToName(dsInput.Type());
+            std::exit(EXIT_FAILURE);
+    }
+}
+
 std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
     const std::vector<std::string>& args, AlignSettings* settings, bool* isFromJson,
     bool* isFromXML, BAM::DataSet::TypeEnum* inputType, bool* isAlignedInput)
@@ -67,30 +122,31 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
         std::exit(EXIT_FAILURE);
     }
 
-    auto inputFile = args[0];
+    std::string inputFile;
+    std::string referenceFile;
+    auto file0Type = DetermineInputType(args[0]);
+    auto file1Type = DetermineInputType(args[1]);
+    if (file0Type == InputType::READ && file1Type == InputType::REF) {
+        inputFile = args[0];
+        referenceFile = args[1];
+    } else if (file0Type == InputType::REF && file1Type == InputType::READ) {
+        referenceFile = args[0];
+        inputFile = args[1];
+    } else if (file0Type == InputType::REF && file1Type == InputType::REF) {
+        referenceFile = args[0];
+        inputFile = args[1];
+    } else if (file0Type == InputType::READ && file1Type == InputType::READ) {
+        PBLOG_FATAL << "Both input files are of type READ. Please check your inputs.";
+        std::exit(EXIT_FAILURE);
+    }
+    PBLOG_INFO << "READ input file: " << inputFile;
+    PBLOG_INFO << "REF  input file: " << referenceFile;
     if (!Utility::FileExists(inputFile)) {
         PBLOG_FATAL << "Input data file does not exist: " << inputFile;
         std::exit(EXIT_FAILURE);
     }
     *isFromJson = Utility::FileExtension(inputFile) == "json";
-    if (*isFromJson) {
-        std::ifstream ifs(inputFile);
-        JSON::Json j;
-        ifs >> j;
-        const auto panic = [](const std::string& error) {
-            PBLOG_FATAL << "JSON Datastore: " << error;
-            std::exit(EXIT_FAILURE);
-        };
-        if (j.empty()) panic("Empty file!");
-        if (j.count("files") == 0) panic("Could not find files element!");
-        if (j.count("files") > 1) panic("More than ONE files element!");
-        if (j["files"].empty()) panic("files element is empty!");
-        if (j["files"].size() > 1) panic("files element contains more than ONE entry!");
-        for (const auto& file : j["files"]) {
-            if (file.count("path") == 0) panic("Could not find path element!");
-            inputFile = file["path"].get<std::string>();
-        }
-    }
+    if (*isFromJson) inputFile = UnpackJson(inputFile);
     *isFromXML = Utility::FileExtension(inputFile) == "xml";
     BAM::DataSet dsInput(inputFile);
     *inputType = dsInput.Type();
@@ -145,18 +201,17 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
             std::exit(EXIT_FAILURE);
     }
 
-    const auto& referenceFiles = args[1];
-    if (!Utility::FileExists(referenceFiles)) {
-        PBLOG_FATAL << "Input reference file does not exist: " << referenceFiles;
+    if (!Utility::FileExists(referenceFile)) {
+        PBLOG_FATAL << "Input reference file does not exist: " << referenceFile;
         std::exit(EXIT_FAILURE);
     }
     std::string reference;
-    if (boost::algorithm::ends_with(referenceFiles, ".mmi")) {
-        reference = referenceFiles;
+    if (boost::algorithm::ends_with(referenceFile, ".mmi")) {
+        reference = referenceFile;
         PBLOG_INFO
             << "Reference input is an index file. Index parameter override options are disabled!";
     } else {
-        BAM::DataSet dsRef(referenceFiles);
+        BAM::DataSet dsRef(referenceFile);
         switch (dsRef.Type()) {
             case BAM::DataSet::TypeEnum::REFERENCE:
                 break;
@@ -166,7 +221,7 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
             case BAM::DataSet::TypeEnum::CONSENSUS_ALIGNMENT:
             case BAM::DataSet::TypeEnum::CONSENSUS_READ:
             default:
-                PBLOG_FATAL << "ERROR: Unsupported reference input file " << referenceFiles
+                PBLOG_FATAL << "ERROR: Unsupported reference input file " << referenceFile
                             << " of type " << BAM::DataSet::TypeToName(dsRef.Type());
                 std::exit(EXIT_FAILURE);
         }
