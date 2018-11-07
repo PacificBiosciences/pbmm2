@@ -1,3 +1,8 @@
-/subprojects/pbcopper
-/subprojects/pbbam
-/subprojects/minimap2
+/build*
+
+# Meson WrapDB stuff
+/subprojects/packagecache/
+/subprojects/googletest*
+/subprojects/pbcopper*
+/subprojects/pbbam*
+/subprojects/minimap2*

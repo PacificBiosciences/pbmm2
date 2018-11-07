@@ -256,6 +256,22 @@ const PlainOption HQRegion{
     "Process HQ region of each ZMW, subreadset.xml input required (activates UNROLLED preset).",
     CLI::Option::BoolType(false)
 };
+const PlainOption Strip{
+    "strip",
+    { "strip" },
+    "Strip Base Tags",
+    "Remove all kinetic and extra QV tags. Output cannot be polished.",
+    CLI::Option::BoolType(false),
+    JSON::Json(nullptr),
+    CLI::OptionFlags::HIDE_FROM_HELP
+};
+const PlainOption SplitBySample{
+    "split_by_sample",
+    { "split-by-sample" },
+    "Split by Sample",
+    "One output BAM per sample.",
+    CLI::Option::BoolType(false)
+};
 // clang-format on
 }  // namespace OptionNames
 
@@ -273,6 +289,8 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     , Sort(options[OptionNames::Sort])
     , ZMW(options[OptionNames::ZMW])
     , HQRegion(options[OptionNames::HQRegion])
+    , Strip(options[OptionNames::Strip])
+    , SplitBySample(options[OptionNames::SplitBySample])
 {
     MM2Settings::Kmer = options[OptionNames::Kmer];
     MM2Settings::MinimizerWindowSize = options[OptionNames::MinimizerWindowSize];
@@ -456,6 +474,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
 
         // hidden
         OptionNames::SortMemoryTC,
+        OptionNames::Strip,
     });
 
     i.AddGroup("Sorting Options", {
@@ -512,6 +531,10 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         OptionNames::HQRegion,
     });
 
+    i.AddGroup("Output File Options", {
+        OptionNames::SplitBySample
+    });
+
     i.AddPositionalArguments({
         { "in.bam|xml", "Input BAM or DataSet XML", "<in.bam|xml>" },
         { "ref.fa|xml|mmi", "Reference FASTA, ReferenceSet XML, or Reference Index", "<ref.fa|xml|mmi>" },
@@ -527,6 +550,8 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     tcTask.AddOption(OptionNames::SampleName);
     tcTask.AddOption(OptionNames::ZMW);
     tcTask.AddOption(OptionNames::MedianFilter);
+    tcTask.AddOption(OptionNames::Strip);
+    tcTask.AddOption(OptionNames::SplitBySample);
 
     tcTask.InputFileTypes({
         {
