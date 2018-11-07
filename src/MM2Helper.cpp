@@ -407,6 +407,10 @@ void AlignedRecord::ComputeAccuracyBases()
     const int32_t nErr = ins + del + mismatch;
     NumAlignedBases = match + ins + mismatch;
     Concordance = 100 * (1.0 - 1.0 * nErr / Span);
+    if (Record.Impl().HasTag("mc"))
+        Record.Impl().EditTag("mc", static_cast<float>(Concordance));
+    else
+        Record.Impl().AddTag("mc", static_cast<float>(Concordance));
 }
 
 }  // namespace minimap2
