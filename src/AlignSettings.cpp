@@ -310,10 +310,8 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
 
     const auto SetSortThreads = [&](int32_t origThreads, int32_t sortThreadPerc) {
         SortThreads = std::min(
-            std::max(static_cast<int>(std::round(MM2Settings::NumThreads * sortThreadPerc / 100.0)),
-                     1),
-            8);
-        MM2Settings::NumThreads = std::max(MM2Settings::NumThreads - SortThreads, 1);
+            std::max(static_cast<int>(std::round(origThreads * sortThreadPerc / 100.0)), 1), 8);
+        MM2Settings::NumThreads = std::max(origThreads - SortThreads, 1);
         if (MM2Settings::NumThreads + SortThreads > origThreads) {
             if (SortThreads > MM2Settings::NumThreads)
                 --SortThreads;

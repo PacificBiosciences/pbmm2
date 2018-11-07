@@ -195,6 +195,7 @@
   *Peak RSS: * (glob)
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -j 500 2>&1| grep WARN
+  *Requested 8 threads for sorting, without specifying --sort. Please check your input.* (glob)
   *Requested more threads for alignment (500) than system-wide available* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/pass2.bam -j 1 -J 500 -m 500G
@@ -210,6 +211,9 @@
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail4.bam -j 1 -J 2 --sort -m 1000G 2>&1
   *Trying to allocate more memory for sorting* (glob)
   [1]
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sort_percentage_4.bam -j 8 --sort --log-level INFO 2>&1 | grep "threads for alignments"
+  *Using 8 threads for alignments, 2 threads for sorting, and 1.5G bytes RAM for sorting.* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/default_parameters.bam --log-level DEBUG 2>&1| grep DEBUG
   *Minimap2 parameters* (glob)
