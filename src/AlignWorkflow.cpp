@@ -18,6 +18,8 @@
 
 #include <pbbam/BamReader.h>
 #include <pbbam/BamWriter.h>
+#include <pbbam/FastaReader.h>
+#include <pbbam/FastqReader.h>
 
 #include <pbbam/BamFile.h>
 #include <pbbam/DataSet.h>
@@ -82,17 +84,41 @@ static std::string UnpackJson(const std::string& jsonInputFile)
 enum class InputType : int
 {
     READ = 0,
-    REF
+    FASTX,
+    MMI,
+    FASTA,
+    FASTQ,
+    UNKNOWN
 };
 
-static InputType DetermineInputType(std::string inputFile)
+static InputType DetermineInputTypeFastx(const std::string& in)
+{
+    char firstChar = ' ';
+    std::ifstream f(in);
+    f.read(&firstChar, 1);
+    if (firstChar == '>')
+        return InputType::FASTA;
+    else if (firstChar == '@')
+        return InputType::FASTQ;
+    else {
+        PBLOG_FATAL << "Unkown file type for file " << in << " starting with character "
+                    << firstChar;
+        std::exit(EXIT_FAILURE);
+    }
+}
+
+static InputType DetermineInputTypeApprox(std::string inputFile)
 {
     if (!Utility::FileExists(inputFile)) {
         PBLOG_FATAL << "Input data file does not exist: " << inputFile;
         std::exit(EXIT_FAILURE);
     }
     if (Utility::FileExtension(inputFile) == "json") inputFile = UnpackJson(inputFile);
-    if (boost::algorithm::ends_with(inputFile, ".mmi")) return InputType::REF;
+    if (boost::algorithm::ends_with(inputFile, ".mmi")) return InputType::MMI;
+    if (boost::algorithm::ends_with(inputFile, ".fq")) return InputType::FASTX;
+    if (boost::algorithm::ends_with(inputFile, ".fastq")) return InputType::FASTX;
+    if (boost::algorithm::ends_with(inputFile, ".fa")) return InputType::FASTX;
+    if (boost::algorithm::ends_with(inputFile, ".fasta")) return InputType::FASTX;
     BAM::DataSet dsInput(inputFile);
     switch (dsInput.Type()) {
         case BAM::DataSet::TypeEnum::ALIGNMENT:
@@ -104,7 +130,7 @@ static InputType DetermineInputType(std::string inputFile)
             return InputType::READ;
         case BAM::DataSet::TypeEnum::BARCODE:
         case BAM::DataSet::TypeEnum::REFERENCE:
-            return InputType::REF;
+            return InputType::FASTX;
         default:
             PBLOG_FATAL << "Unsupported input data file " << inputFile << " of type "
                         << BAM::DataSet::TypeToName(dsInput.Type());
@@ -114,27 +140,78 @@ static InputType DetermineInputType(std::string inputFile)
 
 std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
     const std::vector<std::string>& args, AlignSettings* settings, bool* isFromJson,
-    bool* isFromXML, BAM::DataSet::TypeEnum* inputType, bool* isAlignedInput)
+    bool* isFromXML, BAM::DataSet::TypeEnum* inputType, bool* isAlignedInput, bool* isFastaInput,
+    bool* isFastqInput)
 {
     if (args.size() < 2) {
         PBLOG_FATAL << "Please provide at least the input arguments: input reference output!";
-        PBLOG_FATAL << "EXAMPLE: pbmm2 input.subreads.bam reference.fasta output.bam";
+        PBLOG_FATAL << "EXAMPLE: pbmm2 reference.fasta input.subreads.bam output.bam";
         std::exit(EXIT_FAILURE);
     }
 
     std::string inputFile;
     std::string referenceFile;
-    auto file0Type = DetermineInputType(args[0]);
-    auto file1Type = DetermineInputType(args[1]);
-    if (file0Type == InputType::READ && file1Type == InputType::REF) {
+    auto file0Type = DetermineInputTypeApprox(args[0]);
+    auto file1Type = DetermineInputTypeApprox(args[1]);
+    if (file0Type == InputType::READ &&
+        (file1Type == InputType::FASTX || file1Type == InputType::MMI)) {
         inputFile = args[0];
         referenceFile = args[1];
-    } else if (file0Type == InputType::REF && file1Type == InputType::READ) {
+    } else if ((file0Type == InputType::FASTX || file0Type == InputType::MMI) &&
+               file1Type == InputType::READ) {
         referenceFile = args[0];
         inputFile = args[1];
-    } else if (file0Type == InputType::REF && file1Type == InputType::REF) {
-        referenceFile = args[0];
-        inputFile = args[1];
+    } else if ((file0Type == InputType::FASTX || file0Type == InputType::MMI) &&
+               (file1Type == InputType::FASTX || file1Type == InputType::MMI)) {
+        int32_t numMmi = (file0Type == InputType::MMI) + (file1Type == InputType::MMI);
+        if (numMmi == 2) {
+            PBLOG_FATAL << "Both input files are of type MMI. Please check your inputs.";
+            std::exit(EXIT_FAILURE);
+        } else if (numMmi == 1) {
+            if (file0Type == InputType::MMI) {
+                referenceFile = args[0];
+                inputFile = args[1];
+            } else {
+                referenceFile = args[1];
+                inputFile = args[0];
+            }
+            InputType inputFileType = DetermineInputTypeFastx(inputFile);
+            if (inputFileType == InputType::FASTA) {
+                *isFastaInput = true;
+                PBLOG_WARN << "Input is FASTA. Output BAM file cannot be used for polishing with "
+                              "GenomicConsensus!";
+            } else if (inputFileType == InputType::FASTQ) {
+                *isFastqInput = true;
+                PBLOG_WARN << "Input is FASTQ. Output BAM file cannot be used for polishing with "
+                              "GenomicConsensus!";
+            }
+        } else {
+            InputType firstFileType = DetermineInputTypeFastx(args[0]);
+            InputType secondFileType = DetermineInputTypeFastx(args[1]);
+            if (firstFileType == InputType::FASTQ && secondFileType == InputType::FASTQ) {
+                PBLOG_FATAL << "Both input files are of type fastq. Please check your inputs.";
+                std::exit(EXIT_FAILURE);
+            }
+            if (firstFileType == InputType::FASTA && secondFileType == InputType::FASTQ) {
+                referenceFile = args[0];
+                inputFile = args[1];
+                *isFastqInput = true;
+                PBLOG_WARN << "Input is FASTQ. Output BAM file cannot be used for polishing with "
+                              "GenomicConsensus!";
+            } else if (firstFileType == InputType::FASTQ && secondFileType == InputType::FASTA) {
+                referenceFile = args[1];
+                inputFile = args[0];
+                *isFastqInput = true;
+                PBLOG_WARN << "Input is FASTQ. Output BAM file cannot be used for polishing with "
+                              "GenomicConsensus!";
+            } else {
+                referenceFile = args[0];
+                inputFile = args[1];
+                *isFastaInput = true;
+                PBLOG_WARN << "Input is FASTA. Output BAM file cannot be used for polishing with "
+                              "GenomicConsensus!";
+            }
+        }
     } else if (file0Type == InputType::READ && file1Type == InputType::READ) {
         PBLOG_FATAL << "Both input files are of type READ. Please check your inputs.";
         std::exit(EXIT_FAILURE);
@@ -148,7 +225,8 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
     *isFromJson = Utility::FileExtension(inputFile) == "json";
     if (*isFromJson) inputFile = UnpackJson(inputFile);
     *isFromXML = Utility::FileExtension(inputFile) == "xml";
-    BAM::DataSet dsInput(inputFile);
+    BAM::DataSet dsInput;
+    if (!*isFastaInput && !*isFastqInput) dsInput = BAM::DataSet(inputFile);
     *inputType = dsInput.Type();
     bool fromSubreadset = false;
     bool fromConsensuReadSet = false;
@@ -195,10 +273,14 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
         } break;
         case BAM::DataSet::TypeEnum::BARCODE:
         case BAM::DataSet::TypeEnum::REFERENCE:
-        default:
-            PBLOG_FATAL << "Unsupported input data file " << inputFile << " of type "
-                        << BAM::DataSet::TypeToName(dsInput.Type());
-            std::exit(EXIT_FAILURE);
+        default: {
+            const auto inType = DetermineInputTypeFastx(inputFile);
+            if (inType != InputType::FASTA && inType != InputType::FASTQ) {
+                PBLOG_FATAL << "Unsupported input data file " << inputFile << " of type "
+                            << BAM::DataSet::TypeToName(dsInput.Type());
+                std::exit(EXIT_FAILURE);
+            }
+        }
     }
 
     if (!Utility::FileExists(referenceFile)) {
@@ -777,17 +859,22 @@ int AlignWorkflow::Runner(const CLI::Results& options)
 
     AlignSettings settings(options);
 
-    BAM::DataSet inFile;
+    std::string inFileString;
     std::string refFile;
     std::string outFile;
     bool isFromJson = false;
     bool isFromXML = false;
     bool isAlignedInput = false;
+    bool isFastaInput = false;
+    bool isFastqInput = false;
     BAM::DataSet::TypeEnum inputType;
 
-    std::tie(inFile, refFile, outFile) =
+    std::tie(inFileString, refFile, outFile) =
         CheckPositionalArgs(options.PositionalArguments(), &settings, &isFromJson, &isFromXML,
-                            &inputType, &isAlignedInput);
+                            &inputType, &isAlignedInput, &isFastaInput, &isFastqInput);
+    BAM::DataSet inFile;
+    if (!isFastaInput && !isFastqInput) inFile = BAM::DataSet(inFileString);
+
     if (settings.ZMW && !isAlignedInput &&
         (!isFromXML || (inputType != BAM::DataSet::TypeEnum::SUBREAD &&
                         inputType != BAM::DataSet::TypeEnum::ALIGNMENT))) {
@@ -935,11 +1022,15 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                 auto r = reader.Next();
                 hdr = r.Header();
             }
-        } else {
+        } else if (!isFastaInput && !isFastqInput) {
             const auto bamFiles = inFile.BamFiles();
             hdr = bamFiles.front().Header();
             for (size_t i = 1; i < bamFiles.size(); ++i)
                 hdr += bamFiles.at(i).Header();
+        } else {
+            BAM::ReadGroupInfo rg("fubar");
+            rg.MovieName("UnknownMovie");
+            hdr.AddReadGroup(rg);
         }
         if (isAlignedInput) {
             hdr.ClearSequences();
@@ -1035,7 +1126,44 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             waiting--;
         };
 
-        if (isAlignedInput) {
+        const auto FastxToUnalignedBam = [&hdr, &fastxRgId](const std::string& seq,
+                                                            const std::string& name,
+                                                            const std::string& qual = "") {
+            BAM::BamRecord record(hdr);
+            record.Impl().SetSequenceAndQualities(seq, qual);
+            record.ReadGroupId(fastxRgId);
+            record.Impl().Name(name);
+            record.Impl().AddTag("qs", 0);
+            record.Impl().AddTag("qe", static_cast<int32_t>(seq.size()));
+            return record;
+        };
+
+        if (isFastaInput) {
+            BAM::FastaReader reader(inFileString);
+            BAM::FastaSequence fa;
+            while (reader.GetNext(fa)) {
+                (*records)[i++] = FastxToUnalignedBam(fa.Bases(), fa.Name());
+                if (i >= chunkSize) {
+                    waiting++;
+                    faf.ProduceWith(Submit, std::move(records));
+                    records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
+                    i = 0;
+                }
+            }
+        } else if (isFastqInput) {
+            BAM::FastqReader reader(inFileString);
+            BAM::FastqSequence fq;
+            while (reader.GetNext(fq)) {
+                (*records)[i++] =
+                    FastxToUnalignedBam(fq.Bases(), fq.Name(), fq.Qualities().Fastq());
+                if (i >= chunkSize) {
+                    waiting++;
+                    faf.ProduceWith(Submit, std::move(records));
+                    records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
+                    i = 0;
+                }
+            }
+        } else if (isAlignedInput) {
             if (settings.MedianFilter)
                 PBLOG_WARN << "Option --median-filter is ignored with aligned input!";
             if (settings.ZMW) PBLOG_WARN << "Option --zmw is ignored with aligned input!";

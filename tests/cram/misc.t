@@ -1,9 +1,21 @@
   $ IN=$TESTDIR/data/median.bam
+  $ samtools view -h $IN > $CRAMTMP/sub.sam
+  $ samtools view $IN | head -n 1 >> $CRAMTMP/sub.sam
+  $ samtools view -bS $CRAMTMP/sub.sam > $CRAMTMP/median.bam
+  $ IN=$CRAMTMP/median.bam
   $ REF=$TESTDIR/data/ecoliK12_pbi_March2013.fasta
+
+  $ BAM=$TESTDIR/data/median.bam
+  $ REF=$TESTDIR/data/ecoliK12_pbi_March2013.fasta
+
+  $ samtools view ${BAM} | awk '{ print "@"$1"\n"$10"\n+\n"$11 }' > $CRAMTMP/median.fastq
+  $ FASTQ=$CRAMTMP/median.fastq
+  $ samtools view ${BAM} | awk '{ print ">"$1"\n"$10 }' > $CRAMTMP/median.fasta
+  $ FASTA=$CRAMTMP/median.fasta
 
   $ $__PBTEST_PBMM2_EXE align $IN 2>&1
   *Please provide at least the input arguments: input reference output!* (glob)
-  *EXAMPLE: pbmm2 input.subreads.bam reference.fasta output.bam* (glob)
+  *EXAMPLE: pbmm2 reference.fasta input.subreads.bam output.bam* (glob)
   [1]
 
   $ $__PBTEST_PBMM2_EXE align $IN.bam $REF $CRAMTMP/fail.bam 2>&1; rm -rf $CRAMTMP/fail.bam
@@ -20,7 +32,7 @@
   *Both input files are of type READ. Please check your inputs.* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $REF $REF $CRAMTMP/fail.bam 2>&1; rm -rf $CRAMTMP/fail.bam
-  *Unsupported input data file* (glob)
+  *Input is FASTA.* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam --zmw
   *Option --zmw can only be used with a subreadset.xml containing subread + scraps BAM files.* (glob)
@@ -152,3 +164,62 @@
   $ $__PBTEST_PBMM2_EXE align $TESTDIR/data/median.consensusreadset.xml $REF $CRAMTMP/ccsxml_ref.bam --log-level INFO 2>&1 | grep "input file"
   *READ input file: *median.consensusreadset.xml* (glob)
   *REF  input file: *ecoliK12_pbi_March2013.fasta* (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $REF $FASTA $CRAMTMP/ref_fasta.bam --log-level INFO 2>&1 | grep "input file"
+  *READ input file: *median.fasta* (glob)
+  *REF  input file: *ecoliK12_pbi_March2013.fasta* (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $REF $FASTQ $CRAMTMP/ref_fastq.bam --log-level INFO 2>&1 | grep "input file"
+  *READ input file: *median.fastq* (glob)
+  *REF  input file: *ecoliK12_pbi_March2013.fasta* (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $FASTQ $REF $CRAMTMP/fastq_ref.bam --log-level INFO 2>&1 | grep "input file"
+  *READ input file: *median.fastq* (glob)
+  *REF  input file: *ecoliK12_pbi_March2013.fasta* (glob)
+
+  $ $__PBTEST_PBMM2_EXE index $REF $CRAMTMP/ecoli.mmi
+  $ REF=$CRAMTMP/ecoli.mmi
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/read_ref.bam --log-level INFO 2>&1 | grep "input file"
+  *READ input file: *median.bam* (glob)
+  *REF  input file: *ecoli.mmi* (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $REF $IN $CRAMTMP/ref_read.bam --log-level INFO 2>&1 | grep "input file"
+  *READ input file: *median.bam* (glob)
+  *REF  input file: *ecoli.mmi* (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $REF $TESTDIR/data/median.subreadset.xml $CRAMTMP/ref_xml.bam --log-level INFO 2>&1 | grep "input file"
+  *READ input file: *median.subreadset.xml* (glob)
+  *REF  input file: *ecoli.mmi* (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $TESTDIR/data/median.subreadset.xml $REF $CRAMTMP/xml_ref.bam --log-level INFO 2>&1 | grep "input file"
+  *READ input file: *median.subreadset.xml* (glob)
+  *REF  input file: *ecoli.mmi* (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $REF $TESTDIR/data/median.transcriptset.xml $CRAMTMP/ref_transxml.bam --log-level INFO 2>&1 | grep "input file"
+  *READ input file: *median.transcriptset.xml* (glob)
+  *REF  input file: *ecoli.mmi* (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $TESTDIR/data/median.transcriptset.xml $REF $CRAMTMP/transxml_ref.bam --log-level INFO 2>&1 | grep "input file"
+  *READ input file: *median.transcriptset.xml* (glob)
+  *REF  input file: *ecoli.mmi* (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $REF $TESTDIR/data/median.consensusreadset.xml $CRAMTMP/ref_ccsxml.bam --log-level INFO 2>&1 | grep "input file"
+  *READ input file: *median.consensusreadset.xml* (glob)
+  *REF  input file: *ecoli.mmi* (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $TESTDIR/data/median.consensusreadset.xml $REF $CRAMTMP/ccsxml_ref.bam --log-level INFO 2>&1 | grep "input file"
+  *READ input file: *median.consensusreadset.xml* (glob)
+  *REF  input file: *ecoli.mmi* (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $REF $FASTA $CRAMTMP/ref_fasta.bam --log-level INFO 2>&1 | grep "input file"
+  *READ input file: *median.fasta* (glob)
+  *REF  input file: *ecoli.mmi* (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $REF $FASTQ $CRAMTMP/ref_fastq.bam --log-level INFO 2>&1 | grep "input file"
+  *READ input file: *median.fastq* (glob)
+  *REF  input file: *ecoli.mmi* (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $FASTQ $REF $CRAMTMP/fastq_ref.bam --log-level INFO 2>&1 | grep "input file"
+  *READ input file: *median.fastq* (glob)
+  *REF  input file: *ecoli.mmi* (glob)

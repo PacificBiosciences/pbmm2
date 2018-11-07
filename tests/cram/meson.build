@@ -1,20 +1,21 @@
 pbmm2_cram_test_data = files([
-  # 'baminput.t',
-  # 'biosampleConsensus.t',
-  # 'biosampleSubreads.t',
-  # 'idempotence.t',
-  # 'jsoninput.t',
-  'misc.t'
-  # 'nohpc.t',
-  # 'refxml.t',
-  # 'sa.t',
-  # 'unrolled.t',
-  # 'strip.t',
-  # 'splitsample.t',
-  # 'splitsamplesorted.t',
-  # 'splitsamplejson.t',
-  # 'splitsamplejsonsorted.t',
-  # 'splitsamplesamename.t'
+  'baminput.t',
+  'biosampleConsensus.t',
+  'biosampleSubreads.t',
+  'idempotence.t',
+  'jsoninput.t',
+  'misc.t',
+  'nohpc.t',
+  'refxml.t',
+  'sa.t',
+  'unrolled.t',
+  'strip.t',
+  'splitsample.t',
+  'splitsamplesorted.t',
+  'splitsamplejson.t',
+  'splitsamplejsonsorted.t',
+  'splitsamplesamename.t',
+  'fastxinput.t'
   ])
 
 test(

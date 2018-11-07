@@ -216,8 +216,8 @@ const PlainOption SortThreads{
     "sort_threads",
     { "J", "sort-threads" },
     "Number of threads used for sorting",
-    "Number of threads used for sorting.",
-    CLI::Option::IntType(1)
+    "Number of threads used for sorting; 0 means 25% of -j, maximum 8.",
+    CLI::Option::IntType(0)
 };
 const PlainOption SortMemory{
     "sort_memory",
@@ -308,6 +308,21 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     MM2Settings::NoSpliceFlank = options[OptionNames::NoSpliceFlank];
     MM2Settings::DisableHPC = options[OptionNames::DisableHPC];
 
+    const auto SetSortThreads = [&](int32_t origThreads, int32_t sortThreadPerc) {
+        SortThreads = std::min(
+            std::max(static_cast<int>(std::round(MM2Settings::NumThreads * sortThreadPerc / 100.0)),
+                     1),
+            8);
+        MM2Settings::NumThreads = std::max(MM2Settings::NumThreads - SortThreads, 1);
+        if (MM2Settings::NumThreads + SortThreads > origThreads) {
+            if (SortThreads > MM2Settings::NumThreads)
+                --SortThreads;
+            else
+                --MM2Settings::NumThreads;
+            MM2Settings::NumThreads = std::max(MM2Settings::NumThreads - SortThreads, 1);
+            SortThreads = std::max(SortThreads, 1);
+        }
+    };
     int32_t requestedNThreads;
     if (IsFromRTC) {
         requestedNThreads = options.NumProcessors();
@@ -321,27 +336,13 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
                     << "Please allocate less than 50% of threads for sorting. Currently allocated: "
                     << sortThreadPerc << "%!";
 
-            if (MM2Settings::NumThreads < 2) {
+            if (requestedNThreads < 2) {
                 PBLOG_WARN
                     << "Please allocate more than 2 threads in total. Enforcing to 2 threads!";
-                MM2Settings::NumThreads = 1;
+                requestedNThreads = 1;
                 SortThreads = 1;
             } else {
-                int origThreads = MM2Settings::NumThreads;
-                SortThreads =
-                    std::min(std::max(static_cast<int>(std::round(MM2Settings::NumThreads *
-                                                                  sortThreadPerc / 100.0)),
-                                      1),
-                             8);
-                MM2Settings::NumThreads = std::max(MM2Settings::NumThreads - SortThreads, 1);
-                if (MM2Settings::NumThreads + SortThreads > origThreads) {
-                    if (SortThreads > MM2Settings::NumThreads)
-                        --SortThreads;
-                    else
-                        --MM2Settings::NumThreads;
-                    MM2Settings::NumThreads = std::max(MM2Settings::NumThreads - SortThreads, 1);
-                    SortThreads = std::max(SortThreads, 1);
-                }
+                SetSortThreads(requestedNThreads, sortThreadPerc);
             }
         }
     } else {
@@ -349,6 +350,7 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
         SortMemory =
             PlainOption::SizeStringToInt(options[OptionNames::SortMemory].get<std::string>());
         SortThreads = options[OptionNames::SortThreads];
+        if (SortThreads == 0) SetSortThreads(requestedNThreads, 25);
     }
 
     if (!Sort) {
