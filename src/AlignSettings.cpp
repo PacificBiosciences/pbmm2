@@ -319,17 +319,11 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     MM2Settings::DisableHPC = options[OptionNames::DisableHPC];
 
     const auto SetSortThreads = [&](int32_t origThreads, int32_t sortThreadPerc) {
+        int availableThreads = ThreadCount(origThreads);
         SortThreads = std::min(
-            std::max(static_cast<int>(std::round(origThreads * sortThreadPerc / 100.0)), 1), 8);
-        MM2Settings::NumThreads = std::max(origThreads - SortThreads, 1);
-        if (MM2Settings::NumThreads + SortThreads > origThreads) {
-            if (SortThreads > MM2Settings::NumThreads)
-                --SortThreads;
-            else
-                --MM2Settings::NumThreads;
-            MM2Settings::NumThreads = std::max(MM2Settings::NumThreads - SortThreads, 1);
-            SortThreads = std::max(SortThreads, 1);
-        }
+            std::max(static_cast<int>(std::round(availableThreads * sortThreadPerc / 100.0)), 1),
+            8);
+        MM2Settings::NumThreads = std::max(availableThreads - SortThreads, 1);
     };
     int32_t requestedNThreads;
     if (IsFromRTC) {
@@ -355,14 +349,22 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
         }
     } else {
         requestedNThreads = options[OptionNames::NumThreads];
-        SortMemory =
-            PlainOption::SizeStringToInt(options[OptionNames::SortMemory].get<std::string>());
         SortThreads = options[OptionNames::SortThreads];
-        if (SortThreads == 0) SetSortThreads(requestedNThreads, 25);
+        if (Sort) {
+            SortMemory =
+                PlainOption::SizeStringToInt(options[OptionNames::SortMemory].get<std::string>());
+            if (SortThreads == 0) {
+                SetSortThreads(requestedNThreads, 25);
+            } else {
+                MM2Settings::NumThreads = ThreadCount(requestedNThreads);
+            }
+        } else {
+            MM2Settings::NumThreads = ThreadCount(requestedNThreads);
+        }
     }
 
     if (!Sort) {
-        if (SortThreads != 1)
+        if (SortThreads != 0)
             PBLOG_WARN
                 << "Requested " << SortThreads
                 << " threads for sorting, without specifying --sort. Please check your input.";
@@ -372,8 +374,6 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
                 << "Requested " << pureMemory
                 << " memory for sorting, without specifying --sort. Please check your input.";
     }
-
-    MM2Settings::NumThreads = ThreadCount(requestedNThreads);
 
     int numAvailableCores = std::thread::hardware_concurrency();
 
