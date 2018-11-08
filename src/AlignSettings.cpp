@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <map>
 
+#include <boost/algorithm/string.hpp>
+
 #include <Pbmm2Version.h>
 
 #include "AlignSettings.h"
@@ -62,7 +64,7 @@ const PlainOption SampleName{
     "biosample_name",
     { "sample" },
     "Sample Name",
-    "Override sample name (SM field in RG tag) for all read groups. If not provided, sample names derive from the datasets with order of precedence: biosample name, well sample name, \"UnnamedSample\".",
+    "Sample name for all read groups. Defaults, in order of precedence: SM field in input read group, biosample name, well sample name, \"UnnamedSample\".",
     CLI::Option::StringType()
 };
 const PlainOption AlignModeOpt{
@@ -272,6 +274,13 @@ const PlainOption SplitBySample{
     "One output BAM per sample.",
     CLI::Option::BoolType(false)
 };
+const PlainOption Rg{
+    "rg",
+    { "rg" },
+    "Read group",
+    "Read group header line such as '@RG\\tID:xyz\\tSM:abc'. Only for FASTA/Q inputs.",
+    CLI::Option::StringType()
+};
 // clang-format on
 }  // namespace OptionNames
 
@@ -291,6 +300,7 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     , HQRegion(options[OptionNames::HQRegion])
     , Strip(options[OptionNames::Strip])
     , SplitBySample(options[OptionNames::SplitBySample])
+    , Rg(options[OptionNames::Rg].get<decltype(Rg)>())
 {
     MM2Settings::Kmer = options[OptionNames::Kmer];
     MM2Settings::MinimizerWindowSize = options[OptionNames::MinimizerWindowSize];
@@ -448,6 +458,12 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
         ChunkSize = 1;
         MM2Settings::AlignMode = AlignmentMode::UNROLLED;
     }
+
+    if (!Rg.empty() && !boost::contains(Rg, "ID") && !boost::starts_with(Rg, "@RG\t")) {
+        PBLOG_FATAL << "Invalid @RG line. Missing ID field. Please provide following "
+                       "format: '@RG\\tID:xyz\\tSM:abc'";
+        std::exit(EXIT_FAILURE);
+    }
 }
 
 int32_t AlignSettings::ThreadCount(int32_t n)
@@ -517,7 +533,8 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     });
 
     i.AddGroup("Read Group Options", {
-        OptionNames::SampleName
+        OptionNames::SampleName,
+        OptionNames::Rg,
     });
 
     i.AddGroup("Output Filter Options", {

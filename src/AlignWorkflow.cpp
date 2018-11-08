@@ -34,6 +34,7 @@
 #include <pbcopper/parallel/WorkQueue.h>
 #include <pbcopper/utility/Stopwatch.h>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
@@ -891,6 +892,11 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         std::exit(EXIT_FAILURE);
     }
 
+    if (!isFastaInput && !isFastqInput && !settings.Rg.empty()) {
+        PBLOG_FATAL << "Cannot override read groups with BAM input. Remove option --rg.";
+        std::exit(EXIT_FAILURE);
+    }
+
     std::string outputFilePrefix{"-"};
     bool outputIsXML = false;
     bool outputIsJson = false;
@@ -1015,6 +1021,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             }
         }
 
+        std::string fastxRgId = "default";
         BAM::BamHeader hdr;
         if ((settings.HQRegion || settings.ZMW) && !isAlignedInput) {
             BAM::ZmwReadStitcher reader(inFile);
@@ -1028,8 +1035,12 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             for (size_t i = 1; i < bamFiles.size(); ++i)
                 hdr += bamFiles.at(i).Header();
         } else {
-            BAM::ReadGroupInfo rg("fubar");
-            rg.MovieName("UnknownMovie");
+            std::string rgString = settings.Rg;
+            boost::replace_all(rgString, "\\t", "\t");
+            if (rgString.empty()) rgString = "@RG\tID:default";
+            BAM::ReadGroupInfo rg = BAM::ReadGroupInfo::FromSam(rgString);
+            fastxRgId = rg.Id();
+            if (rg.MovieName().empty()) rg.MovieName("default");
             hdr.AddReadGroup(rg);
         }
         if (isAlignedInput) {
@@ -1053,7 +1064,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                     rg.Sample(SanitizeSampleName(""));
                 }
             } else {
-                rg.Sample(SanitizeSampleName(""));
+                if (rg.Sample().empty()) rg.Sample(SanitizeSampleName(""));
             }
             hdr.AddReadGroup(rg);
         }
@@ -1101,9 +1112,10 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                     s.Bases += aln.NumAlignedBases;
                     s.Concordance += aln.Concordance;
                     ++s.NumAlns;
+                    const std::string movieName = aln.Record.MovieName();
                     writers
-                        ->at(movieNameToSampleAndInfix[aln.Record.MovieName()].second,
-                             movieNameToSampleAndInfix[aln.Record.MovieName()].first)
+                        ->at(movieNameToSampleAndInfix[movieName].second,
+                             movieNameToSampleAndInfix[movieName].first)
                         .Write(aln.Record);
                     if (++alignedRecords % settings.ChunkSize == 0) {
                         const auto now = std::chrono::steady_clock::now();

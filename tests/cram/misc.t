@@ -109,6 +109,9 @@
   * (glob)
     D. Omit output file and stream BAM output to stdout
       $ pbmm2 align hg38.mmi movie1.subreadset.xml | samtools sort > hg38.movie1.sorted.bam
+  * (glob)
+    E. Align CCS fastq input and sort output
+      $ pbmm2 align ref.fasta movie.Q20.fastq ref.movie.bam --sort --rg '@RG\tID:myid\tSM:mysample'
 
   $ $__PBTEST_PBMM2_EXE --help 2>&1 | head -n 1
   pbmm2 - minimap2 with native PacBio BAM support* (glob)
