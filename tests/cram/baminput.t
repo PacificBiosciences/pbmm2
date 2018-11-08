@@ -176,6 +176,8 @@
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sorted.bam --sort -j 2 -J 2 -m 100M --log-level INFO 2>&1| grep INFO
   *Using 2 threads for alignments, 2 threads for sorting, and 200M bytes RAM for sorting. (glob)
+  *READ input file: *median.bam* (glob)
+  *REF  input file: *ecoliK12_pbi_March2013.fasta* (glob)
   *Start reading/building index (glob)
   *Finished reading/building index (glob)
   *Merged sorted output from 0 files and 1 in-memory blocks (glob)
@@ -208,6 +210,9 @@
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail4.bam -j 1 -J 2 --sort -m 1000G 2>&1
   *Trying to allocate more memory for sorting* (glob)
   [1]
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sort_percentage_4.bam -j 8 --sort --log-level INFO 2>&1 | grep "threads for alignments"
+  *Using 6 threads for alignments, 2 threads for sorting, and 1.5G bytes RAM for sorting.* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/default_parameters.bam --log-level DEBUG 2>&1| grep DEBUG
   *Minimap2 parameters* (glob)

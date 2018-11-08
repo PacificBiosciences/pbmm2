@@ -47,7 +47,7 @@ const PlainOption AlignModeOpt{
     "align_mode",
     { "preset" },
     "Alignment mode",
-    "Set alignment mode:\n  - \"SUBREAD\" -k 19 -w 10\n  - \"CCS\"  -k 19 -w 10 --no-hpc\n  - \"ISOSEQ\"  -k 15 -w 5 --no-hpc\nDefault",
+    "Set alignment mode:\n  - \"SUBREAD\" -k 19 -w 10\n  - \"CCS\"  -k 19 -w 10 -u\n  - \"ISOSEQ\"  -k 15 -w 5 -u\nDefault",
     CLI::Option::StringType("SUBREAD"),
     {"SUBREAD", "CCS", "ISOSEQ"}
 };

@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <map>
 
+#include <boost/algorithm/string.hpp>
+
 #include <Pbmm2Version.h>
 
 #include "AlignSettings.h"
@@ -62,7 +64,7 @@ const PlainOption SampleName{
     "biosample_name",
     { "sample" },
     "Sample Name",
-    "Override sample name (SM field in RG tag) for all read groups. If not provided, sample names derive from the datasets with order of precedence: biosample name, well sample name, \"UnnamedSample\".",
+    "Sample name for all read groups. Defaults, in order of precedence: SM field in input read group, biosample name, well sample name, \"UnnamedSample\".",
     CLI::Option::StringType()
 };
 const PlainOption AlignModeOpt{
@@ -216,8 +218,8 @@ const PlainOption SortThreads{
     "sort_threads",
     { "J", "sort-threads" },
     "Number of threads used for sorting",
-    "Number of threads used for sorting.",
-    CLI::Option::IntType(1)
+    "Number of threads used for sorting; 0 means 25% of -j, maximum 8.",
+    CLI::Option::IntType(0)
 };
 const PlainOption SortMemory{
     "sort_memory",
@@ -272,6 +274,13 @@ const PlainOption SplitBySample{
     "One output BAM per sample.",
     CLI::Option::BoolType(false)
 };
+const PlainOption Rg{
+    "rg",
+    { "rg" },
+    "Read group",
+    "Read group header line such as '@RG\\tID:xyz\\tSM:abc'. Only for FASTA/Q inputs.",
+    CLI::Option::StringType()
+};
 // clang-format on
 }  // namespace OptionNames
 
@@ -291,6 +300,7 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     , HQRegion(options[OptionNames::HQRegion])
     , Strip(options[OptionNames::Strip])
     , SplitBySample(options[OptionNames::SplitBySample])
+    , Rg(options[OptionNames::Rg].get<decltype(Rg)>())
 {
     MM2Settings::Kmer = options[OptionNames::Kmer];
     MM2Settings::MinimizerWindowSize = options[OptionNames::MinimizerWindowSize];
@@ -308,6 +318,13 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     MM2Settings::NoSpliceFlank = options[OptionNames::NoSpliceFlank];
     MM2Settings::DisableHPC = options[OptionNames::DisableHPC];
 
+    const auto SetSortThreads = [&](int32_t origThreads, int32_t sortThreadPerc) {
+        int availableThreads = ThreadCount(origThreads);
+        SortThreads = std::min(
+            std::max(static_cast<int>(std::round(availableThreads * sortThreadPerc / 100.0)), 1),
+            8);
+        MM2Settings::NumThreads = std::max(availableThreads - SortThreads, 1);
+    };
     int32_t requestedNThreads;
     if (IsFromRTC) {
         requestedNThreads = options.NumProcessors();
@@ -321,38 +338,33 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
                     << "Please allocate less than 50% of threads for sorting. Currently allocated: "
                     << sortThreadPerc << "%!";
 
-            if (MM2Settings::NumThreads < 2) {
+            if (requestedNThreads < 2) {
                 PBLOG_WARN
                     << "Please allocate more than 2 threads in total. Enforcing to 2 threads!";
-                MM2Settings::NumThreads = 1;
+                requestedNThreads = 1;
                 SortThreads = 1;
             } else {
-                int origThreads = MM2Settings::NumThreads;
-                SortThreads =
-                    std::min(std::max(static_cast<int>(std::round(MM2Settings::NumThreads *
-                                                                  sortThreadPerc / 100.0)),
-                                      1),
-                             8);
-                MM2Settings::NumThreads = std::max(MM2Settings::NumThreads - SortThreads, 1);
-                if (MM2Settings::NumThreads + SortThreads > origThreads) {
-                    if (SortThreads > MM2Settings::NumThreads)
-                        --SortThreads;
-                    else
-                        --MM2Settings::NumThreads;
-                    MM2Settings::NumThreads = std::max(MM2Settings::NumThreads - SortThreads, 1);
-                    SortThreads = std::max(SortThreads, 1);
-                }
+                SetSortThreads(requestedNThreads, sortThreadPerc);
             }
         }
     } else {
         requestedNThreads = options[OptionNames::NumThreads];
-        SortMemory =
-            PlainOption::SizeStringToInt(options[OptionNames::SortMemory].get<std::string>());
         SortThreads = options[OptionNames::SortThreads];
+        if (Sort) {
+            SortMemory =
+                PlainOption::SizeStringToInt(options[OptionNames::SortMemory].get<std::string>());
+            if (SortThreads == 0) {
+                SetSortThreads(requestedNThreads, 25);
+            } else {
+                MM2Settings::NumThreads = ThreadCount(requestedNThreads);
+            }
+        } else {
+            MM2Settings::NumThreads = ThreadCount(requestedNThreads);
+        }
     }
 
     if (!Sort) {
-        if (SortThreads != 1)
+        if (SortThreads != 0)
             PBLOG_WARN
                 << "Requested " << SortThreads
                 << " threads for sorting, without specifying --sort. Please check your input.";
@@ -362,8 +374,6 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
                 << "Requested " << pureMemory
                 << " memory for sorting, without specifying --sort. Please check your input.";
     }
-
-    MM2Settings::NumThreads = ThreadCount(requestedNThreads);
 
     int numAvailableCores = std::thread::hardware_concurrency();
 
@@ -448,6 +458,12 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
         ChunkSize = 1;
         MM2Settings::AlignMode = AlignmentMode::UNROLLED;
     }
+
+    if (!Rg.empty() && !boost::contains(Rg, "ID") && !boost::starts_with(Rg, "@RG\t")) {
+        PBLOG_FATAL << "Invalid @RG line. Missing ID field. Please provide following "
+                       "format: '@RG\\tID:xyz\\tSM:abc'";
+        std::exit(EXIT_FAILURE);
+    }
 }
 
 int32_t AlignSettings::ThreadCount(int32_t n)
@@ -517,7 +533,8 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     });
 
     i.AddGroup("Read Group Options", {
-        OptionNames::SampleName
+        OptionNames::SampleName,
+        OptionNames::Rg,
     });
 
     i.AddGroup("Output Filter Options", {
@@ -536,8 +553,8 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     });
 
     i.AddPositionalArguments({
-        { "in.bam|xml", "Input BAM or DataSet XML", "<in.bam|xml>" },
         { "ref.fa|xml|mmi", "Reference FASTA, ReferenceSet XML, or Reference Index", "<ref.fa|xml|mmi>" },
+        { "in.bam|xml", "Input BAM or DataSet XML", "<in.bam|xml>" },
         { "out.aligned.bam|xml", "Output BAM or DataSet XML", "[out.aligned.bam|xml]" }
     });
 
