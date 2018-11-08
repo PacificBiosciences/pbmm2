@@ -226,3 +226,28 @@
   $ $__PBTEST_PBMM2_EXE align $FASTQ $REF $CRAMTMP/fastq_ref.bam --log-level INFO 2>&1 | grep "input file"
   *READ input file: *median.fastq* (glob)
   *REF  input file: *ecoli.mmi* (glob)
+
+  $ echo $BAM > $CRAMTMP/mixed-bam-fq.fofn
+  $ echo $FASTQ >> $CRAMTMP/mixed-bam-fq.fofn
+  $ $__PBTEST_PBMM2_EXE align $CRAMTMP/mixed-bam-fq.fofn $REF $CRAMTMP/mixed-bam-fq.bam
+  *Could not determine read input type(s). Please do not mix data types, such as BAM+FASTQ. File of files may only contain BAMs or datasets.* (glob)
+  [1]
+
+  $ echo $BAM > $CRAMTMP/mixed-bam-fa.fofn
+  $ echo $FASTA >> $CRAMTMP/mixed-bam-fa.fofn
+  $ $__PBTEST_PBMM2_EXE align $CRAMTMP/mixed-bam-fa.fofn $REF $CRAMTMP/mixed-bam-fq.bam
+  *Could not determine read input type(s). Please do not mix data types, such as BAM+FASTQ. File of files may only contain BAMs or datasets.* (glob)
+  [1]
+
+  $ echo $FASTQ > $CRAMTMP/mixed-fq-fa.fofn
+  $ echo $FASTA >> $CRAMTMP/mixed-fq-fa.fofn
+  $ $__PBTEST_PBMM2_EXE align $CRAMTMP/mixed-fq-fa.fofn $REF $CRAMTMP/mixed-fq-fa.bam
+  *Could not determine read input type(s). Please do not mix data types, such as BAM+FASTQ. File of files may only contain BAMs or datasets.* (glob)
+  [1]
+
+  $ echo $FASTQ > $CRAMTMP/mixed-fq-fq.fofn
+  $ echo $FASTQ >> $CRAMTMP/mixed-fq-fq.fofn
+  $ $__PBTEST_PBMM2_EXE align $CRAMTMP/mixed-fq-fq.fofn $REF $CRAMTMP/mixed-fq-fq.bam
+  *Could not determine read input type(s). Please do not mix data types, such as BAM+FASTQ. File of files may only contain BAMs or datasets.* (glob)
+  [1]
+

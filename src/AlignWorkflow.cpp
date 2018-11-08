@@ -52,6 +52,9 @@
 namespace PacBio {
 namespace minimap2 {
 namespace {
+static const std::string UNKNOWN_FILE_TYPES =
+    "Could not determine read input type(s). Please do not mix data types, such as BAM+FASTQ. File "
+    "of files may only contain BAMs or datasets.";
 struct Summary
 {
     int32_t NumAlns = 0;
@@ -120,7 +123,13 @@ static InputType DetermineInputTypeApprox(std::string inputFile)
     if (boost::algorithm::ends_with(inputFile, ".fastq")) return InputType::FASTX;
     if (boost::algorithm::ends_with(inputFile, ".fa")) return InputType::FASTX;
     if (boost::algorithm::ends_with(inputFile, ".fasta")) return InputType::FASTX;
-    BAM::DataSet dsInput(inputFile);
+    BAM::DataSet dsInput;
+    try {
+        dsInput = BAM::DataSet(inputFile);
+    } catch (...) {
+        PBLOG_FATAL << UNKNOWN_FILE_TYPES;
+        std::exit(EXIT_FAILURE);
+    }
     switch (dsInput.Type()) {
         case BAM::DataSet::TypeEnum::ALIGNMENT:
         case BAM::DataSet::TypeEnum::SUBREAD:
@@ -227,7 +236,12 @@ std::tuple<std::string, std::string, std::string> CheckPositionalArgs(
     if (*isFromJson) inputFile = UnpackJson(inputFile);
     *isFromXML = Utility::FileExtension(inputFile) == "xml";
     BAM::DataSet dsInput;
-    if (!*isFastaInput && !*isFastqInput) dsInput = BAM::DataSet(inputFile);
+    try {
+        if (!*isFastaInput && !*isFastqInput) dsInput = BAM::DataSet(inputFile);
+    } catch (...) {
+        PBLOG_FATAL << UNKNOWN_FILE_TYPES;
+        std::exit(EXIT_FAILURE);
+    }
     *inputType = dsInput.Type();
     bool fromSubreadset = false;
     bool fromConsensuReadSet = false;
@@ -874,7 +888,12 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         CheckPositionalArgs(options.PositionalArguments(), &settings, &isFromJson, &isFromXML,
                             &inputType, &isAlignedInput, &isFastaInput, &isFastqInput);
     BAM::DataSet inFile;
-    if (!isFastaInput && !isFastqInput) inFile = BAM::DataSet(inFileString);
+    try {
+        if (!isFastaInput && !isFastqInput) inFile = BAM::DataSet(inFileString);
+    } catch (...) {
+        PBLOG_FATAL << UNKNOWN_FILE_TYPES;
+        std::exit(EXIT_FAILURE);
+    }
 
     if (settings.ZMW && !isAlignedInput &&
         (!isFromXML || (inputType != BAM::DataSet::TypeEnum::SUBREAD &&
@@ -930,13 +949,18 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     int64_t alignedReads = 0;
 
     const auto BamQuery = [&inFile]() {
-        const auto filter = BAM::PbiFilter::FromDataSet(inFile);
-        std::unique_ptr<BAM::internal::IQuery> query(nullptr);
-        if (filter.IsEmpty())
-            query = std::make_unique<BAM::EntireFileQuery>(inFile);
-        else
-            query = std::make_unique<BAM::PbiFilterQuery>(filter, inFile);
-        return query;
+        try {
+            const auto filter = BAM::PbiFilter::FromDataSet(inFile);
+            std::unique_ptr<BAM::internal::IQuery> query(nullptr);
+            if (filter.IsEmpty())
+                query = std::make_unique<BAM::EntireFileQuery>(inFile);
+            else
+                query = std::make_unique<BAM::PbiFilterQuery>(filter, inFile);
+            return query;
+        } catch (...) {
+            PBLOG_FATAL << UNKNOWN_FILE_TYPES;
+            std::exit(EXIT_FAILURE);
+        }
     };
 
     std::unique_ptr<StreamWriters> writers;
@@ -1054,17 +1078,19 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         for (auto& rg : rgs) {
             if (performOverrideSampleName) {
                 rg.Sample(overridingSampleName);
-            } else if (isFromXML || isFromJson) {
-                if (movieNameToSampleAndInfix.find(rg.MovieName()) !=
-                    movieNameToSampleAndInfix.cend()) {
-                    rg.Sample(movieNameToSampleAndInfix[rg.MovieName()].first);
+            } else if (rg.Sample().empty()) {
+                if (isFromXML || isFromJson) {
+                    if (movieNameToSampleAndInfix.find(rg.MovieName()) !=
+                        movieNameToSampleAndInfix.cend()) {
+                        rg.Sample(movieNameToSampleAndInfix[rg.MovieName()].first);
+                    } else {
+                        PBLOG_INFO << "Cannot find biosample name for movie name " << rg.MovieName()
+                                   << "! Will use fallback.";
+                        rg.Sample(SanitizeSampleName(""));
+                    }
                 } else {
-                    PBLOG_INFO << "Cannot find biosample name for movie name " << rg.MovieName()
-                               << "! Will use fallback.";
                     rg.Sample(SanitizeSampleName(""));
                 }
-            } else {
-                if (rg.Sample().empty()) rg.Sample(SanitizeSampleName(""));
             }
             hdr.AddReadGroup(rg);
         }
