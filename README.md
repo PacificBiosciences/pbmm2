@@ -10,8 +10,8 @@ Its purpose is to support native PacBio in- and output, provide sets of
 recommended parameters, and generate sorted output on-the-fly.
 Sorted output can be used directly for polishing using GenomicConsensus,
 if BAM has been used as input to _pbmm2_.
-Benchmarks show that _pbmm2_ outperforms BLASR in mapped concordance, 
-number of bases mapped, and runtime.
+Benchmarks show that _pbmm2_ outperforms BLASR in mapped concordance,
+number of bases mapped, and especially runtime.
 
 **This is a beta!** Expect changes and different output between
 versions until release of the first stable release.
@@ -80,7 +80,7 @@ Sorted output can be generated using `--sort`.
 
 By default, 25% of threads specified with `-j`, maximum 8, are used for sorting.
 
-To override the default percentage, `-J,--sort-threads` defines the explicit number of threads 
+To override the default percentage, `-J,--sort-threads` defines the explicit number of threads
 used for on-the-fly sorting.
 The memory allocated per sort thread can be defined with `-m,--sort-memory`, accepting suffixes `M,G`.
 
@@ -259,9 +259,6 @@ That is:
 * number of alignments generated,
 * reads per minute processed.
 
-### Can I align FASTA or FASTQ files?
-No. Please use [minimap2](https://github.com/lh3/minimap2) for that.
-
 ### Can I perform unrolled alignment?
 If you are interested in unrolled alignments that is, align the full-length
 ZMW read or the HQ region of a ZMW against an unrolled template, please use
@@ -273,9 +270,18 @@ This is beta feature and still in development.
 You can override the sample name (SM field in RG tag) for all read groups
 with `--sample`.
 If not provided, sample names derive from the dataset input with order of
-precedence: biosample name, well sample name, `UnnamedSample`.
+precedence: SM field in input read group, biosample name, well sample name, `UnnamedSample`.
 If the input is a BAM file and `--sample` has not been used, the SM field will
 be populated with `UnnamedSample`.
+
+### Can I split output by sample name?
+Yes, `--split-by-sample` generates one output BAM file per sample name, with
+the sample name as file name infix, if there is more than one aligned sample name.
+
+### Can I remove all those extra per base and pulse tags?
+Yes, `--strip` removes following extraneous tags if the input is BAM,
+**but the resulting output BAM file cannot be used as input into GenomicConsensus**:
+`dq, dt, ip, iq, mq, pa, pc, pd, pe, pg, pm, pq, pt, pv, pw, px, sf, sq, st`
 
 ### How does _pbmm2_ get invoked in pbsmrtpipe?
 The goal was to simplify the interface of _pbmm2_ with pbsmrtpipe.
@@ -289,11 +295,14 @@ Following options are available:
 
 | ID | Description | Default |
 | - | - | - |
-| `pbmm2_align.task_options.biosample_name` | Override sample name | `""` |
+| `pbmm2_align.task_options.biosample_name` | Override Sample Name | `""` |
+| `pbmm2_align.task_options.hq_mode` | Process HQ Region Reads | `false` |
 | `pbmm2_align.task_options.median_filter` | Pick One Read per ZMW of Median Length | `false` |
 | `pbmm2_align.task_options.min_perc_concordance` | Minimum Concordance (%) | `70` |
 | `pbmm2_align.task_options.minalnlength` | Minimum Length | `50` |
 | `pbmm2_align.task_options.sort_memory_tc` | Memory per thread for sorting | `4G` |
+| `pbmm2_align.task_options.split_by_sample` | Split by Sample | `false` |
+| `pbmm2_align.task_options.strip` | Remove all kinetic and extra QV tags | `false` |
 | `pbmm2_align.task_options.zmw_mode` | Process ZMW Reads | `false` |
 
 Following an example for an input datastore that wraps a `subreadset.xml`.
@@ -333,7 +342,7 @@ Minimal accepted version:
    * Library API access
    * Add fasta/q input support
    * Add --rg
-   * Add -—split-by-sample
+   * Add --split-by-sample
    * Add --strip
    * Fix `SA` tag
    * Fix BAM header for idempotence

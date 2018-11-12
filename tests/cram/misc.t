@@ -14,7 +14,7 @@
   $ FASTA=$CRAMTMP/median.fasta
 
   $ $__PBTEST_PBMM2_EXE align $IN 2>&1
-  *Please provide at least the input arguments: input reference output!* (glob)
+  *Please provide at least the input arguments: reference input output!* (glob)
   *EXAMPLE: pbmm2 reference.fasta input.subreads.bam output.bam* (glob)
   [1]
 
@@ -29,7 +29,7 @@
   [1]
 
   $ $__PBTEST_PBMM2_EXE align $IN $IN $CRAMTMP/fail.bam 2>&1; rm -rf $CRAMTMP/fail.bam
-  *Both input files are of type READ. Please check your inputs.* (glob)
+  *Both input files are of type BAM. Please check your inputs.* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $REF $REF $CRAMTMP/fail.bam 2>&1; rm -rf $CRAMTMP/fail.bam
   *Input is FASTA.* (glob)

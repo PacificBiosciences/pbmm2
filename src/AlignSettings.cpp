@@ -263,9 +263,7 @@ const PlainOption Strip{
     { "strip" },
     "Strip Base Tags",
     "Remove all kinetic and extra QV tags. Output cannot be polished.",
-    CLI::Option::BoolType(false),
-    JSON::Json(nullptr),
-    CLI::OptionFlags::HIDE_FROM_HELP
+    CLI::Option::BoolType(false)
 };
 const PlainOption SplitBySample{
     "split_by_sample",
@@ -325,12 +323,14 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
             8);
         MM2Settings::NumThreads = std::max(availableThreads - SortThreads, 1);
     };
+
     int32_t requestedNThreads;
+    std::string requestedMemory;
     if (IsFromRTC) {
-        requestedNThreads = options.NumProcessors();
         Sort = true;
-        SortMemory =
-            PlainOption::SizeStringToInt(options[OptionNames::SortMemoryTC].get<std::string>());
+        requestedNThreads = options.NumProcessors();
+        requestedMemory = options[OptionNames::SortMemoryTC].get<std::string>();
+
         if (Sort) {
             int sortThreadPerc = options[OptionNames::SortThreadsTC];
             if (sortThreadPerc > 50)
@@ -350,18 +350,13 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     } else {
         requestedNThreads = options[OptionNames::NumThreads];
         SortThreads = options[OptionNames::SortThreads];
-        if (Sort) {
-            SortMemory =
-                PlainOption::SizeStringToInt(options[OptionNames::SortMemory].get<std::string>());
-            if (SortThreads == 0) {
-                SetSortThreads(requestedNThreads, 25);
-            } else {
-                MM2Settings::NumThreads = ThreadCount(requestedNThreads);
-            }
-        } else {
+        requestedMemory = options[OptionNames::SortMemory].get<std::string>();
+        if (Sort && SortThreads == 0)
+            SetSortThreads(requestedNThreads, 25);
+        else
             MM2Settings::NumThreads = ThreadCount(requestedNThreads);
-        }
     }
+    SortMemory = PlainOption::SizeStringToInt(requestedMemory);
 
     if (!Sort) {
         if (SortThreads != 0)
@@ -490,7 +485,6 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
 
         // hidden
         OptionNames::SortMemoryTC,
-        OptionNames::Strip,
     });
 
     i.AddGroup("Sorting Options", {
@@ -537,9 +531,11 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         OptionNames::Rg,
     });
 
-    i.AddGroup("Output Filter Options", {
+    i.AddGroup("Output Options", {
         OptionNames::MinPercConcordance,
-        OptionNames::MinAlignmentLength
+        OptionNames::MinAlignmentLength,
+        OptionNames::Strip,
+        OptionNames::SplitBySample,
     });
 
     i.AddGroup("Input Manipulation Options (mutually exclusive)", {
@@ -549,7 +545,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     });
 
     i.AddGroup("Output File Options", {
-        OptionNames::SplitBySample
+
     });
 
     i.AddPositionalArguments({
