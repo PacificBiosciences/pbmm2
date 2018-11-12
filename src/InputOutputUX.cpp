@@ -51,6 +51,8 @@ InputType InputOutputUX::DetermineInputTypeFastx(const std::string& in)
         return InputType::FASTQ;
     else if (firstChar == 'M')
         return InputType::MMI;
+    else if (firstChar == '<')
+        return InputType::DATASET;
     else {
         PBLOG_FATAL << "Unkown file type for file " << in << " starting with character "
                     << firstChar;
@@ -116,77 +118,171 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
     const bool firstRefFastx = file0Type == InputType::FASTX || file0Type == InputType::MMI;
     const bool secondRefFastx = file1Type == InputType::FASTX || file1Type == InputType::MMI;
 
-    if (file0Type == InputType::BAM && secondRefFastx) {  // BAM <FASTX|MMI>
+    if (file0Type == InputType::BAM && file1Type == InputType::BAM) {  // BAM BAM
+        PBLOG_FATAL << "Both input files are of type BAM. Please check your inputs.";
+        std::exit(EXIT_FAILURE);
+    } else if (file0Type == InputType::BAM && secondRefFastx) {  // BAM <FASTX|MMI>
         inputFile = args[0];
         referenceFile = args[1];
     } else if (firstRefFastx && file1Type == InputType::BAM) {  // <FASTX|MMI> BAM
         referenceFile = args[0];
         inputFile = args[1];
-    } else if (firstRefFastx && secondRefFastx) {  // <FASTX|MMI> <FASTX|MMI>
-        const bool firstMmi = file0Type == InputType::MMI;
-        const bool secondMmi = file1Type == InputType::MMI;
-        const int32_t numMmi = firstMmi + secondMmi;
+    } else {  // <FASTX|MMI> <FASTX|MMI>
         const std::string noGC =
             "Output BAM file cannot be used for polishing with GenomicConsensus!";
 
-        if (numMmi == 2) {  // MMI MMI
-            PBLOG_FATAL << "Both input files are of type MMI. Please check your inputs.";
-            std::exit(EXIT_FAILURE);
-        } else if (numMmi == 1) {  // <FASTX|MMI> <FASTX|MMI>
-            if (firstMmi) {        // MMI FASTX
-                referenceFile = args[0];
-                inputFile = args[1];
-            } else {  //  FASTX MMI
-                referenceFile = args[1];
-                inputFile = args[0];
+        InputType firstFileType = DetermineInputTypeFastx(args[0]);
+        InputType secondFileType = DetermineInputTypeFastx(args[1]);
+        switch (firstFileType) {
+            case InputType::FASTA: {
+                switch (secondFileType) {
+                    case InputType::FASTA: {
+                        referenceFile = args[0];
+                        inputFile = args[1];
+                        uio.isFastaInput = true;
+                        PBLOG_WARN << "Input is FASTA." << noGC;
+                        break;
+                    }
+                    case InputType::FASTQ: {
+                        referenceFile = args[0];
+                        inputFile = args[1];
+                        uio.isFastqInput = true;
+                        PBLOG_WARN << "Input is FASTQ." << noGC;
+                        break;
+                    }
+                    case InputType::DATASET: {
+                        inputFile = args[0];
+                        referenceFile = args[1];
+                        uio.isFastaInput = true;
+                        break;
+                    }
+                    case InputType::MMI: {
+                        inputFile = args[0];
+                        referenceFile = args[1];
+                        uio.isFastaInput = true;
+                        PBLOG_WARN << "Input is FASTA." << noGC;
+                        break;
+                    }
+                    default: {
+                        PBLOG_FATAL << "Unknown input file type for " << args[1];
+                        std::exit(EXIT_FAILURE);
+                    }
+                }
+                break;
             }
-            InputType inputFileType = InputOutputUX::DetermineInputTypeFastx(inputFile);
-            if (inputFileType == InputType::FASTA) {  // FASTX == FASTA
-                uio.isFastaInput = true;
-                PBLOG_WARN << "Input is FASTA." << noGC;
-            } else if (inputFileType == InputType::FASTQ) {  // FASTX == FASTQ
-                uio.isFastqInput = true;
-                PBLOG_WARN << "Input is FASTQ." << noGC;
+            case InputType::FASTQ: {
+                switch (secondFileType) {
+                    case InputType::FASTA: {
+                        referenceFile = args[1];
+                        inputFile = args[0];
+                        uio.isFastqInput = true;
+                        PBLOG_WARN << "Input is FASTQ." << noGC;
+                        break;
+                    }
+                    case InputType::FASTQ: {
+                        PBLOG_FATAL
+                            << "Both input files are of type FASTQ. Please check your inputs.";
+                        std::exit(EXIT_FAILURE);
+                        break;
+                    }
+                    case InputType::DATASET: {
+                        referenceFile = args[1];
+                        inputFile = args[0];
+                        uio.isFastqInput = true;
+                        PBLOG_WARN << "Input is FASTQ." << noGC;
+                        break;
+                    }
+                    case InputType::MMI: {
+                        referenceFile = args[1];
+                        inputFile = args[0];
+                        uio.isFastqInput = true;
+                        PBLOG_WARN << "Input is FASTQ." << noGC;
+                        break;
+                    }
+                    default: {
+                        PBLOG_FATAL << "Unknown input file type for " << args[1];
+                        std::exit(EXIT_FAILURE);
+                    }
+                }
+                break;
             }
-        } else {  // FASTX FASTX
-            InputType firstFileType = DetermineInputTypeFastx(args[0]);
-            InputType secondFileType = DetermineInputTypeFastx(args[1]);
-            const bool firstFastq = firstFileType == InputType::FASTQ;
-            const bool secondFastq = secondFileType == InputType::FASTQ;
-            const bool firstFasta = firstFileType == InputType::FASTA;
-            const bool secondFasta = secondFileType == InputType::FASTA;
-            if (firstFastq && secondFastq) {  // FASTQ FASTQ
-                PBLOG_FATAL << "Both input files are of type FASTQ. Please check your inputs.";
+            case InputType::DATASET: {
+                switch (secondFileType) {
+                    case InputType::FASTA: {
+                        referenceFile = args[0];
+                        inputFile = args[1];
+                        uio.isFastaInput = true;
+                        PBLOG_WARN << "Input is FASTA." << noGC;
+                        break;
+                    }
+                    case InputType::FASTQ: {
+                        referenceFile = args[0];
+                        inputFile = args[1];
+                        uio.isFastqInput = true;
+                        PBLOG_WARN << "Input is FASTQ." << noGC;
+                        break;
+                    }
+                    case InputType::DATASET: {
+                        referenceFile = args[1];
+                        inputFile = args[0];
+                        PBLOG_FATAL << "Should not happen. Please report bug with file types used "
+                                    << args[0] << " and " << args[1];
+                        std::exit(EXIT_FAILURE);
+                        break;
+                    }
+                    case InputType::MMI: {
+                        PBLOG_FATAL << "Do mix referenceset.xml and mmi!";
+                        std::exit(EXIT_FAILURE);
+                        break;
+                    }
+                    default: {
+                        PBLOG_FATAL << "Unknown input file type for " << args[1];
+                        std::exit(EXIT_FAILURE);
+                    }
+                }
+                break;
+            }
+            case InputType::MMI: {
+                switch (secondFileType) {
+                    case InputType::FASTA: {
+                        referenceFile = args[0];
+                        inputFile = args[1];
+                        uio.isFastaInput = true;
+                        PBLOG_WARN << "Input is FASTA." << noGC;
+                        break;
+                    }
+                    case InputType::FASTQ: {
+                        referenceFile = args[0];
+                        inputFile = args[1];
+                        uio.isFastqInput = true;
+                        PBLOG_WARN << "Input is FASTQ." << noGC;
+                        break;
+                    }
+                    case InputType::DATASET: {
+                        referenceFile = args[0];
+                        inputFile = args[1];
+                        break;
+                    }
+                    case InputType::MMI: {
+                        PBLOG_FATAL
+                            << "Both input files are of type MMI. Please check your inputs.";
+                        std::exit(EXIT_FAILURE);
+                    }
+                    default: {
+                        PBLOG_FATAL << "Unknown input file type for " << args[1];
+                        std::exit(EXIT_FAILURE);
+                    }
+                }
+                break;
+            }
+            default: {
+                PBLOG_FATAL << "Unknown input file type for " << args[0];
                 std::exit(EXIT_FAILURE);
             }
-            if (firstFasta && secondFastq) {  // FASTA FASTQ
-                referenceFile = args[0];
-                inputFile = args[1];
-                uio.isFastqInput = true;
-                PBLOG_WARN << "Input is FASTQ." << noGC;
-            } else if (firstFastq && secondFasta) {  // FASTQ FASTA
-                referenceFile = args[1];
-                inputFile = args[0];
-                uio.isFastqInput = true;
-                PBLOG_WARN << "Input is FASTQ." << noGC;
-            } else {  // FASTA FASTA
-                referenceFile = args[0];
-                inputFile = args[1];
-                uio.isFastaInput = true;
-                PBLOG_WARN << "Input is FASTA." << noGC;
-            }
         }
-    } else if (file0Type == InputType::BAM && file1Type == InputType::BAM) {  // BAM BAM
-        PBLOG_FATAL << "Both input files are of type BAM. Please check your inputs.";
-        std::exit(EXIT_FAILURE);
     }
     PBLOG_INFO << "READ input file: " << inputFile;
     PBLOG_INFO << "REF  input file: " << referenceFile;
-
-    if (InputOutputUX::DetermineInputTypeFastx(referenceFile) == InputType::FASTQ) {
-        PBLOG_FATAL << "Cannot use FASTQ input as reference. Please use FASTA!";
-        std::exit(EXIT_FAILURE);
-    }
 
     auto inputFileExt = Utility::FileExtension(inputFile);
     if (inputFileExt == "json") {
@@ -283,6 +379,11 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
             std::exit(EXIT_FAILURE);
         }
         reference = fastaFiles.front();
+    }
+
+    if (InputOutputUX::DetermineInputTypeFastx(reference) == InputType::FASTQ) {
+        PBLOG_FATAL << "Cannot use FASTQ input as reference. Please use FASTA!";
+        std::exit(EXIT_FAILURE);
     }
 
     if (args.size() == 3)

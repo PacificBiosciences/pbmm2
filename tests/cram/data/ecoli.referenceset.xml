@@ -1,0 +1,9 @@
+<pbds:ReferenceSet TimeStampedName="referenceset_150304_231155" MetaType="PacBio.DataSet.ReferenceSet" Name="lambdaNEB" CreatedAt="2015-09-29T13:49:48.574-07:00" UniqueId="6b8db144-a601-4577-ab04-ba64cadc0548" Version="0.3.0" Author="pbscala 0.20.2-SNAPSHOT reference_info_dataset_0.4.1" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xmlns:pbds="http://pacificbiosciences.com/PacBioDatasets.xsd" 
+    xmlns:pbbase="http://pacificbiosciences.com/PacBioBaseDataModel.xsd">
+    <pbbase:ExternalResources>
+        <pbbase:ExternalResource Name="First References FASTA" Description="Points to an example references FASTA file." MetaType="PacBio.ReferenceFile.ReferenceFastaFile" ResourceId="ecoliK12_pbi_March2013.fasta" UniqueId="2dbcf001-ea45-479a-abfc-2c7b82cdeda3" TimeStampedName="pacbio_dataset_index-2dbcf001-ea45-479a-abfc-2c7b82cdeda3" Tags="converted">
+        </pbbase:ExternalResource>
+    </pbbase:ExternalResources>
+</pbds:ReferenceSet>

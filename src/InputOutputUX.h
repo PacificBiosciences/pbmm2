@@ -26,6 +26,7 @@ enum class InputType : int
     MMI,
     FASTA,
     FASTQ,
+    DATASET,
     UNKNOWN
 };
 
