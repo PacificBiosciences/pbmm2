@@ -446,6 +446,8 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         pbiTiming =
             writers->WriteDatasetsJson(inFile, uio.outFile, uio.refFile, uio.isFromXML,
                                        uio.isToJson, s, uio.outPrefix, settings.SplitBySample);
+    else if (settings.CreatePbi)
+        writers->ForcePbiOutput();
 
     PBLOG_INFO << "Mapped Reads: " << alignedReads;
     PBLOG_INFO << "Alignments: " << s.NumAlns;

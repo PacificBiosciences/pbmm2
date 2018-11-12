@@ -279,6 +279,15 @@ const PlainOption Rg{
     "Read group header line such as '@RG\\tID:xyz\\tSM:abc'. Only for FASTA/Q inputs.",
     CLI::Option::StringType()
 };
+const PlainOption CreatePbi{
+    "create_pbi",
+    { "pbi" },
+    "Generate PBI for BAM only output",
+    "Generate PBI for BAM only output.",
+    CLI::Option::BoolType(false),
+    JSON::Json(nullptr),
+    CLI::OptionFlags::HIDE_FROM_HELP
+};
 // clang-format on
 }  // namespace OptionNames
 
@@ -299,6 +308,7 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     , Strip(options[OptionNames::Strip])
     , SplitBySample(options[OptionNames::SplitBySample])
     , Rg(options[OptionNames::Rg].get<decltype(Rg)>())
+    , CreatePbi(options[OptionNames::CreatePbi])
 {
     MM2Settings::Kmer = options[OptionNames::Kmer];
     MM2Settings::MinimizerWindowSize = options[OptionNames::MinimizerWindowSize];
@@ -481,6 +491,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
 
         // hidden
         OptionNames::SortMemoryTC,
+        OptionNames::CreatePbi,
     });
 
     i.AddGroup("Sorting Options", {

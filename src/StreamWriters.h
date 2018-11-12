@@ -60,6 +60,7 @@ struct StreamWriters
                                   const std::string& refFile, const bool isFromXML,
                                   const bool outputIsJson, const Summary& s,
                                   const std::string& outPrefix, const bool splitSample);
+    std::string ForcePbiOutput();
 
     std::string Close();
 
