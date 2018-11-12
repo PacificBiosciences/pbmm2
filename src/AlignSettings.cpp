@@ -566,6 +566,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     tcTask.AddOption(OptionNames::SortMemoryTC);
     tcTask.AddOption(OptionNames::SampleName);
     tcTask.AddOption(OptionNames::ZMW);
+    tcTask.AddOption(OptionNames::HQRegion);
     tcTask.AddOption(OptionNames::MedianFilter);
     tcTask.AddOption(OptionNames::Strip);
     tcTask.AddOption(OptionNames::SplitBySample);
