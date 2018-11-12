@@ -1,0 +1,33 @@
+{
+    "driver": {
+        "env": {},
+        "exe": "pbmm2 align --resolved-tool-contract",
+        "serialization": "json"
+    },
+    "resolved_tool_contract": {
+        "_comment": "Created by pbcommand v1.7.0",
+        "input_files": [
+            "median.json",
+            "ecoliK12_pbi_March2013.fasta"
+        ],
+        "is_distributed": true,
+        "log_level": "INFO",
+        "nproc": 1,
+        "options": {
+            "pbmm2_align.task_options.biosample_name": "",
+            "pbmm2_align.task_options.median_filter": false,
+            "pbmm2_align.task_options.min_perc_concordance": 70,
+            "pbmm2_align.task_options.minalnlength": 50,
+            "pbmm2_align.task_options.sort_memory_tc": "4G",
+            "pbmm2_align.task_options.split_by_sample": false,
+            "pbmm2_align.task_options.strip": false,
+            "pbmm2_align.task_options.zmw_mode": false
+        },
+        "output_files": [
+            "rtc_out_2.json"
+        ],
+        "resources": [],
+        "task_type": "pbsmrtpipe.task_types.standard",
+        "tool_contract_id": "mapping.tasks.pbmm2_align"
+    }
+}

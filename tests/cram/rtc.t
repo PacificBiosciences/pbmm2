@@ -27,6 +27,10 @@
   *CPU Time:* (glob)
   *Peak RSS:* (glob)
 
-  $ samtools view $CRAMTMP/sorted_cli.bam > $CRAMTMP/sorted_cli.sam 
-  $ samtools view $CRAMTMP/rtc_out.bam > $CRAMTMP/rtc_out.sam 
-  $ diff $CRAMTMP/sorted_cli.sam $CRAMTMP/rtc_out.sam 
+  $ samtools view $CRAMTMP/sorted_cli.bam > $CRAMTMP/sorted_cli.sam
+  $ samtools view $CRAMTMP/rtc_out.bam > $CRAMTMP/rtc_out.sam
+  $ diff $CRAMTMP/sorted_cli.sam $CRAMTMP/rtc_out.sam
+
+  $ cp $TESTDIR/data/rtc.median.1nproc.json .
+  $ $__PBTEST_PBMM2_EXE align --resolved-tool-contract rtc.median.1nproc.json 2>&1 | grep AlignSettings
+  *Using 1 threads for alignments, 1 threads for sorting, and 4G bytes RAM for sorting.* (glob)
