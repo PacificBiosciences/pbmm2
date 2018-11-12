@@ -44,6 +44,8 @@ struct AlignSettings : MM2Settings
 
     std::string Rg;
 
+    bool CreatePbi;
+
     /// Parses the provided CLI::Results and retrieves a defined set of options.
     AlignSettings(const PacBio::CLI::Results& options);
 

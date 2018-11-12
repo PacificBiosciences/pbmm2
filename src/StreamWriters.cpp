@@ -274,6 +274,16 @@ std::string StreamWriters::WriteDatasetsJson(const BAM::DataSet& inFile,
     return pbiTiming;
 }
 
+std::string StreamWriters::ForcePbiOutput()
+{
+    Timer pbiTimer;
+    for (auto& sample_sw : sampleNameToStreamWriter) {
+        BAM::BamFile validationBam(sample_sw.second->FinalOutputName());
+        BAM::PbiFile::CreateFrom(validationBam);
+    }
+    return pbiTimer.ElapsedTime();
+}
+
 std::string StreamWriters::Close()
 {
     CreateEmptyIfNoOutput();
