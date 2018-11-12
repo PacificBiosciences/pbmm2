@@ -316,45 +316,63 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     MM2Settings::NoSpliceFlank = options[OptionNames::NoSpliceFlank];
     MM2Settings::DisableHPC = options[OptionNames::DisableHPC];
 
-    const auto SetSortThreads = [&](int32_t origThreads, int32_t sortThreadPerc) {
-        int availableThreads = ThreadCount(origThreads);
-        SortThreads = std::min(
-            std::max(static_cast<int>(std::round(availableThreads * sortThreadPerc / 100.0)), 1),
-            8);
-        MM2Settings::NumThreads = std::max(availableThreads - SortThreads, 1);
-    };
-
+    int numAvailableCores = std::thread::hardware_concurrency();
     int32_t requestedNThreads;
     std::string requestedMemory;
+    int sortThreadPerc = 25;
+
     if (IsFromRTC) {
         Sort = true;
         requestedNThreads = options.NumProcessors();
         requestedMemory = options[OptionNames::SortMemoryTC].get<std::string>();
+    } else {
+        requestedNThreads = options[OptionNames::NumThreads];
+        requestedMemory = options[OptionNames::SortMemory].get<std::string>();
+    }
+    SortThreads = options[OptionNames::SortThreads];
 
-        if (Sort) {
-            int sortThreadPerc = options[OptionNames::SortThreadsTC];
-            if (sortThreadPerc > 50)
-                PBLOG_WARN
-                    << "Please allocate less than 50% of threads for sorting. Currently allocated: "
-                    << sortThreadPerc << "%!";
+    if (sortThreadPerc > 50)
+        PBLOG_WARN << "Please allocate less than 50% of threads for sorting. Currently allocated: "
+                   << sortThreadPerc << "%!";
 
-            if (requestedNThreads < 2) {
-                PBLOG_WARN
-                    << "Please allocate more than 2 threads in total. Enforcing to 2 threads!";
-                requestedNThreads = 1;
-                SortThreads = 1;
-            } else {
-                SetSortThreads(requestedNThreads, sortThreadPerc);
+    if (requestedNThreads > numAvailableCores) {
+        PBLOG_WARN << "Requested more threads for alignment (" << requestedNThreads
+                   << ") than system-wide available (" << numAvailableCores << ")";
+    }
+
+    int availableThreads = ThreadCount(requestedNThreads);
+    if (Sort) {
+        if (SortThreads == 0) {
+            SortThreads = std::min(
+                std::max(static_cast<int>(std::round(availableThreads * sortThreadPerc / 100.0)),
+                         1),
+                8);
+            MM2Settings::NumThreads = std::max(availableThreads - SortThreads, 1);
+        } else if (SortThreads != 0) {
+            if (requestedNThreads == 0)
+                availableThreads = std::max(availableThreads - SortThreads, 1);
+            if (availableThreads + SortThreads > numAvailableCores) {
+                PBLOG_WARN << "Requested more threads for sorting (" << SortThreads
+                           << ") and alignment (" << availableThreads
+                           << ") than system-wide available (" << numAvailableCores << ")";
+            }
+            MM2Settings::NumThreads = availableThreads;
+            if (SortThreads > numAvailableCores) {
+                PBLOG_WARN << "Requested more threads for sorting (" << SortThreads
+                           << ") than system-wide available (" << numAvailableCores << ")!";
+                SortThreads = ThreadCount(SortThreads);
+            }
+            while (MM2Settings::NumThreads + SortThreads > numAvailableCores ||
+                   (MM2Settings::NumThreads == 1 && SortThreads == 1)) {
+                SortThreads = std::max(SortThreads - 1, 1);
+                if (MM2Settings::NumThreads + SortThreads <= numAvailableCores ||
+                    (MM2Settings::NumThreads == 1 && SortThreads == 1))
+                    break;
+                MM2Settings::NumThreads = std::max(MM2Settings::NumThreads - 1, 1);
             }
         }
     } else {
-        requestedNThreads = options[OptionNames::NumThreads];
-        SortThreads = options[OptionNames::SortThreads];
-        requestedMemory = options[OptionNames::SortMemory].get<std::string>();
-        if (Sort && SortThreads == 0)
-            SetSortThreads(requestedNThreads, 25);
-        else
-            MM2Settings::NumThreads = ThreadCount(requestedNThreads);
+        MM2Settings::NumThreads = availableThreads;
     }
     SortMemory = PlainOption::SizeStringToInt(requestedMemory);
 
@@ -370,29 +388,7 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
                 << " memory for sorting, without specifying --sort. Please check your input.";
     }
 
-    int numAvailableCores = std::thread::hardware_concurrency();
-
-    if (requestedNThreads == 0) {
-        MM2Settings::NumThreads -= SortThreads;
-    } else {
-        if (requestedNThreads > numAvailableCores) {
-            PBLOG_WARN << "Requested more threads for alignment (" << requestedNThreads
-                       << ") than system-wide available (" << numAvailableCores << ")";
-        }
-    }
-
     if (Sort) {
-        if (SortThreads > numAvailableCores) {
-            PBLOG_WARN << "Requested more threads for sorting (" << SortThreads
-                       << ") than system-wide available (" << numAvailableCores << ")!";
-        }
-
-        if (requestedNThreads + SortThreads > numAvailableCores) {
-            PBLOG_WARN << "Requested more threads for sorting (" << SortThreads
-                       << ") and alignment (" << requestedNThreads
-                       << ") than system-wide available (" << numAvailableCores << ")";
-        }
-
         std::string suffix;
         const auto MemoryToHumanReadable = [](int64_t memInBytes, float* roundedMemory,
                                               std::string* suffix) {
