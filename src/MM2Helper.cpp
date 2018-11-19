@@ -98,7 +98,7 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             MapOpts.zdrop = 400;
             MapOpts.zdrop_inv = 50;
             MapOpts.bw = 2000;
-            MapOpts.min_join_flank_ratio = 0.2;
+            MapOpts.min_join_flank_ratio = 0.5;
             break;
         case AlignmentMode::CCS:
             *preset = "CCS";
@@ -111,7 +111,7 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             MapOpts.zdrop = 400;
             MapOpts.zdrop_inv = 50;
             MapOpts.bw = 2000;
-            MapOpts.min_join_flank_ratio = 0.2;
+            MapOpts.min_join_flank_ratio = 0.5;
             break;
         case AlignmentMode::ISOSEQ:
             *preset = "ISOSEQ";
