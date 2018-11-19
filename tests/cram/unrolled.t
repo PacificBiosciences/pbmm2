@@ -26,6 +26,7 @@
   *Z-drop                 : 200 (glob)
   *Z-drop inv             : 100 (glob)
   *Bandwidth              : 2000 (glob)
+  *Long join flank ratio  : 0.5 (glob)
   *Mapped Reads: 2 (glob)
   *Alignments: 2 (glob)
   *Mapped Bases: 55704 (glob)
