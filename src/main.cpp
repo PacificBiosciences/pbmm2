@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
   D. Omit output file and stream BAM output to stdout
     $ pbmm2 align hg38.mmi movie1.subreadset.xml | samtools sort > hg38.movie1.sorted.bam
 
-  E. Align CCS fastq input and sort output
+  E. Align CCS fastq input and sort on-the-fly
     $ pbmm2 align ref.fasta movie.Q20.fastq ref.movie.bam --preset CCS --sort --rg '@RG\tID:myid\tSM:mysample')"
                   << std::endl;
         return EXIT_SUCCESS;

@@ -11,10 +11,7 @@ recommended parameters, and generate sorted output on-the-fly.
 Sorted output can be used directly for polishing using GenomicConsensus,
 if BAM has been used as input to _pbmm2_.
 Benchmarks show that _pbmm2_ outperforms BLASR in mapped concordance,
-number of bases mapped, and especially runtime.
-
-**This is a beta!** Expect changes and different output between
-versions until release of the first stable release.
+number of mapped bases, and especially runtime.
 
 ## Availability
 Latest version can be installed via bioconda package `pbmm2`.
@@ -49,8 +46,8 @@ C. Align reads, sort on-the-fly, and create PBI
 D. Omit output file and stream BAM output to stdout
   $ pbmm2 align hg38.mmi movie1.subreadset.xml | samtools sort > hg38.movie1.sorted.bam
 
-E. Align CCS fastq input and sort on-the-fly
-  $ pbmm2 align ref.fasta movie.Q20.fastq ref.movie.bam --sort --rg '@RG\tID:myid\tSM:mysample'
+E. Align CCS fastq input and sort output
+  $ pbmm2 align ref.fasta movie.Q20.fastq ref.movie.bam --preset CCS --sort --rg '@RG\tID:myid\tSM:mysample'
 ```
 
 ### Index
@@ -67,7 +64,7 @@ Usage: pbmm2 index [options] <ref.fa|xml> <out.mmi>
 ### Align
 The output argument is optional. If not provided, BAM output is streamed to stdout.
 ```
-Usage: pbmm2 align [options] <in.bam|xml> <ref.fa|xml|mmi> [out.aligned.bam|xml]
+Usage: pbmm2 align [options] <ref.fa|xml|mmi> <in.bam|xml|fa|fq> [out.aligned.bam|xml]
 ```
 
 #### Alignment Parallelization
@@ -114,7 +111,7 @@ In addition to native PacBio BAM input, reads can also be provided in FASTA and 
 
 **Attention: The resulting output BAM file cannot be used as input into GenomicConsensus!**
 
-With FASTA/Q input, option `--rg` offers setting the read group. Example call:
+With FASTA/Q input, option `--rg` sets the read group. Example call:
 
 ```
 pbmm2 align hg38.fasta movie.Q20.fastq hg38.movie.bam --preset CCS --rg '@RG\tID:myid\tSM:mysample'
@@ -133,10 +130,10 @@ of possible combinations. For this, we currently offer:
 
 ```
   --preset  Set alignment mode:
-             - "SUBREAD" -k 19 -w 10 -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000
-             - "CCS" -k 19 -w 10 -u -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000
-             - "ISOSEQ" -k 15 -w 5 -u -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000
-             - "UNROLLED" -k 15 -w 15 -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 2000
+             - "SUBREAD" -k 19 -w 10 -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000 -L 0.5
+             - "CCS" -k 19 -w 10 -u -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000 -L 0.5
+             - "ISOSEQ" -k 15 -w 5 -u -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000 -L 0.5
+             - "UNROLLED" -k 15 -w 15 -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 2000 -L 0.5
             Default ["SUBREAD"]
 ```
 
@@ -162,6 +159,7 @@ a k-long gap costs min{o+k*e,O+k*E}:
   -O,--gap-open-2     Gap open penalty 2. [-1]
   -e,--gap-extend-1   Gap extension penalty 1. [-1]
   -E,--gap-extend-2   Gap extension penalty 2. [-1]
+  -L,--lj-min-ratio   Long join flank ratio. [-1]
 ```
 
 For `ISOSEQ`, you can override additional parameters:
@@ -304,6 +302,7 @@ Following options are available:
 | `pbmm2_align.task_options.split_by_sample` | Split by Sample | `false` |
 | `pbmm2_align.task_options.strip` | Remove all kinetic and extra QV tags | `false` |
 | `pbmm2_align.task_options.zmw_mode` | Process ZMW Reads | `false` |
+| `pbmm2_align.task_options.hq_mode` | Process HQ region per ZMW | `false` |
 
 Following an example for an input datastore that wraps a `subreadset.xml`.
 Exactly *one* entry in `files` is allowed and only `path` is parsed by _pbmm2_.
@@ -339,11 +338,10 @@ Minimal accepted version:
 ## Full Changelog
 
  * **0.11.0**:
+   * Change input argument order
    * Library API access
    * Add fasta/q input support
-   * Add --rg
-   * Add --split-by-sample
-   * Add --strip
+   * Add `--lj-min-ratio`, `--rg`, `--split-by-sample`, `--strip`
    * Fix `SA` tag
    * Fix BAM header for idempotence
 
