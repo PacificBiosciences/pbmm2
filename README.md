@@ -302,7 +302,6 @@ Following options are available:
 | `pbmm2_align.task_options.split_by_sample` | Split by Sample | `false` |
 | `pbmm2_align.task_options.strip` | Remove all kinetic and extra QV tags | `false` |
 | `pbmm2_align.task_options.zmw_mode` | Process ZMW Reads | `false` |
-| `pbmm2_align.task_options.hq_mode` | Process HQ region per ZMW | `false` |
 
 Following an example for an input datastore that wraps a `subreadset.xml`.
 Exactly *one* entry in `files` is allowed and only `path` is parsed by _pbmm2_.
