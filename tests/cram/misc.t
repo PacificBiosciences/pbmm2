@@ -115,7 +115,7 @@
       $ pbmm2 align hg38.mmi movie1.subreadset.xml | samtools sort > hg38.movie1.sorted.bam
   * (glob)
     E. Align CCS fastq input and sort output
-      $ pbmm2 align ref.fasta movie.Q20.fastq ref.movie.bam --sort --rg '@RG\tID:myid\tSM:mysample'
+      $ pbmm2 align ref.fasta movie.Q20.fastq ref.movie.bam --preset CCS --sort --rg '@RG\tID:myid\tSM:mysample'
 
   $ $__PBTEST_PBMM2_EXE --help 2>&1 | head -n 1
   pbmm2 - minimap2 with native PacBio BAM support* (glob)
@@ -125,10 +125,10 @@
   [1]
 
   $ $__PBTEST_PBMM2_EXE align 2>&1 | grep Usage
-  Usage: pbmm2 align [options] <ref.fa|xml|mmi> <in.bam|xml> [out.aligned.bam|xml]* (glob)
+  Usage: pbmm2 align [options] <ref.fa|xml|mmi> <in.bam|xml|fa|fq> [out.aligned.bam|xml]* (glob)
 
   $ $__PBTEST_PBMM2_EXE align --help 2>&1 | grep Usage
-  Usage: pbmm2 align [options] <ref.fa|xml|mmi> <in.bam|xml> [out.aligned.bam|xml]* (glob)
+  Usage: pbmm2 align [options] <ref.fa|xml|mmi> <in.bam|xml|fa|fq> [out.aligned.bam|xml]* (glob)
 
   $ $__PBTEST_PBMM2_EXE index 2>&1 | grep Usage
   Usage: pbmm2 index [options] <ref.fa|xml> <out.mmi>* (glob)
