@@ -56,8 +56,8 @@ const PlainOption MinPercConcordance{
 const PlainOption MinAlignmentLength{
     "minalnlength",
     { "l", "min-length" },
-    "Minimum Length",
-    "Minimum mapped read length.",
+    "Minimum Length (bp)",
+    "Minimum mapped read length in basepair.",
     CLI::Option::IntType(50)
 };
 const PlainOption SampleName{
@@ -570,7 +570,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
 
     i.AddPositionalArguments({
         { "ref.fa|xml|mmi", "Reference FASTA, ReferenceSet XML, or Reference Index", "<ref.fa|xml|mmi>" },
-        { "in.bam|xml", "Input BAM or DataSet XML", "<in.bam|xml>" },
+        { "in.bam|xml|fa|fq", "Input BAM, DataSet XML, FASTA, or FASTQ", "<in.bam|xml|fa|fq>" },
         { "out.aligned.bam|xml", "Output BAM or DataSet XML", "[out.aligned.bam|xml]" }
     });
 

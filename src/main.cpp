@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
     $ pbmm2 align hg38.mmi movie1.subreadset.xml | samtools sort > hg38.movie1.sorted.bam
 
   E. Align CCS fastq input and sort output
-    $ pbmm2 align ref.fasta movie.Q20.fastq ref.movie.bam --sort --rg '@RG\tID:myid\tSM:mysample')"
+    $ pbmm2 align ref.fasta movie.Q20.fastq ref.movie.bam --preset CCS --sort --rg '@RG\tID:myid\tSM:mysample')"
                   << std::endl;
         return EXIT_SUCCESS;
     }
