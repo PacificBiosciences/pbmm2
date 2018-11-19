@@ -250,7 +250,7 @@
   *Z-drop                 : 400 (glob)
   *Z-drop inv             : 50 (glob)
   *Bandwidth              : 2000 (glob)
-  *Long join flank ratio  : 0.2 (glob)
+  *Long join flank ratio  : 0.5 (glob)
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/default_overrides.bam --log-level DEBUG -o 5 -O 56 -e 4 -E 1 -k 19 -w 10 -A 2 -B 5 -z 400 -Z 50 -r 2000 -L 0.4 2>&1| grep DEBUG
   *Minimap2 parameters* (glob)
