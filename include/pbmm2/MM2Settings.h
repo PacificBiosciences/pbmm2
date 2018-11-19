@@ -27,6 +27,7 @@ struct MM2Settings
     int32_t NonCanon = -1;
     bool NoSpliceFlank = false;
     bool DisableHPC = false;
+    float LongJoinFlankRatio = -1;
 };
 }  // namespace minimap2
 }  // namespace PacBio

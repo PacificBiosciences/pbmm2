@@ -71,10 +71,10 @@ const PlainOption AlignModeOpt{
     "align_mode",
     { "preset" },
     "Alignment mode",
-    "Set alignment mode:\n  - \"SUBREAD\" -k 19 -w 10 -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000\n"
-    "  - \"CCS\" -k 19 -w 10 -u -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000\n"
-    "  - \"ISOSEQ\" -k 15 -w 5 -u -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000\n"
-    "  - \"UNROLLED\" -k 15 -w 15 -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 2000\n"
+    "Set alignment mode:\n  - \"SUBREAD\" -k 19 -w 10 -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000 -L 0.2\n"
+    "  - \"CCS\" -k 19 -w 10 -u -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000 -L 0.2\n"
+    "  - \"ISOSEQ\" -k 15 -w 5 -u -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000 -L 0.5\n"
+    "  - \"UNROLLED\" -k 15 -w 15 -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 2000 -L 0.5\n"
     "Default",
     CLI::Option::StringType("SUBREAD"),
     {"SUBREAD", "CCS", "ISOSEQ", "UNROLLED"}
@@ -288,6 +288,13 @@ const PlainOption CreatePbi{
     JSON::Json(nullptr),
     CLI::OptionFlags::HIDE_FROM_HELP
 };
+const PlainOption LongJoinFlankRatio{
+    "long_join_flank_ratio",
+    { "L", "lj-min-ratio" },
+    "Long Join Flank Ratio",
+    "Long join flank ratio.",
+    CLI::Option::FloatType(-1)
+};
 // clang-format on
 }  // namespace OptionNames
 
@@ -325,6 +332,7 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     MM2Settings::NonCanon = options[OptionNames::NonCanon];
     MM2Settings::NoSpliceFlank = options[OptionNames::NoSpliceFlank];
     MM2Settings::DisableHPC = options[OptionNames::DisableHPC];
+    MM2Settings::LongJoinFlankRatio = options[OptionNames::LongJoinFlankRatio];
 
     int numAvailableCores = std::thread::hardware_concurrency();
     int32_t requestedNThreads;
@@ -465,6 +473,10 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
                        "format: '@RG\\tID:xyz\\tSM:abc'";
         std::exit(EXIT_FAILURE);
     }
+    if (MM2Settings::LongJoinFlankRatio > 1) {
+        PBLOG_FATAL << "Option -L,--lj-min-ratio has to be between a ratio betweem 0 and 1.";
+        std::exit(EXIT_FAILURE);
+    }
 }
 
 int32_t AlignSettings::ThreadCount(int32_t n)
@@ -525,6 +537,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         OptionNames::GapOpen2,
         OptionNames::GapExtension1,
         OptionNames::GapExtension2,
+        OptionNames::LongJoinFlankRatio,
     });
 
     i.AddGroup("IsoSeq Parameter Override Options", {

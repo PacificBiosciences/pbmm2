@@ -34,6 +34,10 @@
   $ $__PBTEST_PBMM2_EXE align $REF $REF $CRAMTMP/fail.bam 2>&1; rm -rf $CRAMTMP/fail.bam
   *Input is FASTA.* (glob)
 
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -L 1.1
+  *Option -L,--lj-min-ratio has to be between a ratio betweem 0 and 1.* (glob)
+  [1]
+
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam --zmw
   *Option --zmw can only be used with a subreadset.xml containing subread + scraps BAM files.* (glob)
   [1]
