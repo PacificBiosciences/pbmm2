@@ -886,24 +886,6 @@ Even if you only want to remove IsoSeq primers, *lima* is the tool of choice.
     demux.primer_5p--sample_liver_3p.bam
 ```
 
-Option `--isoseq` sets following options:
-
-```
-    --split-bam-mamed
-    --shared-prefix
-    --min-passes 1
-    --min-signal-increase 0
-    --min-score-lead -1
-    --match-score 2
-    --mismatch-penalty 4
-    --deletion-penalty 4
-    --insertion-penalty 4
-    --branch-penalty 3
-    --min-end-score 50
-    --min-scoring-regions 2
-    --min-ref-span 0.75
-```
-
 Those options are very conservative to remove any spurious and ambiguous
 calls, in order to guarantee that only proper asymmetric (barcoded) primer
 are used in downstream analyses. Good libraries reach >75% CCS reads passing
