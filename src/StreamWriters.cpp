@@ -133,8 +133,12 @@ StreamWriter::StreamWriter(BAM::BamHeader header, const std::string& outPrefix, 
         sortThread_ = std::make_unique<std::thread>([&]() {
             int numFiles = 0;
             int numBlocks = 0;
-            bam_sort(pipeName_.c_str(), finalOutputName_.c_str(), sortThreads_,
-                     sortThreads_ + numThreads_, sortMemory_, &numFiles, &numBlocks);
+            int ret = bam_sort(pipeName_.c_str(), finalOutputName_.c_str(), sortThreads_,
+                               sortThreads_ + numThreads_, sortMemory_, &numFiles, &numBlocks);
+            if (ret == EXIT_FAILURE) {
+                PBLOG_FATAL << "Fatal error in bam sort. Aborting.";
+                std::exit(EXIT_FAILURE);
+            }
             PBLOG_INFO << "Merged sorted output from " << numFiles << " files and " << numBlocks
                        << " in-memory blocks";
         });
