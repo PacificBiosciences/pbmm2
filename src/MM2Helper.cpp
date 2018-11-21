@@ -261,28 +261,41 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
             if (alnMode_ == AlignmentMode::UNROLLED) break;
         }
     }
-    if (used.size() > 1) {
-        for (size_t i = 0; i < used.size(); ++i) {
+    const auto numAlignments = localResults.size();
+    if (numAlignments > 1) {
+        std::vector<std::string> sas;
+        for (size_t j = 0; j < numAlignments; ++j) {
             std::ostringstream sa;
-            mm_reg1_t* r = &alns[used[i]];
-            for (size_t j = 0; j < used.size(); ++j) {
+            const auto& record = localResults[j].Record;
+            const auto qqs = record.AlignedStart() - record.QueryStart();
+            const auto qqe = record.AlignedEnd() - record.QueryStart();
+            const auto qrs = record.ReferenceStart();
+            const auto qre = record.ReferenceEnd();
+            const bool qrev = record.AlignedStrand() == BAM::Strand::REVERSE;
+            int l_M, l_I = 0, l_D = 0, clip5 = 0, clip3 = 0;
+            if (qqe - qqs < qre - qrs)
+                l_M = qqe - qqs, l_D = (qre - qrs) - l_M;
+            else
+                l_M = qre - qrs, l_I = (qqe - qqs) - l_M;
+            clip5 = qrev ? qlen - qqe : qqs;
+            clip3 = qrev ? qqs : qlen - qqe;
+            sa << Idx->idx_->seq[record.ReferenceId()].name << ',' << qrs + 1 << ',' << "+-"[qrev]
+               << ',';
+            if (clip5) sa << clip5 << 'S';
+            if (l_M) sa << l_M << 'M';
+            if (l_I) sa << l_I << 'I';
+            if (l_D) sa << l_D << 'D';
+            if (clip3) sa << clip3 << 'S';
+            sa << ',' << static_cast<int>(record.MapQuality()) << ',' << record.NumMismatches()
+               << ';';
+            sas.emplace_back(sa.str());
+        }
+
+        for (size_t i = 0; i < numAlignments; ++i) {
+            std::ostringstream sa;
+            for (size_t j = 0; j < numAlignments; ++j) {
                 if (i == j) continue;
-                mm_reg1_t* q = &alns[used[j]];
-                int l_M, l_I = 0, l_D = 0, clip5 = 0, clip3 = 0;
-                if (r == q || q->parent != q->id || q->p == 0) continue;
-                if (q->qe - q->qs < q->re - q->rs)
-                    l_M = q->qe - q->qs, l_D = (q->re - q->rs) - l_M;
-                else
-                    l_M = q->re - q->rs, l_I = (q->qe - q->qs) - l_M;
-                clip5 = q->rev ? qlen - q->qe : q->qs;
-                clip3 = q->rev ? q->qs : qlen - q->qe;
-                sa << Idx->idx_->seq[q->rid].name << ',' << q->rs + 1 << ',' << "+-"[q->rev] << ',';
-                if (clip5) sa << clip5 << 'S';
-                if (l_M) sa << l_M << 'M';
-                if (l_I) sa << l_I << 'I';
-                if (l_D) sa << l_D << 'D';
-                if (clip3) sa << clip3 << 'S';
-                sa << ',' << q->mapq << ',' << q->blen - q->mlen + q->p->n_ambi << ';';
+                sa << sas[j];
             }
             const auto sastr = sa.str();
             if (!sastr.empty()) {
