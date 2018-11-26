@@ -48,6 +48,9 @@ pbmm2_cpp_sources = files([
   'AlignWorkflow.cpp',
   'IndexSettings.cpp',
   'IndexWorkflow.cpp',
+  'InputOutputUX.cpp',
+  'SampleNames.cpp',
+  'StreamWriters.cpp',
   'Timer.cpp'])
 
 pbmm2_cpp_sources += pbmm2_version_sources

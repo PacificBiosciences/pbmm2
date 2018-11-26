@@ -11,6 +11,16 @@
   $ ls -alh $CRAMTMP/unsorted.json 2> /dev/null | wc -l | tr -d ' '
   0
 
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/unsorted_pbi.bam --pbi
+  $ samtools view -H $CRAMTMP/unsorted_pbi.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/unsorted_pbi.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/unsorted_pbi.*.xml 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/unsorted_pbi.json 2> /dev/null | wc -l | tr -d ' '
+  0
+
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sorted.bam --sort
   $ samtools view -H $CRAMTMP/sorted.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
   1
@@ -19,6 +29,16 @@
   $ ls -alh $CRAMTMP/sorted.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/sorted.json 2> /dev/null | wc -l | tr -d ' '
+  0
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sorted_pbi.bam --sort --pbi
+  $ samtools view -H $CRAMTMP/sorted_pbi.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/sorted_pbi.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/sorted_pbi.*.xml 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/sorted_pbi.json 2> /dev/null | wc -l | tr -d ' '
   0
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/unsortedds.alignmentset.xml 2> $CRAMTMP/unsortedds.err || echo $?
@@ -176,6 +196,8 @@
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sorted.bam --sort -j 2 -J 2 -m 100M --log-level INFO 2>&1| grep INFO
   *Using 2 threads for alignments, 2 threads for sorting, and 200M bytes RAM for sorting. (glob)
+  *READ input file: *median.bam* (glob)
+  *REF  input file: *ecoliK12_pbi_March2013.fasta* (glob)
   *Start reading/building index (glob)
   *Finished reading/building index (glob)
   *Merged sorted output from 0 files and 1 in-memory blocks (glob)
@@ -195,6 +217,10 @@
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -j 500 2>&1| grep WARN
   *Requested more threads for alignment (500) than system-wide available* (glob)
 
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -J 500 --sort 2>&1| grep AlignSettings
+  *Requested more threads for sorting (500) and alignment (1) than system-wide available* (glob)
+  *Requested more threads for sorting (500) than system-wide available* (glob)
+
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/pass2.bam -j 1 -J 500 -m 500G
   *Requested 500 threads for sorting, without specifying --sort. Please check your input. (glob)
   *Requested 500G memory for sorting, without specifying --sort. Please check your input. (glob)
@@ -202,12 +228,13 @@
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail3.bam -j 1 -J 500 --sort
   *Requested more threads for sorting* (glob)
   *Requested more threads for sorting* (glob)
-  *Trying to allocate more memory for sorting* (glob)
-  [1]
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail4.bam -j 1 -J 2 --sort -m 1000G 2>&1
   *Trying to allocate more memory for sorting* (glob)
   [1]
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sort_percentage_4.bam -j 8 --sort --log-level INFO 2>&1 | grep "threads for alignments"
+  *Using 6 threads for alignments, 2 threads for sorting, and 1.5G bytes RAM for sorting.* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/default_parameters.bam --log-level DEBUG 2>&1| grep DEBUG
   *Minimap2 parameters* (glob)
@@ -223,8 +250,9 @@
   *Z-drop                 : 400 (glob)
   *Z-drop inv             : 50 (glob)
   *Bandwidth              : 2000 (glob)
+  *Long join flank ratio  : 0.5 (glob)
 
-  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/default_overrides.bam --log-level DEBUG -o 5 -O 56 -e 4 -E 1 -k 19 -w 10 -A 2 -B 5 -z 400 -Z 50 -r 2000 2>&1| grep DEBUG
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/default_overrides.bam --log-level DEBUG -o 5 -O 56 -e 4 -E 1 -k 19 -w 10 -A 2 -B 5 -z 400 -Z 50 -r 2000 -L 0.4 2>&1| grep DEBUG
   *Minimap2 parameters* (glob)
   *Kmer size              : 19 (glob)
   *Minimizer window size  : 10 (glob)
@@ -238,6 +266,7 @@
   *Z-drop                 : 400 (glob)
   *Z-drop inv             : 50 (glob)
   *Bandwidth              : 2000 (glob)
+  *Long join flank ratio  : 0.4 (glob)
 
 Test bam_sort
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sorted_small.bam --sort -J 1 -m 1M --log-level TRACE --log-file $CRAMTMP/sorted_small.txt

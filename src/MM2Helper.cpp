@@ -98,6 +98,7 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             MapOpts.zdrop = 400;
             MapOpts.zdrop_inv = 50;
             MapOpts.bw = 2000;
+            MapOpts.min_join_flank_ratio = 0.5;
             break;
         case AlignmentMode::CCS:
             *preset = "CCS";
@@ -110,6 +111,7 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             MapOpts.zdrop = 400;
             MapOpts.zdrop_inv = 50;
             MapOpts.bw = 2000;
+            MapOpts.min_join_flank_ratio = 0.5;
             break;
         case AlignmentMode::ISOSEQ:
             *preset = "ISOSEQ";
@@ -126,6 +128,7 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             MapOpts.zdrop = 200;
             MapOpts.zdrop_inv = 100;
             MapOpts.noncan = 5;
+            MapOpts.min_join_flank_ratio = 0.5;
             break;
         case AlignmentMode::UNROLLED:
             *preset = "UNROLLED";
@@ -144,6 +147,7 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             MapOpts.min_mid_occ = 100;
             MapOpts.min_dp_max = 200;
             MapOpts.noncan = 0;
+            MapOpts.min_join_flank_ratio = 0.5;
             break;
         default:
             PBLOG_FATAL << "No AlignmentMode --preset selected!";
@@ -161,6 +165,7 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
     if (settings.MaxIntronLength > 0) mm_mapopt_max_intron_len(&MapOpts, settings.MaxIntronLength);
     if (settings.Bandwidth > 0) MapOpts.bw = settings.Bandwidth;
     if (settings.NoSpliceFlank) MapOpts.flag &= ~MM_F_SPLICE_FLANK;
+    if (settings.LongJoinFlankRatio > 0) MapOpts.min_join_flank_ratio = settings.LongJoinFlankRatio;
 }
 
 void MM2Helper::PostInit(const MM2Settings& settings, const std::string& preset,
@@ -182,6 +187,7 @@ void MM2Helper::PostInit(const MM2Settings& settings, const std::string& preset,
         PBLOG_DEBUG << "Z-drop                 : " << MapOpts.zdrop;
         PBLOG_DEBUG << "Z-drop inv             : " << MapOpts.zdrop_inv;
         PBLOG_DEBUG << "Bandwidth              : " << MapOpts.bw;
+        PBLOG_DEBUG << "Long join flank ratio  : " << MapOpts.min_join_flank_ratio;
         if (settings.AlignMode == AlignmentMode::ISOSEQ) {
             PBLOG_DEBUG << "Max ref intron length  : " << MapOpts.max_gap_ref;
             PBLOG_DEBUG << "Prefer splice flanks   : " << (!settings.NoSpliceFlank ? "yes" : "no");
@@ -407,6 +413,10 @@ void AlignedRecord::ComputeAccuracyBases()
     const int32_t nErr = ins + del + mismatch;
     NumAlignedBases = match + ins + mismatch;
     Concordance = 100 * (1.0 - 1.0 * nErr / Span);
+    if (Record.Impl().HasTag("mc"))
+        Record.Impl().EditTag("mc", static_cast<float>(Concordance));
+    else
+        Record.Impl().AddTag("mc", static_cast<float>(Concordance));
 }
 
 }  // namespace minimap2

@@ -1,9 +1,14 @@
   $ IN=$TESTDIR/data/m54075_180905_221350.ccs.bam
+  $ IN2=$TESTDIR/data/m54075_180905_225130.ccs.bam
   $ MERGED=$TESTDIR/data/merged.consensusreadset.xml
   $ REF=$TESTDIR/data/ecoliK12_pbi_March2013.fasta
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/ccs.bam
   $ samtools view -H $CRAMTMP/ccs.bam | grep "@RG"
+  *\tSM:bamSample\t* (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $IN2 $REF $CRAMTMP/ccs_2.bam
+  $ samtools view -H $CRAMTMP/ccs_2.bam | grep "@RG"
   *\tSM:UnnamedSample\t* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/ccs2.bam --sample testSample
@@ -20,11 +25,19 @@
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/ccs5.bam --sample ""
   $ samtools view -H $CRAMTMP/ccs5.bam | grep "@RG"
+  *\tSM:bamSample\t* (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $IN2 $REF $CRAMTMP/ccs4_2.bam --sample "      "
+  $ samtools view -H $CRAMTMP/ccs4_2.bam | grep "@RG"
+  *\tSM:UnnamedSample\t* (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $IN2 $REF $CRAMTMP/ccs5_2.bam --sample ""
+  $ samtools view -H $CRAMTMP/ccs5_2.bam | grep "@RG"
   *\tSM:UnnamedSample\t* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $MERGED $REF $CRAMTMP/ccs6.bam
   $ samtools view -H $CRAMTMP/ccs6.bam | grep "@RG"
-  *\tSM:UCLA_1023\t* (glob)
+  *\tSM:bamSample\t* (glob)
   *\tSM:test_test\t* (glob)
   *\tSM:3260208_188nM-GTAC_4xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494\t* (glob)
 

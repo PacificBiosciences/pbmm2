@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <map>
 
+#include <boost/algorithm/string.hpp>
+
 #include <Pbmm2Version.h>
 
 #include "AlignSettings.h"
@@ -54,25 +56,25 @@ const PlainOption MinPercConcordance{
 const PlainOption MinAlignmentLength{
     "minalnlength",
     { "l", "min-length" },
-    "Minimum Length",
-    "Minimum mapped read length.",
+    "Minimum Length (bp)",
+    "Minimum mapped read length in basepair.",
     CLI::Option::IntType(50)
 };
 const PlainOption SampleName{
     "biosample_name",
     { "sample" },
     "Sample Name",
-    "Override sample name (SM field in RG tag) for all read groups. If not provided, sample names derive from the datasets with order of precedence: biosample name, well sample name, \"UnnamedSample\".",
+    "Sample name for all read groups. Defaults, in order of precedence: SM field in input read group, biosample name, well sample name, \"UnnamedSample\".",
     CLI::Option::StringType()
 };
 const PlainOption AlignModeOpt{
     "align_mode",
     { "preset" },
     "Alignment mode",
-    "Set alignment mode:\n  - \"SUBREAD\" -k 19 -w 10 -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000\n"
-    "  - \"CCS\" -k 19 -w 10 -u -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000\n"
-    "  - \"ISOSEQ\" -k 15 -w 5 -u -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000\n"
-    "  - \"UNROLLED\" -k 15 -w 15 -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 2000\n"
+    "Set alignment mode:\n  - \"SUBREAD\" -k 19 -w 10 -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000 -L 0.5\n"
+    "  - \"CCS\" -k 19 -w 10 -u -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000 -L 0.5\n"
+    "  - \"ISOSEQ\" -k 15 -w 5 -u -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000 -L 0.5\n"
+    "  - \"UNROLLED\" -k 15 -w 15 -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 2000 -L 0.5\n"
     "Default",
     CLI::Option::StringType("SUBREAD"),
     {"SUBREAD", "CCS", "ISOSEQ", "UNROLLED"}
@@ -216,8 +218,8 @@ const PlainOption SortThreads{
     "sort_threads",
     { "J", "sort-threads" },
     "Number of threads used for sorting",
-    "Number of threads used for sorting.",
-    CLI::Option::IntType(1)
+    "Number of threads used for sorting; 0 means 25% of -j, maximum 8.",
+    CLI::Option::IntType(0)
 };
 const PlainOption SortMemory{
     "sort_memory",
@@ -261,9 +263,7 @@ const PlainOption Strip{
     { "strip" },
     "Strip Base Tags",
     "Remove all kinetic and extra QV tags. Output cannot be polished.",
-    CLI::Option::BoolType(false),
-    JSON::Json(nullptr),
-    CLI::OptionFlags::HIDE_FROM_HELP
+    CLI::Option::BoolType(false)
 };
 const PlainOption SplitBySample{
     "split_by_sample",
@@ -271,6 +271,29 @@ const PlainOption SplitBySample{
     "Split by Sample",
     "One output BAM per sample.",
     CLI::Option::BoolType(false)
+};
+const PlainOption Rg{
+    "rg",
+    { "rg" },
+    "Read group",
+    "Read group header line such as '@RG\\tID:xyz\\tSM:abc'. Only for FASTA/Q inputs.",
+    CLI::Option::StringType()
+};
+const PlainOption CreatePbi{
+    "create_pbi",
+    { "pbi" },
+    "Generate PBI for BAM only output",
+    "Generate PBI for BAM only output.",
+    CLI::Option::BoolType(false),
+    JSON::Json(nullptr),
+    CLI::OptionFlags::HIDE_FROM_HELP
+};
+const PlainOption LongJoinFlankRatio{
+    "long_join_flank_ratio",
+    { "L", "lj-min-ratio" },
+    "Long Join Flank Ratio",
+    "Long join flank ratio.",
+    CLI::Option::FloatType(-1)
 };
 // clang-format on
 }  // namespace OptionNames
@@ -291,6 +314,8 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     , HQRegion(options[OptionNames::HQRegion])
     , Strip(options[OptionNames::Strip])
     , SplitBySample(options[OptionNames::SplitBySample])
+    , Rg(options[OptionNames::Rg].get<decltype(Rg)>())
+    , CreatePbi(options[OptionNames::CreatePbi])
 {
     MM2Settings::Kmer = options[OptionNames::Kmer];
     MM2Settings::MinimizerWindowSize = options[OptionNames::MinimizerWindowSize];
@@ -307,52 +332,70 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     MM2Settings::NonCanon = options[OptionNames::NonCanon];
     MM2Settings::NoSpliceFlank = options[OptionNames::NoSpliceFlank];
     MM2Settings::DisableHPC = options[OptionNames::DisableHPC];
+    MM2Settings::LongJoinFlankRatio = options[OptionNames::LongJoinFlankRatio];
 
+    int numAvailableCores = std::thread::hardware_concurrency();
     int32_t requestedNThreads;
-    if (IsFromRTC) {
-        requestedNThreads = options.NumProcessors();
-        Sort = true;
-        SortMemory =
-            PlainOption::SizeStringToInt(options[OptionNames::SortMemoryTC].get<std::string>());
-        if (Sort) {
-            int sortThreadPerc = options[OptionNames::SortThreadsTC];
-            if (sortThreadPerc > 50)
-                PBLOG_WARN
-                    << "Please allocate less than 50% of threads for sorting. Currently allocated: "
-                    << sortThreadPerc << "%!";
+    std::string requestedMemory;
+    int sortThreadPerc = 25;
 
-            if (MM2Settings::NumThreads < 2) {
-                PBLOG_WARN
-                    << "Please allocate more than 2 threads in total. Enforcing to 2 threads!";
-                MM2Settings::NumThreads = 1;
-                SortThreads = 1;
-            } else {
-                int origThreads = MM2Settings::NumThreads;
-                SortThreads =
-                    std::min(std::max(static_cast<int>(std::round(MM2Settings::NumThreads *
-                                                                  sortThreadPerc / 100.0)),
-                                      1),
-                             8);
-                MM2Settings::NumThreads = std::max(MM2Settings::NumThreads - SortThreads, 1);
-                if (MM2Settings::NumThreads + SortThreads > origThreads) {
-                    if (SortThreads > MM2Settings::NumThreads)
-                        --SortThreads;
-                    else
-                        --MM2Settings::NumThreads;
-                    MM2Settings::NumThreads = std::max(MM2Settings::NumThreads - SortThreads, 1);
-                    SortThreads = std::max(SortThreads, 1);
-                }
+    if (IsFromRTC) {
+        Sort = true;
+        requestedNThreads = options.NumProcessors();
+        requestedMemory = options[OptionNames::SortMemoryTC].get<std::string>();
+    } else {
+        requestedNThreads = options[OptionNames::NumThreads];
+        requestedMemory = options[OptionNames::SortMemory].get<std::string>();
+    }
+    SortThreads = options[OptionNames::SortThreads];
+
+    if (sortThreadPerc > 50)
+        PBLOG_WARN << "Please allocate less than 50% of threads for sorting. Currently allocated: "
+                   << sortThreadPerc << "%!";
+
+    if (requestedNThreads > numAvailableCores) {
+        PBLOG_WARN << "Requested more threads for alignment (" << requestedNThreads
+                   << ") than system-wide available (" << numAvailableCores << ")";
+    }
+
+    int availableThreads = ThreadCount(requestedNThreads);
+    if (Sort) {
+        if (SortThreads == 0) {
+            SortThreads = std::min(
+                std::max(static_cast<int>(std::round(availableThreads * sortThreadPerc / 100.0)),
+                         1),
+                8);
+            MM2Settings::NumThreads = std::max(availableThreads - SortThreads, 1);
+        } else if (SortThreads != 0) {
+            if (requestedNThreads == 0)
+                availableThreads = std::max(availableThreads - SortThreads, 1);
+            if (availableThreads + SortThreads > numAvailableCores) {
+                PBLOG_WARN << "Requested more threads for sorting (" << SortThreads
+                           << ") and alignment (" << availableThreads
+                           << ") than system-wide available (" << numAvailableCores << ")";
+            }
+            MM2Settings::NumThreads = availableThreads;
+            if (SortThreads > numAvailableCores) {
+                PBLOG_WARN << "Requested more threads for sorting (" << SortThreads
+                           << ") than system-wide available (" << numAvailableCores << ")!";
+                SortThreads = ThreadCount(SortThreads);
+            }
+            while (MM2Settings::NumThreads + SortThreads > numAvailableCores ||
+                   (MM2Settings::NumThreads == 1 && SortThreads == 1)) {
+                SortThreads = std::max(SortThreads - 1, 1);
+                if (MM2Settings::NumThreads + SortThreads <= numAvailableCores ||
+                    (MM2Settings::NumThreads == 1 && SortThreads == 1))
+                    break;
+                MM2Settings::NumThreads = std::max(MM2Settings::NumThreads - 1, 1);
             }
         }
     } else {
-        requestedNThreads = options[OptionNames::NumThreads];
-        SortMemory =
-            PlainOption::SizeStringToInt(options[OptionNames::SortMemory].get<std::string>());
-        SortThreads = options[OptionNames::SortThreads];
+        MM2Settings::NumThreads = availableThreads;
     }
+    SortMemory = PlainOption::SizeStringToInt(requestedMemory);
 
     if (!Sort) {
-        if (SortThreads != 1)
+        if (SortThreads != 0)
             PBLOG_WARN
                 << "Requested " << SortThreads
                 << " threads for sorting, without specifying --sort. Please check your input.";
@@ -363,31 +406,7 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
                 << " memory for sorting, without specifying --sort. Please check your input.";
     }
 
-    MM2Settings::NumThreads = ThreadCount(requestedNThreads);
-
-    int numAvailableCores = std::thread::hardware_concurrency();
-
-    if (requestedNThreads == 0) {
-        MM2Settings::NumThreads -= SortThreads;
-    } else {
-        if (requestedNThreads > numAvailableCores) {
-            PBLOG_WARN << "Requested more threads for alignment (" << requestedNThreads
-                       << ") than system-wide available (" << numAvailableCores << ")";
-        }
-    }
-
     if (Sort) {
-        if (SortThreads > numAvailableCores) {
-            PBLOG_WARN << "Requested more threads for sorting (" << SortThreads
-                       << ") than system-wide available (" << numAvailableCores << ")!";
-        }
-
-        if (requestedNThreads + SortThreads > numAvailableCores) {
-            PBLOG_WARN << "Requested more threads for sorting (" << SortThreads
-                       << ") and alignment (" << requestedNThreads
-                       << ") than system-wide available (" << numAvailableCores << ")";
-        }
-
         std::string suffix;
         const auto MemoryToHumanReadable = [](int64_t memInBytes, float* roundedMemory,
                                               std::string* suffix) {
@@ -448,6 +467,16 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
         ChunkSize = 1;
         MM2Settings::AlignMode = AlignmentMode::UNROLLED;
     }
+
+    if (!Rg.empty() && !boost::contains(Rg, "ID") && !boost::starts_with(Rg, "@RG\t")) {
+        PBLOG_FATAL << "Invalid @RG line. Missing ID field. Please provide following "
+                       "format: '@RG\\tID:xyz\\tSM:abc'";
+        std::exit(EXIT_FAILURE);
+    }
+    if (MM2Settings::LongJoinFlankRatio > 1) {
+        PBLOG_FATAL << "Option -L,--lj-min-ratio has to be between a ratio betweem 0 and 1.";
+        std::exit(EXIT_FAILURE);
+    }
 }
 
 int32_t AlignSettings::ThreadCount(int32_t n)
@@ -474,7 +503,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
 
         // hidden
         OptionNames::SortMemoryTC,
-        OptionNames::Strip,
+        OptionNames::CreatePbi,
     });
 
     i.AddGroup("Sorting Options", {
@@ -508,6 +537,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         OptionNames::GapOpen2,
         OptionNames::GapExtension1,
         OptionNames::GapExtension2,
+        OptionNames::LongJoinFlankRatio,
     });
 
     i.AddGroup("IsoSeq Parameter Override Options", {
@@ -517,12 +547,15 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     });
 
     i.AddGroup("Read Group Options", {
-        OptionNames::SampleName
+        OptionNames::SampleName,
+        OptionNames::Rg,
     });
 
-    i.AddGroup("Output Filter Options", {
+    i.AddGroup("Output Options", {
         OptionNames::MinPercConcordance,
-        OptionNames::MinAlignmentLength
+        OptionNames::MinAlignmentLength,
+        OptionNames::Strip,
+        OptionNames::SplitBySample,
     });
 
     i.AddGroup("Input Manipulation Options (mutually exclusive)", {
@@ -532,12 +565,12 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     });
 
     i.AddGroup("Output File Options", {
-        OptionNames::SplitBySample
+
     });
 
     i.AddPositionalArguments({
-        { "in.bam|xml", "Input BAM or DataSet XML", "<in.bam|xml>" },
         { "ref.fa|xml|mmi", "Reference FASTA, ReferenceSet XML, or Reference Index", "<ref.fa|xml|mmi>" },
+        { "in.bam|xml|fa|fq", "Input BAM, DataSet XML, FASTA, or FASTQ", "<in.bam|xml|fa|fq>" },
         { "out.aligned.bam|xml", "Output BAM or DataSet XML", "[out.aligned.bam|xml]" }
     });
 
@@ -549,6 +582,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     tcTask.AddOption(OptionNames::SortMemoryTC);
     tcTask.AddOption(OptionNames::SampleName);
     tcTask.AddOption(OptionNames::ZMW);
+    tcTask.AddOption(OptionNames::HQRegion);
     tcTask.AddOption(OptionNames::MedianFilter);
     tcTask.AddOption(OptionNames::Strip);
     tcTask.AddOption(OptionNames::SplitBySample);

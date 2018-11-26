@@ -1,22 +1,17 @@
 <h1 align="center"><img width="200px" src="img/pbmm2.png"/></h1>
 <h1 align="center">pbmm2</h1>
 <p align="center">A minimap2 frontend for PacBio data:
-native PacBio BAM in ⇨ native PacBio BAM out.</p>
+native PacBio data in ⇨ native PacBio BAM out.</p>
 
 ***
 
 _pbmm2_ is a SMRT wrapper for [minimap2](https://github.com/lh3/minimap2).
-Its purpose is to support native PacBio BAM in- and output, provide sets of
+Its purpose is to support native PacBio in- and output, provide sets of
 recommended parameters, and generate sorted output on-the-fly.
-Sorted output can be used directly for polishing using GenomicConsensus.
-Preliminary testing showed that _pbmm2_ outperforms BLASR in mapped concordance
-and number of bases mapped.
-In a future SMRT Link release, _pbmm2_ will replace BLASR as the default PacBio
-aligner; until then, please use BLASR if you need ISO compliant tools and
-official PacBio support.
-
-**This is an early beta!** Expect extreme changes and different output between
-versions until release of the first stable release.
+Sorted output can be used directly for polishing using GenomicConsensus,
+if BAM has been used as input to _pbmm2_.
+Benchmarks show that _pbmm2_ outperforms BLASR in mapped concordance,
+number of mapped bases, and especially runtime.
 
 ## Availability
 Latest version can be installed via bioconda package `pbmm2`.
@@ -25,7 +20,7 @@ Please refer to our [official pbbioconda page](https://github.com/PacificBioscie
 for information on Installation, Support, License, Copyright, and Disclaimer.
 
 ## Latest Version
-Version **0.10.1**: [Full changelog here](#full-changelog)
+Version **0.11.0**: [Full changelog here](#full-changelog)
 
 ## Usage
 _pbmm2_ offers following tools
@@ -40,16 +35,19 @@ Tools:
 ```
 A. Generate index file for reference and reuse it to align reads
   $ pbmm2 index ref.fasta ref.mmi
-  $ pbmm2 align movie.subreads.bam ref.mmi ref.movie.bam
+  $ pbmm2 align ref.mmi movie.subreads.bam ref.movie.bam
 
 B. Align reads and sort on-the-fly, with 4 alignment and 2 sort threads
-  $ pbmm2 align movie.subreads.bam ref.fasta ref.movie.bam --sort -j 4 -J 2
+  $ pbmm2 align ref.fasta movie.subreads.bam ref.movie.bam --sort -j 4 -J 2
 
 C. Align reads, sort on-the-fly, and create PBI
-  $ pbmm2 align movie.subreadset.xml ref.fasta ref.movie.alignmentset.xml --sort
+  $ pbmm2 align ref.fasta movie.subreadset.xml ref.movie.alignmentset.xml --sort
 
 D. Omit output file and stream BAM output to stdout
-  $ pbmm2 align movie1.subreadset.xml hg38.mmi | samtools sort > hg38.movie1.sorted.bam
+  $ pbmm2 align hg38.mmi movie1.subreadset.xml | samtools sort > hg38.movie1.sorted.bam
+
+E. Align CCS fastq input and sort output
+  $ pbmm2 align ref.fasta movie.Q20.fastq ref.movie.bam --preset CCS --sort --rg '@RG\tID:myid\tSM:mysample'
 ```
 
 ### Index
@@ -66,13 +64,21 @@ Usage: pbmm2 index [options] <ref.fa|xml> <out.mmi>
 ### Align
 The output argument is optional. If not provided, BAM output is streamed to stdout.
 ```
-Usage: pbmm2 align [options] <in.bam|xml> <ref.fa|xml|mmi> [out.aligned.bam|xml]
+Usage: pbmm2 align [options] <ref.fa|xml|mmi> <in.bam|xml|fa|fq> [out.aligned.bam|xml]
 ```
+
+#### Alignment Parallelization
+The number of alignment threads can be specified with `-j,--alignment-threads`.
+If not specified, the maximum number of threads will be used, minus one thread for BAM IO
+and minus the number of threads specified for sorting.
 
 #### Sorting
 Sorted output can be generated using `--sort`.
 
-In addition, `-J,--sort-threads` defines the number of threads used for on-the-fly sorting.
+By default, 25% of threads specified with `-j`, maximum 8, are used for sorting.
+
+To override the default percentage, `-J,--sort-threads` defines the explicit number of threads
+used for on-the-fly sorting.
 The memory allocated per sort thread can be defined with `-m,--sort-memory`, accepting suffixes `M,G`.
 
 Benchmarks on human data have shown that 4 sort threads are recommended, but no more
@@ -80,30 +86,38 @@ than 8 threads can be effectively leveraged, even with 70 cores used for alignme
 It is recommended to provide more memory to each of a few sort threads, to avoid disk IO pressure,
 than providing less memory to each of many sort threads.
 
-#### Alignment Parallelization
-The number of alignment threads can be specified with `-j,--alignment-threads`.
-If not specified, the maximum number of threads will be used, minus one thread for BAM IO
-and minus the number of threads specified for sorting.
-
 #### Following dataset IO combinations are allowed:
 
 SubreadSet ⟶ AlignmentSet
 
 ```
-pbmm2 align movie.subreadset.xml hg38.referenceset.xml hg38.movie.alignmentset.xml
+pbmm2 align hg38.referenceset.xml movie.subreadset.xml hg38.movie.alignmentset.xml
 ```
 
 ConsensusReadSet ⟶ ConsensusAlignmentSet
 
 ```
-pbmm2 align movie.consensusreadset.xml hg38.referenceset.xml hg38.movie.consensusalignmentset.xml --preset CCS
+pbmm2 align hg38.referenceset.xml movie.consensusreadset.xml hg38.movie.consensusalignmentset.xml --preset CCS
 ```
 
 TranscriptSet ⟶ TranscriptAlignmentSet
 
 ```
-pbmm2 align movie.transcriptset.xml hg38.referenceset.xml hg38.movie.transcriptalignmentset.xml --preset ISOSEQ
+pbmm2 align hg38.referenceset.xml movie.transcriptset.xml hg38.movie.transcriptalignmentset.xml --preset ISOSEQ
 ```
+
+#### FASTA/Q input
+In addition to native PacBio BAM input, reads can also be provided in FASTA and FASTQ formats.
+
+**Attention: The resulting output BAM file cannot be used as input into GenomicConsensus!**
+
+With FASTA/Q input, option `--rg` sets the read group. Example call:
+
+```
+pbmm2 align hg38.fasta movie.Q20.fastq hg38.movie.bam --preset CCS --rg '@RG\tID:myid\tSM:mysample'
+```
+
+All three reference file formats `.fasta`, `.referenceset.xml`, and `.mmi` can be combined with FASTA/Q input.
 
 ## FAQ
 
@@ -116,10 +130,10 @@ of possible combinations. For this, we currently offer:
 
 ```
   --preset  Set alignment mode:
-             - "SUBREAD" -k 19 -w 10 -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000
-             - "CCS" -k 19 -w 10 -u -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000
-             - "ISOSEQ" -k 15 -w 5 -u -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000
-             - "UNROLLED" -k 15 -w 15 -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 2000
+             - "SUBREAD" -k 19 -w 10 -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000 -L 0.5
+             - "CCS" -k 19 -w 10 -u -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000 -L 0.5
+             - "ISOSEQ" -k 15 -w 5 -u -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000 -L 0.5
+             - "UNROLLED" -k 15 -w 15 -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 2000 -L 0.5
             Default ["SUBREAD"]
 ```
 
@@ -145,6 +159,7 @@ a k-long gap costs min{o+k*e,O+k*E}:
   -O,--gap-open-2     Gap open penalty 2. [-1]
   -e,--gap-extend-1   Gap extension penalty 1. [-1]
   -E,--gap-extend-2   Gap extension penalty 2. [-1]
+  -L,--lj-min-ratio   Long join flank ratio. [-1]
 ```
 
 For `ISOSEQ`, you can override additional parameters:
@@ -242,9 +257,6 @@ That is:
 * number of alignments generated,
 * reads per minute processed.
 
-### Can I align FASTA or FASTQ files?
-No. Please use [minimap2](https://github.com/lh3/minimap2) for that.
-
 ### Can I perform unrolled alignment?
 If you are interested in unrolled alignments that is, align the full-length
 ZMW read or the HQ region of a ZMW against an unrolled template, please use
@@ -256,9 +268,18 @@ This is beta feature and still in development.
 You can override the sample name (SM field in RG tag) for all read groups
 with `--sample`.
 If not provided, sample names derive from the dataset input with order of
-precedence: biosample name, well sample name, `UnnamedSample`.
+precedence: SM field in input read group, biosample name, well sample name, `UnnamedSample`.
 If the input is a BAM file and `--sample` has not been used, the SM field will
 be populated with `UnnamedSample`.
+
+### Can I split output by sample name?
+Yes, `--split-by-sample` generates one output BAM file per sample name, with
+the sample name as file name infix, if there is more than one aligned sample name.
+
+### Can I remove all those extra per base and pulse tags?
+Yes, `--strip` removes following extraneous tags if the input is BAM,
+**but the resulting output BAM file cannot be used as input into GenomicConsensus**:
+`dq, dt, ip, iq, mq, pa, pc, pd, pe, pg, pm, pq, pt, pv, pw, px, sf, sq, st`
 
 ### How does _pbmm2_ get invoked in pbsmrtpipe?
 The goal was to simplify the interface of _pbmm2_ with pbsmrtpipe.
@@ -272,11 +293,14 @@ Following options are available:
 
 | ID | Description | Default |
 | - | - | - |
-| `pbmm2_align.task_options.biosample_name` | Override sample name | `""` |
+| `pbmm2_align.task_options.biosample_name` | Override Sample Name | `""` |
+| `pbmm2_align.task_options.hq_mode` | Process HQ Region Reads | `false` |
 | `pbmm2_align.task_options.median_filter` | Pick One Read per ZMW of Median Length | `false` |
 | `pbmm2_align.task_options.min_perc_concordance` | Minimum Concordance (%) | `70` |
 | `pbmm2_align.task_options.minalnlength` | Minimum Length | `50` |
 | `pbmm2_align.task_options.sort_memory_tc` | Memory per thread for sorting | `4G` |
+| `pbmm2_align.task_options.split_by_sample` | Split by Sample | `false` |
+| `pbmm2_align.task_options.strip` | Remove all kinetic and extra QV tags | `false` |
 | `pbmm2_align.task_options.zmw_mode` | Process ZMW Reads | `false` |
 
 Following an example for an input datastore that wraps a `subreadset.xml`.
@@ -313,7 +337,13 @@ Minimal accepted version:
 ## Full Changelog
 
  * **0.11.0**:
+   * Change input argument order
    * Library API access
+   * Add fasta/q input support
+   * Add `--lj-min-ratio`, `--rg`, `--split-by-sample`, `--strip`
+   * Fix `SA` tag
+   * Fix BAM header for idempotence
+
  * 0.10.1:
    * Idempotence. Alignment of alignments results in identical alignments
    * Use different technique to get tmpfile pipe
