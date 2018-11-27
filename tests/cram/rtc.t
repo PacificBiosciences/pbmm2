@@ -13,6 +13,7 @@
   *Finished reading/building index* (glob)
   *Cannot find biosample name for movie name m54019_180613_153909! Will use fallback.* (glob)
   *Merged sorted output from 0 files and 1 in-memory blocks* (glob)
+  *Generating BAI (glob)
   *Mapped Reads:* (glob)
   *Alignments:* (glob)
   *Mapped Bases:* (glob)

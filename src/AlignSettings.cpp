@@ -302,6 +302,15 @@ const PlainOption NoBAI{
     "Omit BAI generation for sorted output.",
     CLI::Option::BoolType(false)
 };
+const PlainOption NoTrimming{
+    "disable_repeated_matches_trimming",
+    { "no-rmt" },
+    "No Repeated Matches Trimming",
+    "Disable repeated matches trimming.",
+    CLI::Option::BoolType(false),
+    JSON::Json(nullptr),
+    CLI::OptionFlags::HIDE_FROM_HELP
+};
 // clang-format on
 }  // namespace OptionNames
 
@@ -341,6 +350,7 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     MM2Settings::NoSpliceFlank = options[OptionNames::NoSpliceFlank];
     MM2Settings::DisableHPC = options[OptionNames::DisableHPC];
     MM2Settings::LongJoinFlankRatio = options[OptionNames::LongJoinFlankRatio];
+    MM2Settings::NoTrimming = options[OptionNames::NoTrimming];
 
     int numAvailableCores = std::thread::hardware_concurrency();
     int32_t requestedNThreads;
@@ -512,6 +522,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         OptionNames::LogFile,
         OptionNames::LogLevelOption,
         OptionNames::ChunkSize,
+        OptionNames::NoTrimming,
 
         // hidden
         OptionNames::SortMemoryTC,

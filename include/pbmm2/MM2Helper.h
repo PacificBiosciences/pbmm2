@@ -83,6 +83,7 @@ private:
     const int32_t NumThreads;
     std::unique_ptr<Index> Idx;
     AlignmentMode alnMode_;
+    const bool trimRepeatedMatches_;
 };
 
 class AlignedRecord

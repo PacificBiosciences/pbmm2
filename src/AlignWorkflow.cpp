@@ -190,35 +190,40 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                     Strip(r);
             }
             int32_t aligned = 0;
-            auto output = mm2helper.Align(recs, filter, &aligned);
-            if (output) {
-                std::lock_guard<std::mutex> lock(outputMutex);
-                alignedReads += aligned;
-                for (const auto& aln : *output) {
-                    s.Lengths.emplace_back(aln.NumAlignedBases);
-                    s.Bases += aln.NumAlignedBases;
-                    s.Concordance += aln.Concordance;
-                    ++s.NumAlns;
-                    const std::string movieName = aln.Record.MovieName();
-                    const auto& sampleInfix = mtsti[movieName];
-                    writers->at(sampleInfix.second, sampleInfix.first).Write(aln.Record);
-                    if (++alignedRecords % settings.ChunkSize == 0) {
-                        const auto now = std::chrono::steady_clock::now();
-                        auto elapsedSecs =
-                            std::chrono::duration_cast<std::chrono::seconds>(now - lastTime)
-                                .count();
-                        if (elapsedSecs > 5) {
-                            lastTime = now;
-                            auto elapsedSecTotal =
-                                std::chrono::duration_cast<std::chrono::seconds>(now - firstTime)
-                                    .count() /
-                                60.0;
-                            auto alnsPerMin = std::round(alignedReads / elapsedSecTotal);
-                            PBLOG_DEBUG << "#Reads, #Aln, #RPM: " << alignedReads << ", "
-                                        << alignedRecords << ", " << alnsPerMin;
+            try {
+                auto output = mm2helper.Align(recs, filter, &aligned);
+                if (output) {
+                    std::lock_guard<std::mutex> lock(outputMutex);
+                    alignedReads += aligned;
+                    for (const auto& aln : *output) {
+                        s.Lengths.emplace_back(aln.NumAlignedBases);
+                        s.Bases += aln.NumAlignedBases;
+                        s.Concordance += aln.Concordance;
+                        ++s.NumAlns;
+                        const std::string movieName = aln.Record.MovieName();
+                        const auto& sampleInfix = mtsti[movieName];
+                        writers->at(sampleInfix.second, sampleInfix.first).Write(aln.Record);
+                        if (++alignedRecords % settings.ChunkSize == 0) {
+                            const auto now = std::chrono::steady_clock::now();
+                            auto elapsedSecs =
+                                std::chrono::duration_cast<std::chrono::seconds>(now - lastTime)
+                                    .count();
+                            if (elapsedSecs > 5) {
+                                lastTime = now;
+                                auto elapsedSecTotal =
+                                    std::chrono::duration_cast<std::chrono::seconds>(now -
+                                                                                     firstTime)
+                                        .count() /
+                                    60.0;
+                                auto alnsPerMin = std::round(alignedReads / elapsedSecTotal);
+                                PBLOG_DEBUG << "#Reads, #Aln, #RPM: " << alignedReads << ", "
+                                            << alignedRecords << ", " << alnsPerMin;
+                            }
                         }
                     }
                 }
+            } catch (...) {
+                std::cerr << "ERROR" << std::endl;
             }
             waiting--;
         };
