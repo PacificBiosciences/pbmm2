@@ -5,6 +5,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <tuple>
 
 namespace PacBio {
 namespace BAM {
@@ -23,19 +24,20 @@ struct Summary
 
 struct StreamWriter
 {
-    StreamWriter(BAM::BamHeader header, const std::string& outPrefix, bool sort, int sortThreads,
-                 int numThreads, int64_t sortMemory, const std::string& sample = "",
-                 const std::string& infix = "");
+    StreamWriter(BAM::BamHeader header, const std::string& outPrefix, bool sort, bool generateBai,
+                 int sortThreads, int numThreads, int64_t sortMemory,
+                 const std::string& sample = "", const std::string& infix = "");
 
     void Write(const BAM::BamRecord& r) const;
 
-    int64_t Close();
+    std::pair<int64_t, int64_t> Close();
 
     std::string FinalOutputName();
     std::string FinalOutputPrefix();
 
 private:
     bool sort_;
+    bool generateBai_;
     std::string sample_;
     std::string outPrefix_;
     int sortThreads_;
@@ -52,7 +54,7 @@ private:
 struct StreamWriters
 {
     StreamWriters(BAM::BamHeader& header, const std::string& outPrefix, bool splitBySample,
-                  bool sort, int sortThreads, int numThreads, int64_t sortMemory);
+                  bool sort, bool generateBai, int sortThreads, int numThreads, int64_t sortMemory);
 
     StreamWriter& at(const std::string& infix, const std::string& sample);
 
@@ -62,7 +64,7 @@ struct StreamWriters
                                   const std::string& outPrefix, const bool splitSample);
     std::string ForcePbiOutput();
 
-    std::string Close();
+    std::pair<std::string, std::string> Close();
 
     void CreateEmptyIfNoOutput();
 
@@ -71,6 +73,7 @@ private:
     const std::string& outPrefix_;
     bool splitBySample_;
     bool sort_;
+    bool generateBai_;
     int sortThreads_;
     int numThreads_;
     int64_t sortMemory_;

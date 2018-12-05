@@ -22,6 +22,7 @@
   *Index Build/Read Time:* (glob)
   *Alignment Time:* (glob)
   *Sort Merge Time:* (glob)
+  *BAI Generation Time:* (glob)
   *PBI Generation Time:* (glob)
   *Run Time:* (glob)
   *CPU Time:* (glob)

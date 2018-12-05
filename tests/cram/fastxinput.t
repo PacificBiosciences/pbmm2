@@ -12,6 +12,8 @@
   1
   $ ls -alh $CRAMTMP/fasta_unsorted.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/fasta_unsorted.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fasta_unsorted.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fasta_unsorted.json 2> /dev/null | wc -l | tr -d ' '
@@ -23,6 +25,8 @@
   1
   $ ls -alh $CRAMTMP/fasta_sorted.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/fasta_sorted.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  1
   $ ls -alh $CRAMTMP/fasta_sorted.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fasta_sorted.json 2> /dev/null | wc -l | tr -d ' '
@@ -36,6 +40,8 @@
   1
   $ ls -alh $CRAMTMP/fasta_unsortedds.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/fasta_unsortedds.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fasta_unsortedds.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fasta_unsortedds.json 2> /dev/null | wc -l | tr -d ' '
@@ -48,6 +54,8 @@
   $ samtools view -H $CRAMTMP/fasta_sortedds.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fasta_sortedds.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/fasta_sortedds.bam.bai 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fasta_sortedds.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
@@ -70,6 +78,8 @@
   1
   $ ls -alh $CRAMTMP/fasta_unsortedoutstream.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/fasta_unsortedoutstream.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fasta_unsortedoutstream.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fasta_unsortedoutstream.json 2> /dev/null | wc -l | tr -d ' '
@@ -80,6 +90,8 @@
   $ samtools view -H $CRAMTMP/fasta_sortedoutstream.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fasta_sortedoutstream.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fasta_sortedoutstream.bam.bai 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fasta_sortedoutstream.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
@@ -94,6 +106,8 @@
   1
   $ ls -alh $CRAMTMP/fasta_unsortedccs.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/fasta_unsortedccs.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fasta_unsortedccs.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fasta_unsortedccs.json 2> /dev/null | wc -l | tr -d ' '
@@ -107,6 +121,8 @@
   1
   $ ls -alh $CRAMTMP/fasta_unsortedts.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/fasta_unsortedts.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fasta_unsortedts.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fasta_unsortedts.json 2> /dev/null | wc -l | tr -d ' '
@@ -129,6 +145,7 @@
   *Index Build/Read Time: * (glob)
   *Alignment Time: * (glob)
   *Sort Merge Time: * (glob)
+  *BAI Generation Time: * (glob)
   *Run Time: * (glob)
   *CPU Time: * (glob)
   *Peak RSS: * (glob)
@@ -138,6 +155,8 @@
   $ samtools view -H $CRAMTMP/fastq_unsorted.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fastq_unsorted.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fastq_unsorted.bam.bai 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_unsorted.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
@@ -150,6 +169,8 @@
   1
   $ ls -alh $CRAMTMP/fastq_sorted.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/fastq_sorted.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  1
   $ ls -alh $CRAMTMP/fastq_sorted.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_sorted.json 2> /dev/null | wc -l | tr -d ' '
@@ -163,6 +184,8 @@
   1
   $ ls -alh $CRAMTMP/fastq_unsortedds.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/fastq_unsortedds.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fastq_unsortedds.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fastq_unsortedds.json 2> /dev/null | wc -l | tr -d ' '
@@ -175,6 +198,8 @@
   $ samtools view -H $CRAMTMP/fastq_sortedds.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fastq_sortedds.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/fastq_sortedds.bam.bai 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fastq_sortedds.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
@@ -197,6 +222,8 @@
   1
   $ ls -alh $CRAMTMP/fastq_unsortedoutstream.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/fastq_unsortedoutstream.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fastq_unsortedoutstream.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_unsortedoutstream.json 2> /dev/null | wc -l | tr -d ' '
@@ -207,6 +234,8 @@
   $ samtools view -H $CRAMTMP/fastq_sortedoutstream.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fastq_sortedoutstream.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fastq_sortedoutstream.bam.bai 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_sortedoutstream.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
@@ -221,6 +250,8 @@
   1
   $ ls -alh $CRAMTMP/fastq_unsortedccs.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/fastq_unsortedccs.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fastq_unsortedccs.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fastq_unsortedccs.json 2> /dev/null | wc -l | tr -d ' '
@@ -234,6 +265,8 @@
   1
   $ ls -alh $CRAMTMP/fastq_unsortedts.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/fastq_unsortedts.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fastq_unsortedts.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fastq_unsortedts.json 2> /dev/null | wc -l | tr -d ' '
@@ -256,6 +289,7 @@
   *Index Build/Read Time: * (glob)
   *Alignment Time: * (glob)
   *Sort Merge Time: * (glob)
+  *BAI Generation Time: * (glob)
   *Run Time: * (glob)
   *CPU Time: * (glob)
   *Peak RSS: * (glob)
@@ -276,6 +310,8 @@
   1
   $ ls -alh $CRAMTMP/fasta_unsorted.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/fasta_unsorted.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fasta_unsorted.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fasta_unsorted.json 2> /dev/null | wc -l | tr -d ' '
@@ -287,6 +323,8 @@
   1
   $ ls -alh $CRAMTMP/fasta_sorted.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/fasta_sorted.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  1
   $ ls -alh $CRAMTMP/fasta_sorted.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fasta_sorted.json 2> /dev/null | wc -l | tr -d ' '
@@ -300,6 +338,8 @@
   1
   $ ls -alh $CRAMTMP/fasta_unsortedds.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/fasta_unsortedds.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fasta_unsortedds.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fasta_unsortedds.json 2> /dev/null | wc -l | tr -d ' '
@@ -312,6 +352,8 @@
   $ samtools view -H $CRAMTMP/fasta_sortedds.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fasta_sortedds.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/fasta_sortedds.bam.bai 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fasta_sortedds.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
@@ -334,6 +376,8 @@
   1
   $ ls -alh $CRAMTMP/fasta_unsortedoutstream.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/fasta_unsortedoutstream.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fasta_unsortedoutstream.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fasta_unsortedoutstream.json 2> /dev/null | wc -l | tr -d ' '
@@ -344,6 +388,8 @@
   $ samtools view -H $CRAMTMP/fasta_sortedoutstream.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fasta_sortedoutstream.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fasta_sortedoutstream.bam.bai 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fasta_sortedoutstream.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
@@ -358,6 +404,8 @@
   1
   $ ls -alh $CRAMTMP/fasta_unsortedccs.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/fasta_unsortedccs.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fasta_unsortedccs.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fasta_unsortedccs.json 2> /dev/null | wc -l | tr -d ' '
@@ -371,6 +419,8 @@
   1
   $ ls -alh $CRAMTMP/fasta_unsortedts.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/fasta_unsortedts.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fasta_unsortedts.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fasta_unsortedts.json 2> /dev/null | wc -l | tr -d ' '
@@ -393,6 +443,7 @@
   *Index Build/Read Time: * (glob)
   *Alignment Time: * (glob)
   *Sort Merge Time: * (glob)
+  *BAI Generation Time: * (glob)
   *Run Time: * (glob)
   *CPU Time: * (glob)
   *Peak RSS: * (glob)
@@ -402,6 +453,8 @@
   $ samtools view -H $CRAMTMP/fastq_unsorted.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fastq_unsorted.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fastq_unsorted.bam.bai 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_unsorted.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
@@ -414,6 +467,8 @@
   1
   $ ls -alh $CRAMTMP/fastq_sorted.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/fastq_sorted.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  1
   $ ls -alh $CRAMTMP/fastq_sorted.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_sorted.json 2> /dev/null | wc -l | tr -d ' '
@@ -427,6 +482,8 @@
   1
   $ ls -alh $CRAMTMP/fastq_unsortedds.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/fastq_unsortedds.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fastq_unsortedds.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fastq_unsortedds.json 2> /dev/null | wc -l | tr -d ' '
@@ -439,6 +496,8 @@
   $ samtools view -H $CRAMTMP/fastq_sortedds.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fastq_sortedds.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/fastq_sortedds.bam.bai 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fastq_sortedds.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
@@ -461,6 +520,8 @@
   1
   $ ls -alh $CRAMTMP/fastq_unsortedoutstream.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/fastq_unsortedoutstream.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fastq_unsortedoutstream.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_unsortedoutstream.json 2> /dev/null | wc -l | tr -d ' '
@@ -471,6 +532,8 @@
   $ samtools view -H $CRAMTMP/fastq_sortedoutstream.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fastq_sortedoutstream.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fastq_sortedoutstream.bam.bai 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_sortedoutstream.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
@@ -485,6 +548,8 @@
   1
   $ ls -alh $CRAMTMP/fastq_unsortedccs.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/fastq_unsortedccs.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fastq_unsortedccs.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fastq_unsortedccs.json 2> /dev/null | wc -l | tr -d ' '
@@ -495,6 +560,8 @@
   *Input is FASTQ.* (glob)
   - Input is not a dataset, but output is. Please use dataset input for full SMRT Link compatibility!
   $ samtools view -H $CRAMTMP/fastq_unsortedts.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/fastq_unsortedts.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fastq_unsortedts.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
@@ -520,6 +587,7 @@
   *Index Build/Read Time: * (glob)
   *Alignment Time: * (glob)
   *Sort Merge Time: * (glob)
+  *BAI Generation Time: * (glob)
   *Run Time: * (glob)
   *CPU Time: * (glob)
   *Peak RSS: * (glob)

@@ -6,6 +6,8 @@
   1
   $ ls -alh $CRAMTMP/unsorted.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/unsorted.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/unsorted.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/unsorted.json 2> /dev/null | wc -l | tr -d ' '
@@ -16,6 +18,8 @@
   1
   $ ls -alh $CRAMTMP/unsorted_pbi.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/unsorted_pbi.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/unsorted_pbi.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/unsorted_pbi.json 2> /dev/null | wc -l | tr -d ' '
@@ -26,15 +30,31 @@
   1
   $ ls -alh $CRAMTMP/sorted.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/sorted.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  1
   $ ls -alh $CRAMTMP/sorted.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/sorted.json 2> /dev/null | wc -l | tr -d ' '
+  0
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sorted_nobai.bam --sort --no-bai
+  $ samtools view -H $CRAMTMP/sorted_nobai.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/sorted_nobai.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/sorted_nobai.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/sorted_nobai.*.xml 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/sorted_nobai.json 2> /dev/null | wc -l | tr -d ' '
   0
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sorted_pbi.bam --sort --pbi
   $ samtools view -H $CRAMTMP/sorted_pbi.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/sorted_pbi.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/sorted_pbi.bam.bai 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/sorted_pbi.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
@@ -48,6 +68,8 @@
   1
   $ ls -alh $CRAMTMP/unsortedds.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/unsortedds.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/unsortedds.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/unsortedds.json 2> /dev/null | wc -l | tr -d ' '
@@ -60,6 +82,8 @@
   1
   $ ls -alh $CRAMTMP/sortedds.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/sortedds.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  1
   $ ls -alh $CRAMTMP/sortedds.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/sortedds.json 2> /dev/null | wc -l | tr -d ' '
@@ -70,6 +94,8 @@
   1
   $ ls -alh $CRAMTMP/unsortedjs.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/unsortedjs.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/unsortedjs.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/unsortedjs.json 2> /dev/null | wc -l | tr -d ' '
@@ -79,6 +105,8 @@
   $ samtools view -H $CRAMTMP/sortedjs.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/sortedjs.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/sortedjs.bam.bai 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/sortedjs.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
@@ -90,6 +118,8 @@
   1
   $ ls -alh $CRAMTMP/unsortedoutstream.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/unsortedoutstream.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/unsortedoutstream.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/unsortedoutstream.json 2> /dev/null | wc -l | tr -d ' '
@@ -99,6 +129,8 @@
   $ samtools view -H $CRAMTMP/sortedoutstream.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/sortedoutstream.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/sortedoutstream.bam.bai 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/sortedoutstream.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
@@ -115,6 +147,8 @@
   1
   $ ls -alh $CRAMTMP/out_sub.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/out_sub.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/out_sub.alignmentset.xml 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/out_sub.consensusalignmentset.xml 2> /dev/null | wc -l | tr -d ' '
@@ -129,6 +163,8 @@
   1
   $ ls -alh $CRAMTMP/out_cons.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/out_cons.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/out_cons.alignmentset.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/out_cons.consensusalignmentset.xml 2> /dev/null | wc -l | tr -d ' '
@@ -145,6 +181,8 @@
   1
   $ ls -alh $CRAMTMP/out_trans.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/out_trans.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/out_trans.alignmentset.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/out_trans.consensusalignmentset.xml 2> /dev/null | wc -l | tr -d ' '
@@ -210,6 +248,7 @@
   *Index Build/Read Time: * (glob)
   *Alignment Time: * (glob)
   *Sort Merge Time: * (glob)
+  *BAI Generation Time: * (glob)
   *Run Time: * (glob)
   *CPU Time: * (glob)
   *Peak RSS: * (glob)

@@ -20,7 +20,7 @@ Please refer to our [official pbbioconda page](https://github.com/PacificBioscie
 for information on Installation, Support, License, Copyright, and Disclaimer.
 
 ## Latest Version
-Version **0.11.0**: [Full changelog here](#full-changelog)
+Version **0.12.0**: [Full changelog here](#full-changelog)
 
 ## Usage
 _pbmm2_ offers following tools
@@ -123,6 +123,10 @@ All three reference file formats `.fasta`, `.referenceset.xml`, and `.mmi` can b
 
 ### When are `pbi` files created?
 Whenever the output is of type `xml`, a `pbi` file is being generated.
+
+### When are `bai` files created?
+For sorted output via `--sort`, a `bai` file is being generated.
+You can skip BAI generation with `--no-bai`.
 
 ### What are parameter sets and how can I override them?
 Per default, _pbmm2_ uses recommended parameter sets to simplify the plethora
@@ -336,7 +340,12 @@ Minimal accepted version:
 
 ## Full Changelog
 
- * **0.11.0**:
+ * **0.12.0**:
+   * Add BAI for sorted output
+   * Allow `0` value overrides
+   * Abort if insufficient memory is available for sorting
+
+ * 0.11.0:
    * Change input argument order
    * Library API access
    * Add fasta/q input support

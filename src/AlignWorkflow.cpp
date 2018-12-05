@@ -164,9 +164,9 @@ int AlignWorkflow::Runner(const CLI::Results& options)
 
         PacBio::Parallel::FireAndForget faf(settings.NumThreads, 3);
 
-        writers = std::make_unique<StreamWriters>(hdr, uio.outPrefix, settings.SplitBySample,
-                                                  settings.Sort, settings.SortThreads,
-                                                  settings.NumThreads, settings.SortMemory);
+        writers = std::make_unique<StreamWriters>(
+            hdr, uio.outPrefix, settings.SplitBySample, settings.Sort, !settings.NoBAI,
+            settings.SortThreads, settings.NumThreads, settings.SortMemory);
 
         int32_t i = 0;
         const int32_t chunkSize = settings.ChunkSize;
@@ -424,7 +424,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     }
 
     alignmentTime.Freeze();
-    std::string sortTiming = writers->Close();
+    const auto sort_baiTimings = writers->Close();
 
     int32_t maxMappedLength = 0;
     for (const auto& l : s.Lengths) {
@@ -447,7 +447,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             writers->WriteDatasetsJson(inFile, uio.outFile, uio.refFile, uio.isFromXML,
                                        uio.isToJson, s, uio.outPrefix, settings.SplitBySample);
     else if (settings.CreatePbi)
-        writers->ForcePbiOutput();
+        pbiTiming = writers->ForcePbiOutput();
 
     PBLOG_INFO << "Mapped Reads: " << alignedReads;
     PBLOG_INFO << "Alignments: " << s.NumAlns;
@@ -458,7 +458,9 @@ int AlignWorkflow::Runner(const CLI::Results& options)
 
     PBLOG_INFO << "Index Build/Read Time: " << indexTime.ElapsedTime();
     PBLOG_INFO << "Alignment Time: " << alignmentTime.ElapsedTime();
-    if (!sortTiming.empty()) PBLOG_INFO << "Sort Merge Time: " << sortTiming;
+    if (!sort_baiTimings.first.empty()) PBLOG_INFO << "Sort Merge Time: " << sort_baiTimings.first;
+    if (!sort_baiTimings.second.empty() && !settings.NoBAI)
+        PBLOG_INFO << "BAI Generation Time: " << sort_baiTimings.second;
     if (!pbiTiming.empty()) PBLOG_INFO << "PBI Generation Time: " << pbiTiming;
     PBLOG_INFO << "Run Time: " << startTime.ElapsedTime();
     PBLOG_INFO << "CPU Time: "
