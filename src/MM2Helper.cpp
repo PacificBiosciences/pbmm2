@@ -73,8 +73,8 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             std::exit(EXIT_FAILURE);
     }
     if (settings.DisableHPC && IdxOpts.flag & MM_I_HPC) IdxOpts.flag &= ~MM_I_HPC;
-    if (settings.Kmer > 0) IdxOpts.k = settings.Kmer;
-    if (settings.MinimizerWindowSize > 0) IdxOpts.w = settings.MinimizerWindowSize;
+    if (settings.Kmer >= 0) IdxOpts.k = settings.Kmer;
+    if (settings.MinimizerWindowSize >= 0) IdxOpts.w = settings.MinimizerWindowSize;
     IdxOpts.batch_size = 0x7fffffffffffffffL;  // always build a uni-part index
 
     mm_mapopt_init(&MapOpts);
@@ -153,19 +153,20 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             PBLOG_FATAL << "No AlignmentMode --preset selected!";
             std::exit(EXIT_FAILURE);
     }
-    if (settings.GapOpen1 > 0) MapOpts.q = settings.GapOpen1;
-    if (settings.GapOpen2 > 0) MapOpts.q2 = settings.GapOpen2;
-    if (settings.GapExtension1 > 0) MapOpts.e = settings.GapExtension1;
-    if (settings.GapExtension2 > 0) MapOpts.e2 = settings.GapExtension2;
-    if (settings.MatchScore > 0) MapOpts.a = settings.MatchScore;
-    if (settings.MismatchPenalty > 0) MapOpts.b = settings.MismatchPenalty;
-    if (settings.Zdrop > 0) MapOpts.zdrop = settings.Zdrop;
-    if (settings.ZdropInv > 0) MapOpts.zdrop_inv = settings.ZdropInv;
-    if (settings.NonCanon > 0) MapOpts.noncan = settings.NonCanon;
-    if (settings.MaxIntronLength > 0) mm_mapopt_max_intron_len(&MapOpts, settings.MaxIntronLength);
-    if (settings.Bandwidth > 0) MapOpts.bw = settings.Bandwidth;
+    if (settings.GapOpen1 >= 0) MapOpts.q = settings.GapOpen1;
+    if (settings.GapOpen2 >= 0) MapOpts.q2 = settings.GapOpen2;
+    if (settings.GapExtension1 >= 0) MapOpts.e = settings.GapExtension1;
+    if (settings.GapExtension2 >= 0) MapOpts.e2 = settings.GapExtension2;
+    if (settings.MatchScore >= 0) MapOpts.a = settings.MatchScore;
+    if (settings.MismatchPenalty >= 0) MapOpts.b = settings.MismatchPenalty;
+    if (settings.Zdrop >= 0) MapOpts.zdrop = settings.Zdrop;
+    if (settings.ZdropInv >= 0) MapOpts.zdrop_inv = settings.ZdropInv;
+    if (settings.NonCanon >= 0) MapOpts.noncan = settings.NonCanon;
+    if (settings.MaxIntronLength >= 0) mm_mapopt_max_intron_len(&MapOpts, settings.MaxIntronLength);
+    if (settings.Bandwidth >= 0) MapOpts.bw = settings.Bandwidth;
     if (settings.NoSpliceFlank) MapOpts.flag &= ~MM_F_SPLICE_FLANK;
-    if (settings.LongJoinFlankRatio > 0) MapOpts.min_join_flank_ratio = settings.LongJoinFlankRatio;
+    if (settings.LongJoinFlankRatio >= 0)
+        MapOpts.min_join_flank_ratio = settings.LongJoinFlankRatio;
 }
 
 void MM2Helper::PostInit(const MM2Settings& settings, const std::string& preset,
