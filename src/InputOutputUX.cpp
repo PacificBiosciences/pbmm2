@@ -396,6 +396,15 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
         std::exit(EXIT_FAILURE);
     }
 
+    if (uio.outFile == "-" && settings.CreatePbi) {
+        PBLOG_FATAL << "Cannot generate pbi and use output pipe!";
+        std::exit(EXIT_FAILURE);
+    }
+
+    if (uio.outFile == "-" && settings.NoBAI) {
+        PBLOG_WARN << "Option --no-bai has no effect when using an output pipe!";
+    }
+
     if (args.size() == 3) {
         const std::string outlc = boost::algorithm::to_lower_copy(uio.outFile);
         const auto outExt = Utility::FileExtension(outlc);

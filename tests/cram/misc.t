@@ -300,3 +300,9 @@
   $ $__PBTEST_PBMM2_EXE align $CRAMTMP/mixed-fq-fq.fofn $REF $CRAMTMP/mixed-fq-fq.bam
   *Could not determine read input type(s). Please do not mix data types, such as BAM+FASTQ. File of files may only contain BAMs or datasets.* (glob)
   [1]
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF --sort --no-bai > $CRAMTMP/warn_bai_pipe.bam
+  *Option --no-bai has no effect when using an output pipe!* (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/warn_bai.bam --no-bai
+  *Option --no-bai has no effect without option --sort!* (glob)

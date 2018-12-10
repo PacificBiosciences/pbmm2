@@ -27,11 +27,90 @@ PacBio::BAM::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const i
 
     return cigar;
 }
+
+PacBio::BAM::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const int opt_flag,
+                               int newQs, int newQe, int* refStartOffset)
+{
+    using PacBio::BAM::Cigar;
+
+    Cigar cigar;
+
+    if (r->p == nullptr) return cigar;
+
+    uint32_t k, clip_len[2];
+    int origQs = r->qs;
+    int origQe = r->qe;
+    if (r->rev) {
+        std::swap(newQs, newQe);
+        newQs = qlen - newQs;
+        newQe = qlen - newQe;
+        std::swap(origQs, origQe);
+        origQs = qlen - origQs;
+        origQe = qlen - origQe;
+    }
+    clip_len[0] = newQs;
+    clip_len[1] = qlen - newQe;
+#if 0
+    std::cerr << "Clips " << clip_len[0] << ' ' << clip_len[1] << std::endl;
+#endif
+    const char clip_char = !(opt_flag & MM_F_SOFTCLIP) ? 'H' : 'S'; /* (sam_flag & 0x800) && */
+#if 0
+    std::cerr << "RENDER " << origQs << "\t" << origQe << "\t" << newQs << "\t" << newQe
+              << std::endl;
+#endif
+
+    if (clip_len[0]) cigar.emplace_back(clip_char, clip_len[0]);
+    int position = origQs;
+    int refSpace = 0;
+    for (k = 0; k < r->p->n_cigar; ++k) {
+        const char cigarChar = "MIDNSHP=XB"[r->p->cigar[k] & 0xf];
+        int used = 0;
+        for (size_t l = 0; l<r->p->cigar[k]>> 4; ++l) {
+            switch (cigarChar) {
+                case 'M':
+                case '=':
+                case 'X':
+                    if ((position < newQs)) ++refSpace;
+                    [[fallthrough]];
+                case 'I':
+                    if (position >= newQs && position < newQe) ++used;
+                    ++position;
+                    break;
+                case 'D':
+                case 'N':
+                    if ((position < newQs)) ++refSpace;
+                    if (position >= newQs && position < newQe) ++used;
+                    break;
+                case 'S':
+                case 'H':
+                    PBLOG_FATAL << "Cigar should not occur " << cigarChar;
+                    std::exit(EXIT_FAILURE);
+                default:
+                    PBLOG_FATAL << "Unknown cigar " << cigarChar;
+                    std::exit(EXIT_FAILURE);
+                    break;
+            }
+        }
+        if (used > 0) cigar.emplace_back(cigarChar, used);
+    }
+    *refStartOffset = refSpace;
+#if 0
+    std::cerr << "refSpace " << refSpace << std::endl;
+#endif
+    if (clip_len[1]) cigar.emplace_back(clip_char, clip_len[1]);
+#if 0
+    std::cerr << cigar.ToStdString() << std::endl;
+#endif
+
+    return cigar;
+}
 }  // namespace
 
 MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
                      const std::string& outputMmi)
-    : NumThreads{settings.NumThreads}, alnMode_(settings.AlignMode)
+    : NumThreads{settings.NumThreads}
+    , alnMode_(settings.AlignMode)
+    , trimRepeatedMatches_(!settings.NoTrimming)
 {
     std::string preset;
     PreInit(settings, &preset);
@@ -39,7 +118,9 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
     PostInit(settings, preset, outputMmi.empty());
 }
 MM2Helper::MM2Helper(const std::vector<BAM::FastaSequence>& refs, const MM2Settings& settings)
-    : NumThreads{settings.NumThreads}, alnMode_(settings.AlignMode)
+    : NumThreads{settings.NumThreads}
+    , alnMode_(settings.AlignMode)
+    , trimRepeatedMatches_(!settings.NoTrimming)
 {
     std::string preset;
     PreInit(settings, &preset);
@@ -83,8 +164,11 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
     MapOpts.flag |= MM_F_LONG_CIGAR;
     MapOpts.flag |= MM_F_EQX;
     MapOpts.flag |= MM_F_NO_PRINT_2ND;
-    MapOpts.flag |= MM_F_HARD_MLEVEL;
-    MapOpts.mask_level = 0;
+    if (settings.NoTrimming) {
+        MapOpts.flag |= MM_F_HARD_MLEVEL;
+        MapOpts.mask_level = 0;
+    }
+    MapOpts.min_join_flank_ratio = 0.5;
 
     switch (settings.AlignMode) {
         case AlignmentMode::SUBREADS:
@@ -98,7 +182,6 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             MapOpts.zdrop = 400;
             MapOpts.zdrop_inv = 50;
             MapOpts.bw = 2000;
-            MapOpts.min_join_flank_ratio = 0.5;
             break;
         case AlignmentMode::CCS:
             *preset = "CCS";
@@ -111,7 +194,6 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             MapOpts.zdrop = 400;
             MapOpts.zdrop_inv = 50;
             MapOpts.bw = 2000;
-            MapOpts.min_join_flank_ratio = 0.5;
             break;
         case AlignmentMode::ISOSEQ:
             *preset = "ISOSEQ";
@@ -128,7 +210,6 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             MapOpts.zdrop = 200;
             MapOpts.zdrop_inv = 100;
             MapOpts.noncan = 5;
-            MapOpts.min_join_flank_ratio = 0.5;
             break;
         case AlignmentMode::UNROLLED:
             *preset = "UNROLLED";
@@ -147,7 +228,6 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             MapOpts.min_mid_occ = 100;
             MapOpts.min_dp_max = 200;
             MapOpts.noncan = 0;
-            MapOpts.min_join_flank_ratio = 0.5;
             break;
         default:
             PBLOG_FATAL << "No AlignmentMode --preset selected!";
@@ -235,54 +315,221 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
         unalignedCopy->Impl().SetMapped(false);
         unalignedCopy->Impl().CigarData("");
     }
+
     const int qlen = seq.length();
     auto alns = mm_map(Idx->idx_, qlen, seq.c_str(), &numAlns,
                        tbufLocal ? tbufLocal->tbuf_ : tbuf->tbuf_, &MapOpts, nullptr);
+
     std::vector<int> used;
+    std::vector<int32_t> queryHits(seq.size(), 0);
+
     for (int i = 0; i < numAlns; ++i) {
         auto& aln = alns[i];
         // if no alignment, continue
         if (aln.p == nullptr) continue;
         // secondary alignment
         if (aln.id != aln.parent) continue;
+        used.emplace_back(i);
+        if (alnMode_ == AlignmentMode::UNROLLED) break;
+    }
 
+    const auto SetQryHits = [&](mm_reg1_t& aln, int* begin, int* end) {
+        bool started = false;
+        bool ended = false;
+
+        int l = aln.qs;
+        int r = aln.qe;
+        for (int s = l; s < r; ++s) {
+            if (!started) {
+                if (queryHits[s] == 1) {
+                    queryHits[s] = 1;
+                    continue;
+                } else if (queryHits[s] == 0) {
+                    *begin = s;
+                    started = true;
+                }
+            } else {
+                if (!ended) {
+                    if (queryHits[s] == 0) {
+                        queryHits[s] = 1;
+                        continue;
+                    } else if (queryHits[s] == 1) {
+                        *end = s - 1;
+                        ended = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if (!ended) *end = r - 1;
+        return started;
+    };
+
+    const auto AlignAndTrim = [&](const int idx, const bool trim) {
+        auto& aln = alns[idx];
+        int begin = trim ? 0 : aln.qs;
+        int end = trim ? 0 : aln.qe;
+        if (trim && !SetQryHits(aln, &begin, &end)) return;
         const int32_t refId = aln.rid;
-        const BAM::Position refStart = aln.rs;
         const BAM::Strand strand = aln.rev ? BAM::Strand::REVERSE : BAM::Strand::FORWARD;
-        const BAM::Cigar cigar = RenderCigar(&aln, qlen, MapOpts.flag);
-        const uint8_t mapq = aln.mapq;
+        int refStartOffset = 0;
+        BAM::Cigar cigar;
+        if (trim)
+            cigar = RenderCigar(&aln, qlen, MapOpts.flag, begin, end, &refStartOffset);
+        else
+            cigar = RenderCigar(&aln, qlen, MapOpts.flag);
+        const BAM::Position refStart = aln.rs + refStartOffset;
+#if 0
+        if (!aln.rev)
+            std::cerr << aln.rs << "\t"
+                      << "\t"
+                      << "\t" << aln.qs << "\t" << aln.qe << std::endl;
+        else
+            std::cerr << aln.rs << "\t"
+                      << "\t"
+                      << "\t" << qlen - aln.qe << "\t" << qlen - aln.qs << std::endl;
+#endif
         auto mapped = BAM::BamRecord::Mapped(unalignedCopy ? *unalignedCopy : record, refId,
-                                             refStart, strand, cigar, mapq);
+                                             refStart, strand, cigar, aln.mapq);
+        if (mapped.Impl().HasTag("rm")) mapped.Impl().RemoveTag("rm");
         mapped.Impl().SetSupplementaryAlignment(aln.sam_pri == 0);
         AlignedRecord alnRec{std::move(mapped)};
-        if (filter(alnRec)) {
-            used.emplace_back(i);
-            localResults.emplace_back(std::move(alnRec));
-            if (alnMode_ == AlignmentMode::UNROLLED) break;
+        if (filter(alnRec)) localResults.emplace_back(std::move(alnRec));
+    };
+
+    if (!trimRepeatedMatches_ || used.size() <= 1) {
+        for (const auto i : used) {
+            AlignAndTrim(i, false);
+        }
+    } else {
+        std::vector<std::pair<int, int>> queryIntervals;
+        std::vector<std::pair<int, int>> qryIdxOverlaps;
+        std::vector<std::pair<int, int>> refIntervals;
+        std::vector<std::pair<int, int>> refIdxOverlaps;
+
+        for (const auto i : used) {
+            auto& aln = alns[i];
+            int l = aln.rev ? qlen - aln.qe : aln.qs;
+            int r = aln.rev ? qlen - aln.qs : aln.qe;
+            for (size_t j = 0; j < queryIntervals.size(); ++j) {
+                const auto& s_e = queryIntervals[j];
+                if (l <= s_e.second && r >= s_e.first) qryIdxOverlaps.emplace_back(i, used[j]);
+            }
+            queryIntervals.emplace_back(l, r);
+            for (size_t j = 0; j < refIntervals.size(); ++j) {
+                const auto& s_e = refIntervals[j];
+                if (aln.rs <= s_e.second && aln.re >= s_e.first) {
+                    if (aln.rs < alns[used[j]].rs)
+                        refIdxOverlaps.emplace_back(i, used[j]);
+                    else
+                        refIdxOverlaps.emplace_back(used[j], i);
+                }
+            }
+            refIntervals.emplace_back(aln.rs, aln.re);
+        }
+#if 0
+        std::cerr << "hasOverlap " << !qryIdxOverlaps.empty() << std::endl;
+
+        for (const auto& x : refIdxOverlaps)
+            std::cerr << "REF OVERLAP " << x.first << ' ' << x.second << std::endl;
+#endif
+        std::vector<std::pair<int, int>> primaryAlignments;
+        if (!refIdxOverlaps.empty()) {
+            for (const auto& refIdx : refIdxOverlaps) {
+                for (const auto& qryIdx : qryIdxOverlaps) {
+                    if (refIdx.first == qryIdx.first || refIdx.first == qryIdx.second ||
+                        refIdx.second == qryIdx.first || refIdx.second == qryIdx.second) {
+                        primaryAlignments.emplace_back(refIdx);
+#if 0
+                            std::cerr << "X " << refIdx.first << std::endl;
+#endif
+                        break;
+                    }
+                }
+            }
+        }
+#if 0
+        std::cerr << "primaryAlignments " << primaryAlignments.size() << std::endl;
+#endif
+
+#if 0
+        if (!primaryAlignments.empty()) {
+            std::cerr << "Picked " << alns[primaryAlignments[0].first].rs << "-"
+                      << alns[primaryAlignments[0].first].re << std::endl;
+            std::cerr << "Picked " << alns[primaryAlignments[0].second].rs << "-"
+                      << alns[primaryAlignments[0].second].re << std::endl;
+        }
+#endif
+        if (!qryIdxOverlaps.empty() && !primaryAlignments.empty()) {
+            AlignAndTrim(primaryAlignments[0].first, true);
+            AlignAndTrim(primaryAlignments[0].second, true);
+            for (const auto i : used) {
+                if (i == primaryAlignments[0].first) continue;
+                if (i == primaryAlignments[0].second) continue;
+                AlignAndTrim(i, true);
+            }
+            for (auto& l : localResults)
+                l.Record.Impl().AddTag("rm", 1);
+        } else {
+            for (const auto i : used) {
+                AlignAndTrim(i, true);
+            }
         }
     }
-    if (used.size() > 1) {
-        for (size_t i = 0; i < used.size(); ++i) {
+    const auto numAlignments = localResults.size();
+    if (numAlignments > 1) {
+        std::vector<std::string> sas;
+        std::vector<std::pair<int32_t, int32_t>> spans;
+        for (size_t j = 0; j < numAlignments; ++j) {
             std::ostringstream sa;
-            mm_reg1_t* r = &alns[used[i]];
-            for (size_t j = 0; j < used.size(); ++j) {
+            const auto& record = localResults.at(j).Record;
+            int32_t qryStart = BAM::IsCcsOrTranscript(record.Type()) ? 0 : record.QueryStart();
+            const auto qqs = record.AlignedStart() - qryStart;
+            const auto qqe = record.AlignedEnd() - qryStart;
+            const auto qrs = record.ReferenceStart();
+            const auto qre = record.ReferenceEnd();
+            const bool qrev = record.AlignedStrand() == BAM::Strand::REVERSE;
+            int l_M, l_I = 0, l_D = 0, clip5 = 0, clip3 = 0;
+            if (qqe - qqs < qre - qrs)
+                l_M = qqe - qqs, l_D = (qre - qrs) - l_M;
+            else
+                l_M = qre - qrs, l_I = (qqe - qqs) - l_M;
+            clip5 = qrev ? qlen - qqe : qqs;
+            clip3 = qrev ? qqs : qlen - qqe;
+            sa << Idx->idx_->seq[record.ReferenceId()].name << ',' << qrs + 1 << ',' << "+-"[qrev]
+               << ',';
+            if (clip5) sa << clip5 << 'S';
+            if (l_M) sa << l_M << 'M';
+            if (l_I) sa << l_I << 'I';
+            if (l_D) sa << l_D << 'D';
+            if (clip3) sa << clip3 << 'S';
+            sa << ',' << static_cast<int>(record.MapQuality()) << ',' << record.NumMismatches()
+               << ';';
+            sas.emplace_back(sa.str());
+            if (qrev)
+                spans.emplace_back(clip3, qlen - clip5);
+            else
+                spans.emplace_back(clip5, qlen - clip3);
+        }
+        if (trimRepeatedMatches_)
+            for (size_t i = 0; i < numAlignments; ++i) {
+                int32_t fixedBegin = spans[i].first;
+                int32_t fixedEnd = spans[i].second;
+                for (size_t j = i + 1; j < numAlignments; ++j) {
+                    int32_t curBegin = spans[j].first;
+                    int32_t curEnd = spans[j].second;
+                    if (fixedEnd > curBegin && fixedBegin < curEnd) {
+                        PBLOG_FATAL << "Overlapping intervals: " << record.FullName() << "\t"
+                                    << fixedBegin << "-" << fixedEnd << "\t" << curBegin << "-"
+                                    << curEnd;
+                    }
+                }
+            }
+        for (size_t i = 0; i < numAlignments; ++i) {
+            std::ostringstream sa;
+            for (size_t j = 0; j < numAlignments; ++j) {
                 if (i == j) continue;
-                mm_reg1_t* q = &alns[used[j]];
-                int l_M, l_I = 0, l_D = 0, clip5 = 0, clip3 = 0;
-                if (r == q || q->parent != q->id || q->p == 0) continue;
-                if (q->qe - q->qs < q->re - q->rs)
-                    l_M = q->qe - q->qs, l_D = (q->re - q->rs) - l_M;
-                else
-                    l_M = q->re - q->rs, l_I = (q->qe - q->qs) - l_M;
-                clip5 = q->rev ? qlen - q->qe : q->qs;
-                clip3 = q->rev ? q->qs : qlen - q->qe;
-                sa << Idx->idx_->seq[q->rid].name << ',' << q->rs + 1 << ',' << "+-"[q->rev] << ',';
-                if (clip5) sa << clip5 << 'S';
-                if (l_M) sa << l_M << 'M';
-                if (l_I) sa << l_I << 'I';
-                if (l_D) sa << l_D << 'D';
-                if (clip3) sa << clip3 << 'S';
-                sa << ',' << q->mapq << ',' << q->blen - q->mlen + q->p->n_ambi << ';';
+                sa << sas[j];
             }
             const auto sastr = sa.str();
             if (!sastr.empty()) {
@@ -293,13 +540,14 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
             }
         }
     }
+
     // cleanup
     for (int i = 0; i < numAlns; ++i)
         if (alns[i].p) free(alns[i].p);
     free(alns);
 
     return localResults;
-}
+}  // namespace minimap2
 
 std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record) const
 {
