@@ -247,12 +247,34 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
     if (settings.NoSpliceFlank) MapOpts.flag &= ~MM_F_SPLICE_FLANK;
     if (settings.LongJoinFlankRatio >= 0)
         MapOpts.min_join_flank_ratio = settings.LongJoinFlankRatio;
+
+    if ((MapOpts.q != MapOpts.q2 || MapOpts.e != MapOpts.e2) &&
+        !(MapOpts.e > MapOpts.e2 && MapOpts.q + MapOpts.e < MapOpts.q2 + MapOpts.e2)) {
+        PBLOG_FATAL << "Violation of dual gap penalties, E1>E2 and O1+E1<O2+E2";
+        std::exit(EXIT_FAILURE);
+    }
+
+    if ((MapOpts.q + MapOpts.e) + (MapOpts.q2 + MapOpts.e2) > 127) {
+        PBLOG_FATAL << "Violation of scoring system ({-O}+{-E})+({-O2}+{-E2}) <= 127";
+        std::exit(EXIT_FAILURE);
+    }
+
+    if (MapOpts.zdrop < MapOpts.zdrop_inv) {
+        PBLOG_FATAL << "Z-drop should not be less than inversion-Z-drop";
+        std::exit(EXIT_FAILURE);
+    }
 }
 
 void MM2Helper::PostInit(const MM2Settings& settings, const std::string& preset,
                          const bool postAlignParameter)
 {
     mm_mapopt_update(&MapOpts, Idx->idx_);
+
+    if (Idx->idx_->k <= 0 || Idx->idx_->w <= 0) {
+        PBLOG_FATAL << "Index parameter -k and -w must be positive.";
+        std::exit(EXIT_FAILURE);
+    }
+
     PBLOG_DEBUG << "Minimap2 parameters based on preset: " << preset;
     PBLOG_DEBUG << "Kmer size              : " << Idx->idx_->k;
     PBLOG_DEBUG << "Minimizer window size  : " << Idx->idx_->w;
