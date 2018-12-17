@@ -50,14 +50,7 @@ PacBio::BAM::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const i
     }
     clip_len[0] = newQs;
     clip_len[1] = qlen - newQe;
-#if 0
-    std::cerr << "Clips " << clip_len[0] << ' ' << clip_len[1] << std::endl;
-#endif
     const char clip_char = !(opt_flag & MM_F_SOFTCLIP) ? 'H' : 'S'; /* (sam_flag & 0x800) && */
-#if 0
-    std::cerr << "RENDER " << origQs << "\t" << origQe << "\t" << newQs << "\t" << newQe
-              << std::endl;
-#endif
 
     if (clip_len[0]) cigar.emplace_back(clip_char, clip_len[0]);
     int position = origQs;
@@ -94,13 +87,7 @@ PacBio::BAM::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const i
         if (used > 0) cigar.emplace_back(cigarChar, used);
     }
     *refStartOffset = refSpace;
-#if 0
-    std::cerr << "refSpace " << refSpace << std::endl;
-#endif
     if (clip_len[1]) cigar.emplace_back(clip_char, clip_len[1]);
-#if 0
-    std::cerr << cigar.ToStdString() << std::endl;
-#endif
 
     return cigar;
 }
@@ -308,7 +295,12 @@ std::unique_ptr<std::vector<AlignedRecord>> MM2Helper::Align(
 
     for (auto& record : *records) {
         std::vector<AlignedRecord> localResults = Align(record, filter, tbuf);
-        *alignedReads += !localResults.empty();
+        for (const auto& aln : localResults) {
+            if (aln.IsAligned) {
+                *alignedReads += 1;
+                break;
+            }
+        }
 
         for (auto&& a : localResults)
             result->emplace_back(std::move(a));
@@ -329,13 +321,17 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
     int numAlns;
     const auto seq = record.Sequence(BAM::Orientation::NATIVE);
     std::unique_ptr<BAM::BamRecord> unalignedCopy;
-    if (record.IsMapped() && record.Impl().IsReverseStrand()) {
-        unalignedCopy = std::make_unique<BAM::BamRecord>(record);
+    if (record.IsMapped()) {
+        unalignedCopy = std::make_unique<BAM::BamRecord>(record.Header());
         unalignedCopy->Impl().SetSequenceAndQualities(
             seq, record.Qualities(BAM::Orientation::NATIVE).Fastq());
         unalignedCopy->Impl().SetReverseStrand(false);
         unalignedCopy->Impl().SetMapped(false);
         unalignedCopy->Impl().CigarData("");
+        for (const auto& tag : record.Impl().Tags())
+            if (tag.first != "RG") unalignedCopy->Impl().AddTag(tag.first, tag.second);
+        unalignedCopy->ReadGroupId(record.ReadGroupId());
+        unalignedCopy->Impl().Name(record.FullName());
     }
 
     const int qlen = seq.length();
@@ -401,16 +397,6 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
         else
             cigar = RenderCigar(&aln, qlen, MapOpts.flag);
         const BAM::Position refStart = aln.rs + refStartOffset;
-#if 0
-        if (!aln.rev)
-            std::cerr << aln.rs << "\t"
-                      << "\t"
-                      << "\t" << aln.qs << "\t" << aln.qe << std::endl;
-        else
-            std::cerr << aln.rs << "\t"
-                      << "\t"
-                      << "\t" << qlen - aln.qe << "\t" << qlen - aln.qs << std::endl;
-#endif
         auto mapped = BAM::BamRecord::Mapped(unalignedCopy ? *unalignedCopy : record, refId,
                                              refStart, strand, cigar, aln.mapq);
         if (mapped.Impl().HasTag("rm")) mapped.Impl().RemoveTag("rm");
@@ -449,12 +435,6 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
             }
             refIntervals.emplace_back(aln.rs, aln.re);
         }
-#if 0
-        std::cerr << "hasOverlap " << !qryIdxOverlaps.empty() << std::endl;
-
-        for (const auto& x : refIdxOverlaps)
-            std::cerr << "REF OVERLAP " << x.first << ' ' << x.second << std::endl;
-#endif
         std::vector<std::pair<int, int>> primaryAlignments;
         if (!refIdxOverlaps.empty()) {
             for (const auto& refIdx : refIdxOverlaps) {
@@ -462,26 +442,11 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
                     if (refIdx.first == qryIdx.first || refIdx.first == qryIdx.second ||
                         refIdx.second == qryIdx.first || refIdx.second == qryIdx.second) {
                         primaryAlignments.emplace_back(refIdx);
-#if 0
-                            std::cerr << "X " << refIdx.first << std::endl;
-#endif
                         break;
                     }
                 }
             }
         }
-#if 0
-        std::cerr << "primaryAlignments " << primaryAlignments.size() << std::endl;
-#endif
-
-#if 0
-        if (!primaryAlignments.empty()) {
-            std::cerr << "Picked " << alns[primaryAlignments[0].first].rs << "-"
-                      << alns[primaryAlignments[0].first].re << std::endl;
-            std::cerr << "Picked " << alns[primaryAlignments[0].second].rs << "-"
-                      << alns[primaryAlignments[0].second].re << std::endl;
-        }
-#endif
         if (!qryIdxOverlaps.empty() && !primaryAlignments.empty()) {
             AlignAndTrim(primaryAlignments[0].first, true);
             AlignAndTrim(primaryAlignments[0].second, true);
@@ -568,8 +533,23 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
         if (alns[i].p) free(alns[i].p);
     free(alns);
 
+    if (localResults.empty()) {
+        if (record.IsMapped()) {
+            const auto RemovePbmm2MappedTags = [](BAM::BamRecord& r) {
+                for (const auto& t : {"SA", "rm", "mc"})
+                    if (r.Impl().HasTag(t)) r.Impl().RemoveTag(t);
+            };
+            if (unalignedCopy) {
+                RemovePbmm2MappedTags(*unalignedCopy);
+                localResults.emplace_back(*unalignedCopy);
+            }
+        } else {
+            localResults.emplace_back(AlignedRecord{record});
+        }
+    }
+
     return localResults;
-}  // namespace minimap2
+}
 
 std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record) const
 {
@@ -642,7 +622,8 @@ std::vector<PacBio::BAM::SequenceInfo> Index::SequenceInfos() const
 
 AlignedRecord::AlignedRecord(BAM::BamRecord record) : Record(std::move(record))
 {
-    ComputeAccuracyBases();
+    IsAligned = Record.IsMapped();
+    if (IsAligned) ComputeAccuracyBases();
 }
 
 void AlignedRecord::ComputeAccuracyBases()

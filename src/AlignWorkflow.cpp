@@ -196,14 +196,16 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                     std::lock_guard<std::mutex> lock(outputMutex);
                     alignedReads += aligned;
                     for (const auto& aln : *output) {
-                        s.Lengths.emplace_back(aln.NumAlignedBases);
-                        s.Bases += aln.NumAlignedBases;
-                        s.Concordance += aln.Concordance;
-                        ++s.NumAlns;
+                        if (aln.IsAligned) {
+                            s.Lengths.emplace_back(aln.NumAlignedBases);
+                            s.Bases += aln.NumAlignedBases;
+                            s.Concordance += aln.Concordance;
+                            ++s.NumAlns;
+                        }
                         const std::string movieName = aln.Record.MovieName();
                         const auto& sampleInfix = mtsti[movieName];
                         writers->at(sampleInfix.second, sampleInfix.first).Write(aln.Record);
-                        if (++alignedRecords % settings.ChunkSize == 0) {
+                        if (aln.IsAligned && ++alignedRecords % settings.ChunkSize == 0) {
                             const auto now = std::chrono::steady_clock::now();
                             auto elapsedSecs =
                                 std::chrono::duration_cast<std::chrono::seconds>(now - lastTime)
@@ -410,6 +412,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                     i = 0;
                 }
             }
+            if (i > 0) i--;
         }
         // terminal records, if they exist
         if (i > 0) {

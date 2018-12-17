@@ -93,9 +93,10 @@ public:
 
 public:
     BAM::BamRecord Record;
-    int32_t NumAlignedBases;
-    int32_t Span;
-    double Concordance;
+    int32_t NumAlignedBases = 0;
+    int32_t Span = 0;
+    double Concordance = 0;
+    bool IsAligned;
 
 private:
     void ComputeAccuracyBases();
