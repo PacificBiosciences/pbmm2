@@ -499,6 +499,17 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     if (!Sort && NoBAI) {
         PBLOG_WARN << "Option --no-bai has no effect without option --sort!";
     }
+
+    if (MM2Settings::GapOpen1 < -1 || MM2Settings::GapOpen2 < -1 ||
+        MM2Settings::GapExtension1 < -1 || MM2Settings::GapExtension2 < -1) {
+        PBLOG_FATAL << "Gap options have to be strictly positive.";
+        std::exit(EXIT_FAILURE);
+    }
+    if (MM2Settings::Kmer < -1 || MM2Settings::Kmer == 0 || MM2Settings::MinimizerWindowSize < -1 ||
+        MM2Settings::MinimizerWindowSize == 0) {
+        PBLOG_FATAL << "Index parameter -k and -w must be positive.";
+        std::exit(EXIT_FAILURE);
+    }
 }
 
 int32_t AlignSettings::ThreadCount(int32_t n)
