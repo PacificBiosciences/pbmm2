@@ -295,7 +295,12 @@ std::unique_ptr<std::vector<AlignedRecord>> MM2Helper::Align(
 
     for (auto& record : *records) {
         std::vector<AlignedRecord> localResults = Align(record, filter, tbuf);
-        *alignedReads += !localResults.empty();
+        for (const auto& aln : localResults) {
+            if (aln.IsAligned) {
+                *alignedReads += 1;
+                break;
+            }
+        }
 
         for (auto&& a : localResults)
             result->emplace_back(std::move(a));
@@ -316,13 +321,17 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
     int numAlns;
     const auto seq = record.Sequence(BAM::Orientation::NATIVE);
     std::unique_ptr<BAM::BamRecord> unalignedCopy;
-    if (record.IsMapped() && record.Impl().IsReverseStrand()) {
-        unalignedCopy = std::make_unique<BAM::BamRecord>(record);
+    if (record.IsMapped()) {
+        unalignedCopy = std::make_unique<BAM::BamRecord>(record.Header());
         unalignedCopy->Impl().SetSequenceAndQualities(
             seq, record.Qualities(BAM::Orientation::NATIVE).Fastq());
         unalignedCopy->Impl().SetReverseStrand(false);
         unalignedCopy->Impl().SetMapped(false);
         unalignedCopy->Impl().CigarData("");
+        for (const auto& tag : record.Impl().Tags())
+            if (tag.first != "RG") unalignedCopy->Impl().AddTag(tag.first, tag.second);
+        unalignedCopy->ReadGroupId(record.ReadGroupId());
+        unalignedCopy->Impl().Name(record.FullName());
     }
 
     const int qlen = seq.length();
@@ -524,6 +533,21 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
         if (alns[i].p) free(alns[i].p);
     free(alns);
 
+    if (localResults.empty()) {
+        if (record.IsMapped()) {
+            const auto RemovePbmm2MappedTags = [](BAM::BamRecord& r) {
+                for (const auto& t : {"SA", "rm", "mc"})
+                    if (r.Impl().HasTag(t)) r.Impl().RemoveTag(t);
+            };
+            if (unalignedCopy) {
+                RemovePbmm2MappedTags(*unalignedCopy);
+                localResults.emplace_back(*unalignedCopy);
+            }
+        } else {
+            localResults.emplace_back(AlignedRecord{record});
+        }
+    }
+
     return localResults;
 }
 
@@ -598,7 +622,8 @@ std::vector<PacBio::BAM::SequenceInfo> Index::SequenceInfos() const
 
 AlignedRecord::AlignedRecord(BAM::BamRecord record) : Record(std::move(record))
 {
-    ComputeAccuracyBases();
+    IsAligned = Record.IsMapped();
+    if (IsAligned) ComputeAccuracyBases();
 }
 
 void AlignedRecord::ComputeAccuracyBases()
