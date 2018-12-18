@@ -196,6 +196,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                     std::lock_guard<std::mutex> lock(outputMutex);
                     alignedReads += aligned;
                     for (const auto& aln : *output) {
+                        if (!settings.OutputUnmapped && !aln.IsAligned) continue;
                         if (aln.IsAligned) {
                             s.Lengths.emplace_back(aln.NumAlignedBases);
                             s.Bases += aln.NumAlignedBases;

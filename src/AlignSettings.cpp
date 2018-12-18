@@ -311,6 +311,15 @@ const PlainOption NoTrimming{
     JSON::Json(nullptr),
     CLI::OptionFlags::HIDE_FROM_HELP
 };
+const PlainOption OutputUnmapped{
+    "output_unmapped",
+    { "unmapped" },
+    "Output Unmapped Records",
+    "Output unmapped records.",
+    CLI::Option::BoolType(false),
+    JSON::Json(nullptr),
+    CLI::OptionFlags::HIDE_FROM_HELP
+};
 // clang-format on
 }  // namespace OptionNames
 
@@ -333,6 +342,7 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     , Rg(options[OptionNames::Rg].get<decltype(Rg)>())
     , CreatePbi(options[OptionNames::CreatePbi])
     , NoBAI(options[OptionNames::NoBAI])
+    , OutputUnmapped(options[OptionNames::OutputUnmapped])
 {
     MM2Settings::Kmer = options[OptionNames::Kmer];
     MM2Settings::MinimizerWindowSize = options[OptionNames::MinimizerWindowSize];
@@ -591,6 +601,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         OptionNames::Strip,
         OptionNames::SplitBySample,
         OptionNames::NoBAI,
+        OptionNames::OutputUnmapped,
     });
 
     i.AddGroup("Input Manipulation Options (mutually exclusive)", {
