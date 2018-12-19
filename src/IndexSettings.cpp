@@ -97,6 +97,12 @@ IndexSettings::IndexSettings(const PacBio::CLI::Results& options)
                                                             {"CCS", AlignmentMode::CCS},
                                                             {"ISOSEQ", AlignmentMode::ISOSEQ}};
     MM2Settings::AlignMode = alignModeMap.at(options[OptionNames::AlignModeOpt].get<std::string>());
+
+    if (MM2Settings::Kmer < -1 || MM2Settings::Kmer == 0 || MM2Settings::MinimizerWindowSize < -1 ||
+        MM2Settings::MinimizerWindowSize == 0) {
+        PBLOG_FATAL << "Index parameter -k and -w must be positive.";
+        std::exit(EXIT_FAILURE);
+    }
 }
 
 int32_t IndexSettings::ThreadCount(int32_t n)

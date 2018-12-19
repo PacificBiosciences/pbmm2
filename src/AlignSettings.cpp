@@ -295,6 +295,31 @@ const PlainOption LongJoinFlankRatio{
     "Long join flank ratio.",
     CLI::Option::FloatType(-1)
 };
+const PlainOption NoBAI{
+    "no_bai",
+    { "no-bai" },
+    "Omit BAI Generation",
+    "Omit BAI generation for sorted output.",
+    CLI::Option::BoolType(false)
+};
+const PlainOption NoTrimming{
+    "disable_repeated_matches_trimming",
+    { "no-rmt" },
+    "No Repeated Matches Trimming",
+    "Disable repeated matches trimming.",
+    CLI::Option::BoolType(false),
+    JSON::Json(nullptr),
+    CLI::OptionFlags::HIDE_FROM_HELP
+};
+const PlainOption OutputUnmapped{
+    "output_unmapped",
+    { "unmapped" },
+    "Output Unmapped Records",
+    "Output unmapped records.",
+    CLI::Option::BoolType(false),
+    JSON::Json(nullptr),
+    CLI::OptionFlags::HIDE_FROM_HELP
+};
 // clang-format on
 }  // namespace OptionNames
 
@@ -316,6 +341,8 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     , SplitBySample(options[OptionNames::SplitBySample])
     , Rg(options[OptionNames::Rg].get<decltype(Rg)>())
     , CreatePbi(options[OptionNames::CreatePbi])
+    , NoBAI(options[OptionNames::NoBAI])
+    , OutputUnmapped(options[OptionNames::OutputUnmapped])
 {
     MM2Settings::Kmer = options[OptionNames::Kmer];
     MM2Settings::MinimizerWindowSize = options[OptionNames::MinimizerWindowSize];
@@ -333,6 +360,7 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     MM2Settings::NoSpliceFlank = options[OptionNames::NoSpliceFlank];
     MM2Settings::DisableHPC = options[OptionNames::DisableHPC];
     MM2Settings::LongJoinFlankRatio = options[OptionNames::LongJoinFlankRatio];
+    MM2Settings::NoTrimming = options[OptionNames::NoTrimming];
 
     int numAvailableCores = std::thread::hardware_concurrency();
     int32_t requestedNThreads;
@@ -477,6 +505,21 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
         PBLOG_FATAL << "Option -L,--lj-min-ratio has to be between a ratio betweem 0 and 1.";
         std::exit(EXIT_FAILURE);
     }
+
+    if (!Sort && NoBAI) {
+        PBLOG_WARN << "Option --no-bai has no effect without option --sort!";
+    }
+
+    if (MM2Settings::GapOpen1 < -1 || MM2Settings::GapOpen2 < -1 ||
+        MM2Settings::GapExtension1 < -1 || MM2Settings::GapExtension2 < -1) {
+        PBLOG_FATAL << "Gap options have to be strictly positive.";
+        std::exit(EXIT_FAILURE);
+    }
+    if (MM2Settings::Kmer < -1 || MM2Settings::Kmer == 0 || MM2Settings::MinimizerWindowSize < -1 ||
+        MM2Settings::MinimizerWindowSize == 0) {
+        PBLOG_FATAL << "Index parameter -k and -w must be positive.";
+        std::exit(EXIT_FAILURE);
+    }
 }
 
 int32_t AlignSettings::ThreadCount(int32_t n)
@@ -500,6 +543,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         OptionNames::LogFile,
         OptionNames::LogLevelOption,
         OptionNames::ChunkSize,
+        OptionNames::NoTrimming,
 
         // hidden
         OptionNames::SortMemoryTC,
@@ -556,6 +600,8 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         OptionNames::MinAlignmentLength,
         OptionNames::Strip,
         OptionNames::SplitBySample,
+        OptionNames::NoBAI,
+        OptionNames::OutputUnmapped,
     });
 
     i.AddGroup("Input Manipulation Options (mutually exclusive)", {

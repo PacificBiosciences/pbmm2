@@ -20,7 +20,7 @@ Please refer to our [official pbbioconda page](https://github.com/PacificBioscie
 for information on Installation, Support, License, Copyright, and Disclaimer.
 
 ## Latest Version
-Version **0.11.0**: [Full changelog here](#full-changelog)
+Version **0.12.0**: [Full changelog here](#full-changelog)
 
 ## Usage
 _pbmm2_ offers following tools
@@ -124,6 +124,10 @@ All three reference file formats `.fasta`, `.referenceset.xml`, and `.mmi` can b
 ### When are `pbi` files created?
 Whenever the output is of type `xml`, a `pbi` file is being generated.
 
+### When are `bai` files created?
+For sorted output via `--sort`, a `bai` file is being generated.
+You can skip BAI generation with `--no-bai`.
+
 ### What are parameter sets and how can I override them?
 Per default, _pbmm2_ uses recommended parameter sets to simplify the plethora
 of possible combinations. For this, we currently offer:
@@ -192,6 +196,36 @@ The `--min-concordance-perc` option, whereas concordance is defined as
 
 will remove alignments that do not pass the provided threshold in percent.
 You can deactivate this filter with `--min-concordance-perc 0`.
+
+### What is repeated matches trimming?
+A repeated match is, when the same query interval is shared between a primary
+and supplementary alignment. This can happen for translocations, where breakends
+share the same flanking sequence:
+<img width="1000px" src="img/repeated_matches_bnd.png"/>
+
+And sometimes, when a LINE gets inserted, the flanks are/get duplicated leading
+to complicated alignments, where we see a split read sharing a duplication.
+The inserted region itself, mapping to a random other LINE in the reference
+genome, may also share sequence similarity to the flanks:
+<img width="1000px" src="img/repeated_matches_line.png"/>
+
+To get the best alignments, minimap2 decides that two alignments may use up to
+50% (default) of the same query bases. This does not work for PacBio, because we
+see _pbmm2_ as a _blasr_ replacement and require that a single base may never be
+aligned twice. Minimap2 offers a feature to enforce a query interval overlap
+to 0%. What happens now if a query interval gets used in two alignments,
+one or both get flagged as secondary and get filtered.
+This leads to yield loss and more importantly missing SVs in the alignment.
+
+Papers like [this](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-015-0670-9)
+present dynamic programming approaches to find the optimal split to
+uniquely map query intervals, while maximizing alignment scores. We don't have
+per base alignment scores available, thus our approach will be much simpler.
+We align the read, find overlapping query intervals, determine one alignment to
+be maximal reference spanning, and all others get trimmed; by trimming, I mean
+that _pbmm2_ rewrites the cigar and the reference coordinates on-the-fly.
+This allows us to increase number of mapped bases, slightly reduce mapped
+concordance, but boost SV recall rate.
 
 ### Why is the output different from BLASR?
 As for any two alignments of the same data with different mappers, alignments
@@ -336,7 +370,13 @@ Minimal accepted version:
 
 ## Full Changelog
 
- * **0.11.0**:
+ * **0.12.0**:
+   * Add repeated matches trimming
+   * Add BAI for sorted output
+   * Allow `0` value overrides
+   * Abort if insufficient memory is available for sorting
+
+ * 0.11.0:
    * Change input argument order
    * Library API access
    * Add fasta/q input support

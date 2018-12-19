@@ -12,8 +12,8 @@ class DataSet;
 class BamHeader;
 }  // namespace BAM
 namespace minimap2 {
-class AlignSettings;
-class UserIO;
+struct AlignSettings;
+struct UserIO;
 using MovieToSampleToInfix = std::map<std::string, std::pair<std::string, std::string>>;
 class SampleNames
 {

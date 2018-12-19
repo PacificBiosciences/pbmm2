@@ -164,9 +164,9 @@ int AlignWorkflow::Runner(const CLI::Results& options)
 
         PacBio::Parallel::FireAndForget faf(settings.NumThreads, 3);
 
-        writers = std::make_unique<StreamWriters>(hdr, uio.outPrefix, settings.SplitBySample,
-                                                  settings.Sort, settings.SortThreads,
-                                                  settings.NumThreads, settings.SortMemory);
+        writers = std::make_unique<StreamWriters>(
+            hdr, uio.outPrefix, settings.SplitBySample, settings.Sort, !settings.NoBAI,
+            settings.SortThreads, settings.NumThreads, settings.SortMemory);
 
         int32_t i = 0;
         const int32_t chunkSize = settings.ChunkSize;
@@ -190,35 +190,43 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                     Strip(r);
             }
             int32_t aligned = 0;
-            auto output = mm2helper.Align(recs, filter, &aligned);
-            if (output) {
-                std::lock_guard<std::mutex> lock(outputMutex);
-                alignedReads += aligned;
-                for (const auto& aln : *output) {
-                    s.Lengths.emplace_back(aln.NumAlignedBases);
-                    s.Bases += aln.NumAlignedBases;
-                    s.Concordance += aln.Concordance;
-                    ++s.NumAlns;
-                    const std::string movieName = aln.Record.MovieName();
-                    const auto& sampleInfix = mtsti[movieName];
-                    writers->at(sampleInfix.second, sampleInfix.first).Write(aln.Record);
-                    if (++alignedRecords % settings.ChunkSize == 0) {
-                        const auto now = std::chrono::steady_clock::now();
-                        auto elapsedSecs =
-                            std::chrono::duration_cast<std::chrono::seconds>(now - lastTime)
-                                .count();
-                        if (elapsedSecs > 5) {
-                            lastTime = now;
-                            auto elapsedSecTotal =
-                                std::chrono::duration_cast<std::chrono::seconds>(now - firstTime)
-                                    .count() /
-                                60.0;
-                            auto alnsPerMin = std::round(alignedReads / elapsedSecTotal);
-                            PBLOG_DEBUG << "#Reads, #Aln, #RPM: " << alignedReads << ", "
-                                        << alignedRecords << ", " << alnsPerMin;
+            try {
+                auto output = mm2helper.Align(recs, filter, &aligned);
+                if (output) {
+                    std::lock_guard<std::mutex> lock(outputMutex);
+                    alignedReads += aligned;
+                    for (const auto& aln : *output) {
+                        if (!settings.OutputUnmapped && !aln.IsAligned) continue;
+                        if (aln.IsAligned) {
+                            s.Lengths.emplace_back(aln.NumAlignedBases);
+                            s.Bases += aln.NumAlignedBases;
+                            s.Concordance += aln.Concordance;
+                            ++s.NumAlns;
+                        }
+                        const std::string movieName = aln.Record.MovieName();
+                        const auto& sampleInfix = mtsti[movieName];
+                        writers->at(sampleInfix.second, sampleInfix.first).Write(aln.Record);
+                        if (aln.IsAligned && ++alignedRecords % settings.ChunkSize == 0) {
+                            const auto now = std::chrono::steady_clock::now();
+                            auto elapsedSecs =
+                                std::chrono::duration_cast<std::chrono::seconds>(now - lastTime)
+                                    .count();
+                            if (elapsedSecs > 5) {
+                                lastTime = now;
+                                auto elapsedSecTotal =
+                                    std::chrono::duration_cast<std::chrono::seconds>(now -
+                                                                                     firstTime)
+                                        .count() /
+                                    60.0;
+                                auto alnsPerMin = std::round(alignedReads / elapsedSecTotal);
+                                PBLOG_DEBUG << "#Reads, #Aln, #RPM: " << alignedReads << ", "
+                                            << alignedRecords << ", " << alnsPerMin;
+                            }
                         }
                     }
                 }
+            } catch (...) {
+                std::cerr << "ERROR" << std::endl;
             }
             waiting--;
         };
@@ -405,6 +413,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                     i = 0;
                 }
             }
+            if (i > 0) i--;
         }
         // terminal records, if they exist
         if (i > 0) {
@@ -424,7 +433,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     }
 
     alignmentTime.Freeze();
-    std::string sortTiming = writers->Close();
+    const auto sort_baiTimings = writers->Close();
 
     int32_t maxMappedLength = 0;
     for (const auto& l : s.Lengths) {
@@ -447,7 +456,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             writers->WriteDatasetsJson(inFile, uio.outFile, uio.refFile, uio.isFromXML,
                                        uio.isToJson, s, uio.outPrefix, settings.SplitBySample);
     else if (settings.CreatePbi)
-        writers->ForcePbiOutput();
+        pbiTiming = writers->ForcePbiOutput();
 
     PBLOG_INFO << "Mapped Reads: " << alignedReads;
     PBLOG_INFO << "Alignments: " << s.NumAlns;
@@ -458,7 +467,9 @@ int AlignWorkflow::Runner(const CLI::Results& options)
 
     PBLOG_INFO << "Index Build/Read Time: " << indexTime.ElapsedTime();
     PBLOG_INFO << "Alignment Time: " << alignmentTime.ElapsedTime();
-    if (!sortTiming.empty()) PBLOG_INFO << "Sort Merge Time: " << sortTiming;
+    if (!sort_baiTimings.first.empty()) PBLOG_INFO << "Sort Merge Time: " << sort_baiTimings.first;
+    if (!sort_baiTimings.second.empty() && !settings.NoBAI)
+        PBLOG_INFO << "BAI Generation Time: " << sort_baiTimings.second;
     if (!pbiTiming.empty()) PBLOG_INFO << "PBI Generation Time: " << pbiTiming;
     PBLOG_INFO << "Run Time: " << startTime.ElapsedTime();
     PBLOG_INFO << "CPU Time: "

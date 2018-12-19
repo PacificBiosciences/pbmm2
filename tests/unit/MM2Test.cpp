@@ -35,7 +35,7 @@ static std::vector<BAM::BamRecord> SimpleAlign()
     for (const auto& record : reader) {
         const std::vector<AlignedRecord> alignments = mm2helper.Align(record);
         for (const auto& aln : alignments)
-            alignedBam.emplace_back(std::move(aln.Record));
+            if (aln.IsAligned) alignedBam.emplace_back(std::move(aln.Record));
     }
     return alignedBam;
 }
@@ -44,7 +44,7 @@ TEST(MM2Test, SimpleAlign)
 {
     SetGlobalLogger();
     std::vector<BAM::BamRecord> alignedBam = SimpleAlign();
-    EXPECT_EQ(89, alignedBam.size());
+    EXPECT_EQ(96, alignedBam.size());
 }
 
 TEST(MM2Test, Filter)
@@ -63,10 +63,10 @@ TEST(MM2Test, Filter)
         const std::vector<AlignedRecord> alignments = mm2helper.Align(record, myFilter);
         for (const auto& aln : alignments) {
             EXPECT_TRUE(aln.Concordance > 90.0);
-            alignedBam.emplace_back(std::move(aln.Record));
+            if (aln.IsAligned) alignedBam.emplace_back(std::move(aln.Record));
         }
     }
-    EXPECT_EQ(79, alignedBam.size());
+    EXPECT_EQ(85, alignedBam.size());
 }
 
 TEST(MM2Test, UseCommonThreadBuffer)
@@ -84,10 +84,10 @@ TEST(MM2Test, UseCommonThreadBuffer)
     for (const auto& record : reader) {
         const std::vector<AlignedRecord> alignments = mm2helper.Align(record, tbuf);
         for (const auto& aln : alignments) {
-            alignedBam.emplace_back(std::move(aln.Record));
+            if (aln.IsAligned) alignedBam.emplace_back(std::move(aln.Record));
         }
     }
-    EXPECT_EQ(89, alignedBam.size());
+    EXPECT_EQ(96, alignedBam.size());
 }
 
 TEST(MM2Test, FilterAndBuffer)
@@ -107,10 +107,10 @@ TEST(MM2Test, FilterAndBuffer)
         const std::vector<AlignedRecord> alignments = mm2helper.Align(record, myFilter, tbuf);
         for (const auto& aln : alignments) {
             EXPECT_TRUE(aln.Concordance > 90.0);
-            alignedBam.emplace_back(std::move(aln.Record));
+            if (aln.IsAligned) alignedBam.emplace_back(std::move(aln.Record));
         }
     }
-    EXPECT_EQ(79, alignedBam.size());
+    EXPECT_EQ(85, alignedBam.size());
 }
 
 TEST(MM2Test, AlignCCS)
@@ -129,7 +129,7 @@ TEST(MM2Test, AlignCCS)
         const std::vector<AlignedRecord> alignments = mm2helper.Align(record);
         for (const auto& aln : alignments) {
             alignedBases += aln.NumAlignedBases;
-            alignedBam.emplace_back(std::move(aln.Record));
+            if (aln.IsAligned) alignedBam.emplace_back(std::move(aln.Record));
         }
     }
     EXPECT_EQ(8, alignedBam.size());
@@ -155,7 +155,7 @@ TEST(MM2Test, AlignCCSWithOverrides)
         const std::vector<AlignedRecord> alignments = mm2helper.Align(record);
         for (const auto& aln : alignments) {
             alignedBases += aln.NumAlignedBases;
-            alignedBam.emplace_back(std::move(aln.Record));
+            if (aln.IsAligned) alignedBam.emplace_back(std::move(aln.Record));
         }
     }
     EXPECT_EQ(9, alignedBam.size());
@@ -175,7 +175,7 @@ TEST(MM2Test, ReAlign)
     for (const auto& record : reader) {
         const std::vector<AlignedRecord> alignments = mm2helper.Align(record);
         for (const auto& aln : alignments)
-            alignedBam.emplace_back(std::move(aln.Record));
+            if (aln.IsAligned) alignedBam.emplace_back(std::move(aln.Record));
     }
 
     std::vector<BAM::BamRecord> idempotent;
@@ -185,8 +185,8 @@ TEST(MM2Test, ReAlign)
             idempotent.emplace_back(std::move(aln.Record));
     }
 
-    EXPECT_EQ(89, alignedBam.size());
-    EXPECT_EQ(89, idempotent.size());
+    EXPECT_EQ(96, alignedBam.size());
+    EXPECT_EQ(96, idempotent.size());
 }
 
 static std::vector<BAM::BamRecord> FastaRefAlign()
@@ -201,7 +201,7 @@ static std::vector<BAM::BamRecord> FastaRefAlign()
     for (const auto& record : reader) {
         const std::vector<AlignedRecord> alignments = mm2helper.Align(record);
         for (const auto& aln : alignments)
-            alignedBam.emplace_back(std::move(aln.Record));
+            if (aln.IsAligned) alignedBam.emplace_back(std::move(aln.Record));
     }
     return alignedBam;
 }
@@ -211,10 +211,10 @@ TEST(MM2Test, FastaRefAlign)
     SetGlobalLogger();
 
     std::vector<BAM::BamRecord> alignedFastaRefBam = FastaRefAlign();
-    EXPECT_EQ(89, alignedFastaRefBam.size());
+    EXPECT_EQ(96, alignedFastaRefBam.size());
 
     std::vector<BAM::BamRecord> alignedRefFileBam = SimpleAlign();
-    EXPECT_EQ(89, alignedRefFileBam.size());
+    EXPECT_EQ(96, alignedRefFileBam.size());
 
     for (size_t i = 0; i < alignedFastaRefBam.size(); ++i) {
         const auto& fromFasta = alignedFastaRefBam[i];

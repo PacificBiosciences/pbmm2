@@ -3,6 +3,7 @@
 #include <memory>
 #include <thread>
 
+#include <htslib/sam.h>
 #include <pbbam/BamRecord.h>
 #include <pbbam/BamWriter.h>
 #include <pbbam/PbiFile.h>
@@ -94,9 +95,10 @@ void PrintErrorAndAbort(int error)
 }  // namespace
 
 StreamWriter::StreamWriter(BAM::BamHeader header, const std::string& outPrefix, bool sort,
-                           int sortThreads, int numThreads, int64_t sortMemory,
+                           bool generateBai, int sortThreads, int numThreads, int64_t sortMemory,
                            const std::string& sample, const std::string& infix)
     : sort_(sort)
+    , generateBai_(generateBai)
     , sample_(sample)
     , outPrefix_(outPrefix)
     , sortThreads_(sortThreads)
@@ -142,7 +144,6 @@ StreamWriter::StreamWriter(BAM::BamHeader header, const std::string& outPrefix, 
             PBLOG_INFO << "Merged sorted output from " << numFiles << " files and " << numBlocks
                        << " in-memory blocks";
         });
-
         outputFile = pipeName_;
         bamWriterConfig.useTempFile = false;
     } else {
@@ -161,16 +162,49 @@ void StreamWriter::Write(const BAM::BamRecord& r) const
     bamWriter_->Write(r);
 }
 
-int64_t StreamWriter::Close()
+std::pair<int64_t, int64_t> StreamWriter::Close()
 {
     bamWriter_.reset();
     if (sort_) {
+        int baiMs = 0;
         Utility::Stopwatch sortTime;
         unlink(pipeName_.c_str());
-        if (sortThread_) sortThread_->join();
-        return sortTime.ElapsedMilliseconds();
+        if (sortThread_) {
+            sortThread_->join();
+            if (generateBai_ && finalOutputName_ != "-") {
+                Utility::Stopwatch baiTime;
+                PBLOG_INFO << "Generating BAI";
+                int ret = sam_index_build3(finalOutputName_.c_str(), NULL, 0,
+                                           std::min(sortThreads_ + numThreads_, 8));
+
+                switch (ret) {
+                    case 0:
+                        break;
+                    case -2:
+                        PBLOG_FATAL << "BAI Index Generation: Failed to open file "
+                                    << finalOutputName_;
+                        std::exit(EXIT_FAILURE);
+                    case -3:
+                        PBLOG_FATAL << "BAI Index Generation: File is in a format that cannot be "
+                                       "usefully indexed "
+                                    << finalOutputName_;
+                        std::exit(EXIT_FAILURE);
+                    case -4:
+                        PBLOG_FATAL << "BAI Index Generation: Failed to create or write index "
+                                    << finalOutputName_ + ".bai";
+                        std::exit(EXIT_FAILURE);
+                    default:
+                        PBLOG_FATAL << "BAI Index Generation: Failed to create index for "
+                                    << finalOutputName_;
+                        std::exit(EXIT_FAILURE);
+                        break;
+                }
+                baiMs = baiTime.ElapsedMilliseconds();
+            }
+        }
+        return {sortTime.ElapsedMilliseconds(), baiMs};
     } else {
-        return 0;
+        return {0, 0};
     }
 }
 
@@ -178,12 +212,13 @@ std::string StreamWriter::FinalOutputName() { return finalOutputName_; }
 std::string StreamWriter::FinalOutputPrefix() { return finalOutputPrefix_; }
 
 StreamWriters::StreamWriters(BAM::BamHeader& header, const std::string& outPrefix,
-                             bool splitBySample, bool sort, int sortThreads, int numThreads,
-                             int64_t sortMemory)
+                             bool splitBySample, bool sort, bool generateBai, int sortThreads,
+                             int numThreads, int64_t sortMemory)
     : header_(header.DeepCopy())
     , outPrefix_(outPrefix)
     , splitBySample_(splitBySample)
     , sort_(sort)
+    , generateBai_(generateBai)
     , sortThreads_(sortThreads)
     , numThreads_(numThreads)
     , sortMemory_(sortMemory)
@@ -195,16 +230,17 @@ StreamWriter& StreamWriters::at(const std::string& infix, const std::string& sam
     if (!splitBySample_) {
         if (sampleNameToStreamWriter.find(unsplit) == sampleNameToStreamWriter.cend())
             sampleNameToStreamWriter.emplace(
-                unsplit, std::make_unique<StreamWriter>(header_.DeepCopy(), outPrefix_, sort_,
-                                                        sortThreads_, numThreads_, sortMemory_));
+                unsplit,
+                std::make_unique<StreamWriter>(header_.DeepCopy(), outPrefix_, sort_, generateBai_,
+                                               sortThreads_, numThreads_, sortMemory_));
 
         return *sampleNameToStreamWriter.at(unsplit);
     } else {
         if (sampleNameToStreamWriter.find(sample) == sampleNameToStreamWriter.cend())
             sampleNameToStreamWriter.emplace(
-                sample,
-                std::make_unique<StreamWriter>(header_.DeepCopy(), outPrefix_, sort_, sortThreads_,
-                                               numThreads_, sortMemory_, sample, infix));
+                sample, std::make_unique<StreamWriter>(header_.DeepCopy(), outPrefix_, sort_,
+                                                       generateBai_, sortThreads_, numThreads_,
+                                                       sortMemory_, sample, infix));
         return *sampleNameToStreamWriter.at(sample);
     }
 }
@@ -288,17 +324,21 @@ std::string StreamWriters::ForcePbiOutput()
     return pbiTimer.ElapsedTime();
 }
 
-std::string StreamWriters::Close()
+std::pair<std::string, std::string> StreamWriters::Close()
 {
     CreateEmptyIfNoOutput();
-    int64_t ms = 0;
+    int64_t sortMs = 0;
+    int64_t baiMs = 0;
     for (auto& sample_sw : sampleNameToStreamWriter) {
-        ms += sample_sw.second->Close();
+        const auto sort_bai = sample_sw.second->Close();
+        sortMs += sort_bai.first - sort_bai.second;
+        baiMs += sort_bai.second;
     }
     if (!sort_)
-        return "";
+        return {"", ""};
     else
-        return Timer::ElapsedTimeFromSeconds(ms * 1e6);
+        return {Timer::ElapsedTimeFromSeconds(sortMs * 1e6),
+                Timer::ElapsedTimeFromSeconds(baiMs * 1e6)};
 }
 
 void StreamWriters::CreateEmptyIfNoOutput()

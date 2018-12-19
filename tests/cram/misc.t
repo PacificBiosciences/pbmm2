@@ -300,3 +300,53 @@
   $ $__PBTEST_PBMM2_EXE align $CRAMTMP/mixed-fq-fq.fofn $REF $CRAMTMP/mixed-fq-fq.bam
   *Could not determine read input type(s). Please do not mix data types, such as BAM+FASTQ. File of files may only contain BAMs or datasets.* (glob)
   [1]
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF --sort --no-bai > $CRAMTMP/warn_bai_pipe.bam
+  *Option --no-bai has no effect when using an output pipe!* (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/warn_bai.bam --no-bai
+  *Option --no-bai has no effect without option --sort!* (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -o -2
+  *Gap options have to be strictly positive. (glob)
+  [1]
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -O -2
+  *Gap options have to be strictly positive. (glob)
+  [1]
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -e -2
+  *Gap options have to be strictly positive. (glob)
+  [1]
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -E -2
+  *Gap options have to be strictly positive. (glob)
+  [1]
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -k 0
+  *Index parameter -k and -w must be positive. (glob)
+  [1]
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -k -2
+  *Index parameter -k and -w must be positive. (glob)
+  [1]
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -w 0
+  *Index parameter -k and -w must be positive. (glob)
+  [1]
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -w -2
+  *Index parameter -k and -w must be positive. (glob)
+  [1]
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -o 150
+  *Violation of dual gap penalties, E1>E2 and O1+E1<O2+E2 (glob)
+  [1]
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -z 100 -Z 200
+  *Z-drop should not be less than inversion-Z-drop (glob)
+  [1]
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -o 20 -O 5 -e 1 -E 2
+  *Violation of dual gap penalties, E1>E2 and O1+E1<O2+E2 (glob)
+  [1]
