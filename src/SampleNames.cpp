@@ -136,8 +136,10 @@ BAM::BamHeader SampleNames::GenerateBamHeader(const BAM::DataSet& inFile,
         hdr.AddReadGroup(rg);
     }
     const auto version = PacBio::Pbmm2Version() + " (commit " + PacBio::Pbmm2GitSha1() + ")";
-    hdr.AddProgram(BAM::ProgramInfo("pbmm2").Name("pbmm2").Version(version).CommandLine(
-        "pbmm2 " + settings.CLI));
+    auto pg = BAM::ProgramInfo("pbmm2").Name("pbmm2").Version(version).CommandLine("pbmm2 " +
+                                                                                   settings.CLI);
+    if (!settings.TcOverrides.empty()) pg.CustomTags({{"or", settings.TcOverrides}});
+    hdr.AddProgram(pg);
     return hdr;
 }
 }  // namespace minimap2

@@ -374,9 +374,9 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     MM2Settings::DisableHPC = options[OptionNames::DisableHPC];
     MM2Settings::LongJoinFlankRatio = options[OptionNames::LongJoinFlankRatio];
     MM2Settings::NoTrimming = options[OptionNames::NoTrimming];
-    std::string tcOverrides = options[OptionNames::TCOverrides];
-    if (!tcOverrides.empty()) {
-        tcOverrides = "recursion " + tcOverrides;
+    TcOverrides = options[OptionNames::TCOverrides];
+    if (!TcOverrides.empty()) {
+        std::string tcOverrides = "recursion " + TcOverrides;
         std::vector<std::string> strs;
         boost::split(strs, tcOverrides, boost::is_any_of(" "));
         CLI::Parser parser(AlignSettings::CreateCLI());
