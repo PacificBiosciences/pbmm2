@@ -44,7 +44,7 @@ TEST(MM2Test, SimpleAlign)
 {
     SetGlobalLogger();
     std::vector<BAM::BamRecord> alignedBam = SimpleAlign();
-    EXPECT_EQ(96, alignedBam.size());
+    EXPECT_EQ(96ul, alignedBam.size());
 }
 
 TEST(MM2Test, Filter)
@@ -66,7 +66,7 @@ TEST(MM2Test, Filter)
             if (aln.IsAligned) alignedBam.emplace_back(std::move(aln.Record));
         }
     }
-    EXPECT_EQ(85, alignedBam.size());
+    EXPECT_EQ(85ul, alignedBam.size());
 }
 
 TEST(MM2Test, UseCommonThreadBuffer)
@@ -87,7 +87,7 @@ TEST(MM2Test, UseCommonThreadBuffer)
             if (aln.IsAligned) alignedBam.emplace_back(std::move(aln.Record));
         }
     }
-    EXPECT_EQ(96, alignedBam.size());
+    EXPECT_EQ(96ul, alignedBam.size());
 }
 
 TEST(MM2Test, FilterAndBuffer)
@@ -110,7 +110,7 @@ TEST(MM2Test, FilterAndBuffer)
             if (aln.IsAligned) alignedBam.emplace_back(std::move(aln.Record));
         }
     }
-    EXPECT_EQ(85, alignedBam.size());
+    EXPECT_EQ(85ul, alignedBam.size());
 }
 
 TEST(MM2Test, AlignCCS)
@@ -132,7 +132,7 @@ TEST(MM2Test, AlignCCS)
             if (aln.IsAligned) alignedBam.emplace_back(std::move(aln.Record));
         }
     }
-    EXPECT_EQ(8, alignedBam.size());
+    EXPECT_EQ(8ul, alignedBam.size());
     EXPECT_EQ(11501, alignedBases);
 }
 
@@ -158,7 +158,7 @@ TEST(MM2Test, AlignCCSWithOverrides)
             if (aln.IsAligned) alignedBam.emplace_back(std::move(aln.Record));
         }
     }
-    EXPECT_EQ(9, alignedBam.size());
+    EXPECT_EQ(9ul, alignedBam.size());
     EXPECT_EQ(11704, alignedBases);
 }
 
@@ -185,8 +185,8 @@ TEST(MM2Test, ReAlign)
             idempotent.emplace_back(std::move(aln.Record));
     }
 
-    EXPECT_EQ(96, alignedBam.size());
-    EXPECT_EQ(96, idempotent.size());
+    EXPECT_EQ(96ul, alignedBam.size());
+    EXPECT_EQ(96ul, idempotent.size());
 }
 
 static std::vector<BAM::BamRecord> FastaRefAlign()
@@ -211,10 +211,10 @@ TEST(MM2Test, FastaRefAlign)
     SetGlobalLogger();
 
     std::vector<BAM::BamRecord> alignedFastaRefBam = FastaRefAlign();
-    EXPECT_EQ(96, alignedFastaRefBam.size());
+    EXPECT_EQ(96ul, alignedFastaRefBam.size());
 
     std::vector<BAM::BamRecord> alignedRefFileBam = SimpleAlign();
-    EXPECT_EQ(96, alignedRefFileBam.size());
+    EXPECT_EQ(96ul, alignedRefFileBam.size());
 
     for (size_t i = 0; i < alignedFastaRefBam.size(); ++i) {
         const auto& fromFasta = alignedFastaRefBam[i];

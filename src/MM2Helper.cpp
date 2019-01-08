@@ -64,7 +64,7 @@ PacBio::BAM::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const i
                 case '=':
                 case 'X':
                     if ((position < newQs)) ++refSpace;
-                    [[fallthrough]];
+                    /* Falls through. */
                 case 'I':
                     if (position >= newQs && position < newQe) ++used;
                     ++position;

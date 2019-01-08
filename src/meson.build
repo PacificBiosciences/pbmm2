@@ -6,9 +6,6 @@ pbmm2_patch_version = pbmm2_ver_arr[2]
 
 pbmm2_config = configuration_data()
 pbmm2_config.set('PBMM2_VERSION', meson.project_version())
-pbmm2_config.set('PBMM2_VERSION_MAJOR', pbmm2_major_version)
-pbmm2_config.set('PBMM2_VERSION_MINOR', pbmm2_minor_version)
-pbmm2_config.set('PBMM2_VERSION_PATCH', pbmm2_patch_version)
 
 pbmm2_version_sources = [
   vcs_tag(
