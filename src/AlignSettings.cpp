@@ -333,6 +333,13 @@ const PlainOption TCOverrides{
     JSON::Json(nullptr),
     CLI::OptionFlags::HIDE_FROM_HELP
 };
+const PlainOption MaxNumAlns{
+    "best_n",
+    { "N", "best-n" },
+    "Max Alignments per Read",
+    "Output at maximum N alignments for each read, 0 means no maximum.",
+    CLI::Option::IntType(0)
+};
 // clang-format on
 }  // namespace OptionNames
 
@@ -374,6 +381,7 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     MM2Settings::DisableHPC = options[OptionNames::DisableHPC];
     MM2Settings::LongJoinFlankRatio = options[OptionNames::LongJoinFlankRatio];
     MM2Settings::NoTrimming = options[OptionNames::NoTrimming];
+    MM2Settings::MaxNumAlns = options[OptionNames::MaxNumAlns];
     TcOverrides = options[OptionNames::TCOverrides];
     if (!TcOverrides.empty()) {
         std::string tcOverrides = "recursion " + TcOverrides;
@@ -559,6 +567,11 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
         PBLOG_FATAL << "Index parameter -k and -w must be positive.";
         std::exit(EXIT_FAILURE);
     }
+
+    if (MM2Settings::MaxNumAlns < 0) {
+        PBLOG_FATAL << "Parameter --best-n, -N must be positive.";
+        std::exit(EXIT_FAILURE);
+    }
 }
 
 int32_t AlignSettings::ThreadCount(int32_t n)
@@ -638,6 +651,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     i.AddGroup("Output Options", {
         OptionNames::MinPercConcordance,
         OptionNames::MinAlignmentLength,
+        OptionNames::MaxNumAlns,
         OptionNames::Strip,
         OptionNames::SplitBySample,
         OptionNames::NoBAI,

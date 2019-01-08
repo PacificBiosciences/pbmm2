@@ -98,6 +98,7 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
     : NumThreads{settings.NumThreads}
     , alnMode_(settings.AlignMode)
     , trimRepeatedMatches_(!settings.NoTrimming)
+    , maxNumAlns_(settings.MaxNumAlns)
 {
     std::string preset;
     PreInit(settings, &preset);
@@ -108,6 +109,7 @@ MM2Helper::MM2Helper(const std::vector<BAM::FastaSequence>& refs, const MM2Setti
     : NumThreads{settings.NumThreads}
     , alnMode_(settings.AlignMode)
     , trimRepeatedMatches_(!settings.NoTrimming)
+    , maxNumAlns_(settings.MaxNumAlns)
 {
     std::string preset;
     PreInit(settings, &preset);
@@ -384,6 +386,7 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
     };
 
     const auto AlignAndTrim = [&](const int idx, const bool trim) {
+        if (maxNumAlns_ > 0 && static_cast<int32_t>(localResults.size()) >= maxNumAlns_) return;
         auto& aln = alns[idx];
         int begin = trim ? 0 : aln.qs;
         int end = trim ? 0 : aln.qe;

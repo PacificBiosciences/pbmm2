@@ -313,3 +313,7 @@ Test bam_sort
 
 Test that median filter does not fail
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/median_output.bam --median-filter
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/bestn1.bam --best-n 1
+  $ samtools view $CRAMTMP/bestn1.bam | wc -l | tr -d ' '
+  52
