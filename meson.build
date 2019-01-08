@@ -15,7 +15,9 @@ pbmm2_flags = []
 cpp = meson.get_compiler('cpp')
 foreach cflag: [
   '-Wno-missing-field-initializers',
-  '-Wno-c99-extensions']
+  '-Wno-c99-extensions',
+  '-Wno-deprecated-declarations', # rely on std::tmpnam()
+  '-Werror']
     if cpp.has_argument(cflag)
       pbmm2_flags += cflag
     endif

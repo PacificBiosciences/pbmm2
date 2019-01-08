@@ -312,7 +312,7 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
         switch (uio.inputType) {
             case BAM::DataSet::TypeEnum::ALIGNMENT:
                 AlignedInput();
-                [[fallthrough]];
+                /* Falls through. */
             case BAM::DataSet::TypeEnum::SUBREAD: {
                 if (uio.isFromJson && !IsUnrolled()) {
                     settings.AlignMode = AlignmentMode::SUBREADS;
@@ -322,7 +322,7 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
             } break;
             case BAM::DataSet::TypeEnum::CONSENSUS_ALIGNMENT:
                 AlignedInput();
-                [[fallthrough]];
+                /* Falls through. */
             case BAM::DataSet::TypeEnum::CONSENSUS_READ: {
                 if (uio.isFromJson && !IsUnrolled()) {
                     settings.AlignMode = AlignmentMode::CCS;
@@ -332,7 +332,7 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
             } break;
             case BAM::DataSet::TypeEnum::TRANSCRIPT_ALIGNMENT:
                 AlignedInput();
-                [[fallthrough]];
+                /* Falls through. */
             case BAM::DataSet::TypeEnum::TRANSCRIPT: {
                 if (uio.isFromJson && !IsUnrolled()) {
                     settings.AlignMode = AlignmentMode::ISOSEQ;
