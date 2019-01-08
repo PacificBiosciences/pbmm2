@@ -25,6 +25,7 @@ struct MM2Settings
     int32_t Bandwidth = -1;
     int32_t MaxIntronLength = -1;
     int32_t NonCanon = -1;
+    int32_t MaxNumAlns = 0;
     bool NoSpliceFlank = false;
     bool DisableHPC = false;
     bool NoTrimming = false;

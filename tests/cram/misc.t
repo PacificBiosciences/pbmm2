@@ -350,3 +350,11 @@
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -o 20 -O 5 -e 1 -E 2
   *Violation of dual gap penalties, E1>E2 and O1+E1<O2+E2 (glob)
   [1]
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam --best-n -1
+  *Parameter --best-n, -N must be positive. (glob)
+  [1]
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -N -2
+  *Parameter --best-n, -N must be positive. (glob)
+  [1]

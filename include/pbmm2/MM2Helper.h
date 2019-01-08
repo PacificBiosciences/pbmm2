@@ -84,6 +84,7 @@ private:
     std::unique_ptr<Index> Idx;
     AlignmentMode alnMode_;
     const bool trimRepeatedMatches_;
+    const int32_t maxNumAlns_;
 };
 
 class AlignedRecord
