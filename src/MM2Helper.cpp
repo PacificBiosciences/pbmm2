@@ -593,7 +593,7 @@ Index::Index(const std::vector<BAM::FastaSequence>& refs, const mm_idxopt_t& opt
     for (size_t i = 0; i < numRefs; ++i)
         name[i] = refs[i].Name().c_str();
 
-    idx_ = mm_idx_str(opts.w, opts.k, opts.flag & MM_I_HPC, 0, numRefs, numThreads, seq, name);
+    idx_ = mm_idx_str(opts.w, opts.k, opts.flag & MM_I_HPC, 0, numRefs, seq, name);
 }
 
 Index::Index(const std::string& fname, const mm_idxopt_t& opts, const int32_t& numThreads,
