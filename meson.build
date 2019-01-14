@@ -58,7 +58,7 @@ pbmm2_thread_dep = dependency('threads', required : true)
 pbmm2_boost_dep = dependency('boost', required : true)
 
 ## zlib
-pbmm2_zlib_dep = dependency('zlib', fallback : ['zlib', 'zlib_dep'])
+pbmm2_zlib_dep = dependency('zlib', required : true)
 
 ## pbbam
 pbmm2_pbbam_dep = dependency('pbbam', fallback : ['pbbam', 'pbbam_dep'])
