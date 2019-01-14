@@ -5,13 +5,14 @@ native PacBio data in ⇨ native PacBio BAM out.</p>
 
 ***
 
-_pbmm2_ is a SMRT wrapper for [minimap2](https://github.com/lh3/minimap2).
+_pbmm2_ is a SMRT C++ wrapper for [minimap2](https://github.com/lh3/minimap2)'s C API.
 Its purpose is to support native PacBio in- and output, provide sets of
 recommended parameters, and generate sorted output on-the-fly.
 Sorted output can be used directly for polishing using GenomicConsensus,
 if BAM has been used as input to _pbmm2_.
 Benchmarks show that _pbmm2_ outperforms BLASR in mapped concordance,
-number of mapped bases, and especially runtime.
+number of mapped bases, and especially runtime. _pbmm2_ is the official
+replacement for BLASR.
 
 ## Availability
 Latest version can be installed via bioconda package `pbmm2`.
@@ -58,7 +59,7 @@ Usage: pbmm2 index [options] <ref.fa|xml> <out.mmi>
 
 **Notes:**
  - If you use an index file, you can't override parameters `-k`, `-w`, nor `-u` in `pbmm2 align`!
- - Minimap2 parameter `-H` (homopolymer-compressed k-mer) is always on and can be disabled with `-u`.
+ - Minimap2 parameter `-H` (homopolymer-compressed k-mer) is always on for _SUBREAD_ and _UNROLLED_ presets and can be disabled with `-u`.
  - You can also use existing minimap2 `.mmi` files in `pbmm2 align`.
 
 ### Align
@@ -120,6 +121,9 @@ pbmm2 align hg38.fasta movie.Q20.fastq hg38.movie.bam --preset CCS --rg '@RG\tID
 All three reference file formats `.fasta`, `.referenceset.xml`, and `.mmi` can be combined with FASTA/Q input.
 
 ## FAQ
+
+### Which minimap2 version is used?
+Minimap2 version 2.15 is used, to be specific, SHA1 [c404f49](https://github.com/lh3/minimap2/commit/c404f49569fa2d606b652418ffa4b9743bcaf641).
 
 ### When are `pbi` files created?
 Whenever the output is of type `xml`, a `pbi` file is being generated.
@@ -184,7 +188,7 @@ minimap2 parameters:
  - soft clipping with `-Y`
  - long cigars for tag `CG` with `-L`
  - `X/=` cigars instead of `M` with `--eqx`
- - no overlapping query intervals with `-M 0 --mask-level-hard`
+ - no overlapping query intervals with [repeated matches trimming](README.md#what-is-repeated-matches-trimming)
  - no secondary alignments are produced with `--secondary=no`
 
 ### How do you define mapped concordance?
@@ -267,12 +271,13 @@ If you use `--log-level INFO`, after alignment is done, you get following
 timing and memory information:
 
 ```
-Index build/read time: 22s 327ms
-Alignment time: 5s 523ms
-Sort merge time: 344ms 927us
-PBI generation time: 161ms 120us
-Run time: 28s 392ms
-CPU time: 39s 653ms
+Index Build/Read Time: 22s 327ms
+Alignment Time: 5s 523ms
+Sort Merge Time: 344ms 927us
+BAI Generation Time: 150ms
+PBI Generation Time: 161ms 120us
+Run Time: 28s 392ms
+CPU Time: 39s 653ms
 Peak RSS: 12.5847 GB
 ```
 
@@ -295,7 +300,8 @@ That is:
 If you are interested in unrolled alignments that is, align the full-length
 ZMW read or the HQ region of a ZMW against an unrolled template, please use
 `--zmw` or `--hqregion` with `*.subreadset.xml` as input that contains
-one `*.subreads.bam` and one `*.scraps.bam` file.
+one `*.subreads.bam` and one `*.scraps.bam` file. Keep in mind, to unroll the
+reference on your own.
 This is beta feature and still in development.
 
 ### How can I set the sample name?
@@ -314,6 +320,18 @@ the sample name as file name infix, if there is more than one aligned sample nam
 Yes, `--strip` removes following extraneous tags if the input is BAM,
 **but the resulting output BAM file cannot be used as input into GenomicConsensus**:
 `dq, dt, ip, iq, mq, pa, pc, pd, pe, pg, pm, pq, pt, pv, pw, px, sf, sq, st`
+
+### Where are the unmapped reads?
+Per default, unmapped reads are omitted. You can add them to the output BAM file
+with `--unmapped`.
+
+### Can I output at maximum the N best alignments per read?
+Use `-N, --best-n`. If set to `0`, default, maximum filtering is disabled.
+
+### Is there a way to only align one subread per ZMW?
+Using `--median-filter`, only the subread closest to the median subread length
+per ZMW is being aligned.
+Preferably, full-length subreads flanked by adapters are chosen.
 
 ### How does _pbmm2_ get invoked in pbsmrtpipe?
 The goal was to simplify the interface of _pbmm2_ with pbsmrtpipe.
@@ -335,6 +353,7 @@ Following options are available:
 | `pbmm2_align.task_options.sort_memory_tc` | Memory per thread for sorting | `4G` |
 | `pbmm2_align.task_options.split_by_sample` | Split by Sample | `false` |
 | `pbmm2_align.task_options.strip` | Remove all kinetic and extra QV tags | `false` |
+| `pbmm2_align.task_options.tc_overrides` | Override Alignment Options | `""` |
 | `pbmm2_align.task_options.zmw_mode` | Process ZMW Reads | `false` |
 
 Following an example for an input datastore that wraps a `subreadset.xml`.
@@ -371,6 +390,7 @@ Minimal accepted version:
 ## Full Changelog
 
  * **0.12.0**:
+   * Enable `--unmapped` to add unmapped records to output
    * Add repeated matches trimming
    * Add BAI for sorted output
    * Allow `0` value overrides
