@@ -319,10 +319,8 @@ const PlainOption OutputUnmapped{
     "output_unmapped",
     { "unmapped" },
     "Output Unmapped Records",
-    "Output unmapped records.",
-    CLI::Option::BoolType(false),
-    JSON::Json(nullptr),
-    CLI::OptionFlags::HIDE_FROM_HELP
+    "Include unmapped records in output.",
+    CLI::Option::BoolType(false)
 };
 const PlainOption TCOverrides{
     "tc_overrides",
