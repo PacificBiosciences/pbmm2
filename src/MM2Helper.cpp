@@ -113,7 +113,7 @@ MM2Helper::MM2Helper(const std::vector<BAM::FastaSequence>& refs, const MM2Setti
 {
     std::string preset;
     PreInit(settings, &preset);
-    Idx = std::make_unique<Index>(refs, IdxOpts, NumThreads);
+    Idx = std::make_unique<Index>(refs, IdxOpts);
     PostInit(settings, preset, true);
 }
 void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
@@ -580,8 +580,7 @@ std::vector<PacBio::BAM::SequenceInfo> MM2Helper::SequenceInfos() const
     return Idx->SequenceInfos();
 }
 
-Index::Index(const std::vector<BAM::FastaSequence>& refs, const mm_idxopt_t& opts,
-             const int32_t& numThreads)
+Index::Index(const std::vector<BAM::FastaSequence>& refs, const mm_idxopt_t& opts)
 {
     const auto numRefs = refs.size();
     const char** seq;
