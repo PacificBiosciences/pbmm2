@@ -36,3 +36,25 @@
   $ cp $TESTDIR/data/rtc.median.1nproc.json .
   $ $__PBTEST_PBMM2_EXE align --resolved-tool-contract rtc.median.1nproc.json 2>&1 | grep AlignSettings
   *Using 1 threads for alignments, 1 threads for sorting, and 4G bytes RAM for sorting.* (glob)
+
+  $ cp $TESTDIR/data/rtc.median.override.json .
+  $ $__PBTEST_PBMM2_EXE align --resolved-tool-contract rtc.median.override.json 2>&1 | grep -v Requested | grep DEBUG
+  *Minimap2 parameters based on preset: SUBREADS (glob)
+  *Kmer size              : 13 (glob)
+  *Minimizer window size  : 14 (glob)
+  *Homopolymer compressed : false (glob)
+  *Gap open 1             : 11 (glob)
+  *Gap open 2             : 20 (glob)
+  *Gap extension 1        : 2 (glob)
+  *Gap extension 2        : 1 (glob)
+  *Match score            : 1 (glob)
+  *Mismatch penalty       : 2 (glob)
+  *Z-drop                 : 100 (glob)
+  *Z-drop inv             : 10 (glob)
+  *Bandwidth              : 1234 (glob)
+  *Long join flank ratio  : 0.1 (glob)
+  *Trying pipe* (glob)
+  *Alignment finished, merging sorted chunks using* (glob)
+
+  $ samtools view -H rtc_overrides_out.bam | grep "ID:pbmm2" | sed 's/\t/X/g' | tr 'X' '\n' | grep "or:"
+  or:-k 13 -w 14 -u -A 1 -B 2 -z 100 -Z 10 -r 1234 -o 11 -O 20 -e 2 -E 1 -L 0.1

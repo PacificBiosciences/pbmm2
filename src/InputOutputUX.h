@@ -17,7 +17,7 @@ static const std::string UNKNOWN_FILE_TYPES =
     "of files may only contain BAMs or datasets.";
 }
 
-class AlignSettings;
+struct AlignSettings;
 
 enum class InputType : int
 {

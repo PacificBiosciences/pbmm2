@@ -1,8 +1,12 @@
 // Author: Armin Töpfer
 
 #include <unistd.h>
+#include <iterator>
 #include <map>
+#include <string>
+#include <vector>
 
+#include <pbcopper/cli/Parser.h>
 #include <boost/algorithm/string.hpp>
 
 #include <Pbmm2Version.h>
@@ -315,10 +319,24 @@ const PlainOption OutputUnmapped{
     "output_unmapped",
     { "unmapped" },
     "Output Unmapped Records",
-    "Output unmapped records.",
-    CLI::Option::BoolType(false),
+    "Include unmapped records in output.",
+    CLI::Option::BoolType(false)
+};
+const PlainOption TCOverrides{
+    "tc_overrides",
+    { "tc-overrides" },
+    "Override Options",
+    "Space-separated list of arguments to pbmm2 align. Allowed arguments: k, w, u, A, B, z, Z, r, o, O, e, E, L.",
+    CLI::Option::StringType(),
     JSON::Json(nullptr),
     CLI::OptionFlags::HIDE_FROM_HELP
+};
+const PlainOption MaxNumAlns{
+    "best_n",
+    { "N", "best-n" },
+    "Max Alignments per Read",
+    "Output at maximum N alignments for each read, 0 means no maximum.",
+    CLI::Option::IntType(0)
 };
 // clang-format on
 }  // namespace OptionNames
@@ -361,6 +379,33 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     MM2Settings::DisableHPC = options[OptionNames::DisableHPC];
     MM2Settings::LongJoinFlankRatio = options[OptionNames::LongJoinFlankRatio];
     MM2Settings::NoTrimming = options[OptionNames::NoTrimming];
+    MM2Settings::MaxNumAlns = options[OptionNames::MaxNumAlns];
+    TcOverrides = options[OptionNames::TCOverrides];
+    if (!TcOverrides.empty()) {
+        std::string tcOverrides = "recursion " + TcOverrides;
+        std::vector<std::string> strs;
+        boost::split(strs, tcOverrides, boost::is_any_of(" "));
+        CLI::Parser parser(AlignSettings::CreateCLI());
+        const auto results = parser.Parse(strs);
+        AlignSettings os(results);
+
+        if (os.Kmer >= 0) MM2Settings::Kmer = os.Kmer;
+        if (os.MinimizerWindowSize >= 0) MM2Settings::MinimizerWindowSize = os.MinimizerWindowSize;
+        if (os.GapOpen1 >= 0) MM2Settings::GapOpen1 = os.GapOpen1;
+        if (os.GapOpen2 >= 0) MM2Settings::GapOpen2 = os.GapOpen2;
+        if (os.GapExtension1 >= 0) MM2Settings::GapExtension1 = os.GapExtension1;
+        if (os.GapExtension2 >= 0) MM2Settings::GapExtension2 = os.GapExtension2;
+        if (os.MatchScore >= 0) MM2Settings::MatchScore = os.MatchScore;
+        if (os.MismatchPenalty >= 0) MM2Settings::MismatchPenalty = os.MismatchPenalty;
+        if (os.Zdrop >= 0) MM2Settings::Zdrop = os.Zdrop;
+        if (os.ZdropInv >= 0) MM2Settings::ZdropInv = os.ZdropInv;
+        if (os.Bandwidth >= 0) MM2Settings::Bandwidth = os.Bandwidth;
+        if (os.DisableHPC) MM2Settings::DisableHPC = os.DisableHPC;
+        if (os.LongJoinFlankRatio >= 0) MM2Settings::LongJoinFlankRatio = os.LongJoinFlankRatio;
+        if (os.NoTrimming) MM2Settings::NoTrimming = os.NoTrimming;
+    }
+
+    if (boost::starts_with(CLI, "recursion")) return;
 
     int numAvailableCores = std::thread::hardware_concurrency();
     int32_t requestedNThreads;
@@ -520,6 +565,11 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
         PBLOG_FATAL << "Index parameter -k and -w must be positive.";
         std::exit(EXIT_FAILURE);
     }
+
+    if (MM2Settings::MaxNumAlns < 0) {
+        PBLOG_FATAL << "Parameter --best-n, -N must be positive.";
+        std::exit(EXIT_FAILURE);
+    }
 }
 
 int32_t AlignSettings::ThreadCount(int32_t n)
@@ -548,6 +598,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         // hidden
         OptionNames::SortMemoryTC,
         OptionNames::CreatePbi,
+        OptionNames::TCOverrides,
     });
 
     i.AddGroup("Sorting Options", {
@@ -598,6 +649,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     i.AddGroup("Output Options", {
         OptionNames::MinPercConcordance,
         OptionNames::MinAlignmentLength,
+        OptionNames::MaxNumAlns,
         OptionNames::Strip,
         OptionNames::SplitBySample,
         OptionNames::NoBAI,
@@ -632,6 +684,7 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
     tcTask.AddOption(OptionNames::MedianFilter);
     tcTask.AddOption(OptionNames::Strip);
     tcTask.AddOption(OptionNames::SplitBySample);
+    tcTask.AddOption(OptionNames::TCOverrides);
 
     tcTask.InputFileTypes({
         {

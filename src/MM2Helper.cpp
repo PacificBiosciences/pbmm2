@@ -64,7 +64,7 @@ PacBio::BAM::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const i
                 case '=':
                 case 'X':
                     if ((position < newQs)) ++refSpace;
-                    [[fallthrough]];
+                    /* Falls through. */
                 case 'I':
                     if (position >= newQs && position < newQe) ++used;
                     ++position;
@@ -98,6 +98,7 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
     : NumThreads{settings.NumThreads}
     , alnMode_(settings.AlignMode)
     , trimRepeatedMatches_(!settings.NoTrimming)
+    , maxNumAlns_(settings.MaxNumAlns)
 {
     std::string preset;
     PreInit(settings, &preset);
@@ -108,10 +109,11 @@ MM2Helper::MM2Helper(const std::vector<BAM::FastaSequence>& refs, const MM2Setti
     : NumThreads{settings.NumThreads}
     , alnMode_(settings.AlignMode)
     , trimRepeatedMatches_(!settings.NoTrimming)
+    , maxNumAlns_(settings.MaxNumAlns)
 {
     std::string preset;
     PreInit(settings, &preset);
-    Idx = std::make_unique<Index>(refs, IdxOpts, NumThreads);
+    Idx = std::make_unique<Index>(refs, IdxOpts);
     PostInit(settings, preset, true);
 }
 void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
@@ -384,6 +386,7 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
     };
 
     const auto AlignAndTrim = [&](const int idx, const bool trim) {
+        if (maxNumAlns_ > 0 && static_cast<int32_t>(localResults.size()) >= maxNumAlns_) return;
         auto& aln = alns[idx];
         int begin = trim ? 0 : aln.qs;
         int end = trim ? 0 : aln.qe;
@@ -577,8 +580,7 @@ std::vector<PacBio::BAM::SequenceInfo> MM2Helper::SequenceInfos() const
     return Idx->SequenceInfos();
 }
 
-Index::Index(const std::vector<BAM::FastaSequence>& refs, const mm_idxopt_t& opts,
-             const int32_t& numThreads)
+Index::Index(const std::vector<BAM::FastaSequence>& refs, const mm_idxopt_t& opts)
 {
     const auto numRefs = refs.size();
     const char** seq;
@@ -590,7 +592,7 @@ Index::Index(const std::vector<BAM::FastaSequence>& refs, const mm_idxopt_t& opt
     for (size_t i = 0; i < numRefs; ++i)
         name[i] = refs[i].Name().c_str();
 
-    idx_ = mm_idx_str(opts.w, opts.k, opts.flag & MM_I_HPC, 0, numRefs, numThreads, seq, name);
+    idx_ = mm_idx_str(opts.w, opts.k, opts.flag & MM_I_HPC, 0, numRefs, seq, name);
 }
 
 Index::Index(const std::string& fname, const mm_idxopt_t& opts, const int32_t& numThreads,

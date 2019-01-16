@@ -30,8 +30,7 @@ using FilterFunc = std::function<bool(const AlignedRecord&)>;
 
 struct Index
 {
-    Index(const std::vector<BAM::FastaSequence>& refs, const mm_idxopt_t& opts,
-          const int32_t& numThreads);
+    Index(const std::vector<BAM::FastaSequence>& refs, const mm_idxopt_t& opts);
     Index(const std::string& fname, const mm_idxopt_t& opts, const int32_t& numThreads,
           const std::string& outputMmi = "");
 
@@ -84,6 +83,7 @@ private:
     std::unique_ptr<Index> Idx;
     AlignmentMode alnMode_;
     const bool trimRepeatedMatches_;
+    const int32_t maxNumAlns_;
 };
 
 class AlignedRecord

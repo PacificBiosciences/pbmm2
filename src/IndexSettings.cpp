@@ -47,9 +47,9 @@ const PlainOption AlignModeOpt{
     "align_mode",
     { "preset" },
     "Alignment mode",
-    "Set alignment mode:\n  - \"SUBREAD\" -k 19 -w 10\n  - \"CCS\"  -k 19 -w 10 -u\n  - \"ISOSEQ\"  -k 15 -w 5 -u\nDefault",
+    "Set alignment mode:\n  - \"SUBREAD\" -k 19 -w 10\n  - \"CCS\"  -k 19 -w 10 -u\n  - \"ISOSEQ\"  -k 15 -w 5 -u\n  - \"UNROLLED\" -k 15 -w 15\nDefault",
     CLI::Option::StringType("SUBREAD"),
-    {"SUBREAD", "CCS", "ISOSEQ"}
+    {"SUBREAD", "CCS", "ISOSEQ", "UNROLLED"}
 };
 const PlainOption Kmer{
     "kmer_size",
@@ -95,7 +95,8 @@ IndexSettings::IndexSettings(const PacBio::CLI::Results& options)
 
     const std::map<std::string, AlignmentMode> alignModeMap{{"SUBREAD", AlignmentMode::SUBREADS},
                                                             {"CCS", AlignmentMode::CCS},
-                                                            {"ISOSEQ", AlignmentMode::ISOSEQ}};
+                                                            {"ISOSEQ", AlignmentMode::ISOSEQ},
+                                                            {"UNROLLED", AlignmentMode::UNROLLED}};
     MM2Settings::AlignMode = alignModeMap.at(options[OptionNames::AlignModeOpt].get<std::string>());
 
     if (MM2Settings::Kmer < -1 || MM2Settings::Kmer == 0 || MM2Settings::MinimizerWindowSize < -1 ||
