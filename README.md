@@ -1,13 +1,13 @@
 <h1 align="center"><img width="200px" src="img/pbmm2.png"/></h1>
 <h1 align="center">pbmm2</h1>
-<p align="center">A minimap2 frontend for PacBio data:
+<p align="center">A minimap2 SMRT wrapper for PacBio data:
 native PacBio data in ⇨ native PacBio BAM out.</p>
 
 ***
 
 _pbmm2_ is a SMRT C++ wrapper for [minimap2](https://github.com/lh3/minimap2)'s C API.
 Its purpose is to support native PacBio in- and output, provide sets of
-recommended parameters, and generate sorted output on-the-fly.
+recommended parameters, generate sorted output on-the-fly, and postprocess alignments.
 Sorted output can be used directly for polishing using GenomicConsensus,
 if BAM has been used as input to _pbmm2_.
 Benchmarks show that _pbmm2_ outperforms BLASR in mapped concordance,
@@ -21,7 +21,7 @@ Please refer to our [official pbbioconda page](https://github.com/PacificBioscie
 for information on Installation, Support, License, Copyright, and Disclaimer.
 
 ## Latest Version
-Version **0.12.0**: [Full changelog here](#full-changelog)
+Version **1.0.0**: [Full changelog here](#full-changelog)
 
 ## Usage
 _pbmm2_ offers following tools
@@ -150,7 +150,7 @@ please use the respective options:
 
 ```
   -k   k-mer size (no larger than 28). [-1]
-  -w   Minizer window size. [-1]
+  -w   Minimizer window size. [-1]
   -u   Disable homopolymer-compressed k-mer (compression is activate for SUBREAD & UNROLLED presets).
   -A   Matching score. [-1]
   -B   Mismatch penalty. [-1]
@@ -389,7 +389,10 @@ Minimal accepted version:
 
 ## Full Changelog
 
- * **0.12.0**:
+ * **1.0.0**:
+   * First stable release, included in SMRT Link v7.0
+
+ * 0.12.0:
    * Enable `--unmapped` to add unmapped records to output
    * Add repeated matches trimming
    * Add BAI for sorted output

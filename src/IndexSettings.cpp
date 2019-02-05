@@ -61,8 +61,8 @@ const PlainOption Kmer{
 const PlainOption MinimizerWindowSize{
     "minimizer_window_size",
     { "w" },
-    "Minizer Window Size",
-    "Minizer window size.",
+    "Minimizer Window Size",
+    "Minimizer window size.",
     CLI::Option::IntType(-1)
 };
 const PlainOption DisableHPC{
