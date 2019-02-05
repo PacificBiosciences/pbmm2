@@ -76,13 +76,7 @@ The sort order is defined by the barcode indices, lowest first.
  * Enhanced filtering options to remove ambiguous calls
 
 ## Latest Version
-
-Version **1.8.0**:
-  * Add clip lengths as `bx` tag
-  * Enable single-barcode samples
-  * Implicitly call `--dump-clips` in `--isoseq` mode
-
-[Full changelog here](#full-changelog)
+Version **1.9.0**: [Full changelog here](#full-changelog)
 
 ## Execution
 
@@ -196,6 +190,7 @@ how ZMWs many are *same/different*, and how many reads have been filtered.
     Below min score lead          : 11656 (32%)
     Below min ref span            : 3124 (8%)
     Without adapter               : 25094 (68%)
+    With bad adapter              : 10349 (28%) <- Only with --bad-adapter-ratio
     Undesired hybrids             : xxx (xx%) <- Only with --peek-guess
     Undesired same barcode pairs  : xxx (xx%) <- Only with --different
     Undesired diff barcode pairs  : xxx (xx%) <- Only with --same
@@ -212,6 +207,8 @@ how ZMWs many are *same/different*, and how many reads have been filtered.
     ZMWs for (A):
     Allow diff barcode pair       : 157264 (74%)
     Allow same barcode pair       : 188026 (88%)
+    Bad adapter yield loss        : 10112 (5%) <- Only with --bad-adapter-ratio
+    Bad adapter impurity          : 10348 (5%) <- Only without --bad-adapter-ratio
 
     Reads for (B):
     Above length                  : 1278461 (100%)
@@ -509,6 +506,8 @@ A `prefix.lima.guess` file shows the decision process. Example:
 ### `--guess-min-count`
 The minimum ZMW abundance to whitelist a barcode. This filter is `AND`ed with
 the minimum barcode score provided by `--guess`. The default is 0.
+If there are in total less barcoded ZMWs than the provided threshold,
+the guess feature is automatically deactivated.
 
 ### `--peek` && `--guess`
 The optimal way is to use both advanced options in combination, e.g.,
@@ -521,6 +520,9 @@ In the second run, the barcode mask is used to demultiplex all ZMWs.
 Equivalent to the `Infer Barcodes Used parameter` option in SMRT Link.
 Sets the following options:
 `--peek 50000 --guess 45 --guess-min-count 10`.
+
+If used in combination with `--isoseq`:
+`--peek 50000 --guess 75 --guess-min-count 100`.
 
 ### `--single-side`
 Identify barcodes in molecules that only have barcodes adjacent to one adapter.
@@ -678,6 +680,10 @@ HQ length distribution per barcode:
 
 <img src="img/plots/summary_hq_length_hist_2d.png" width="886px">
 
+Bad adapter ratio histogram:
+
+<img src="img/plots/summary_bad_adapter_ratio.png" width="886px">
+
 ## Implementation details
 ### Smith-Waterman 101
 Barcode score and clipping position are computed by a Smith-Waterman algorithm.
@@ -828,6 +834,49 @@ For asymmetric designs with *different* barcodes in a pair, at least a single
 full-pass read is required; this can be two adapters, two half-adapters, or a
 combination.
 
+### What are bad adapters?
+In the subreads.bam file, each subread has a context flag `cx`.
+It annotates, among other things, if a subread has flanking adapters,
+before and/or after. Adapter finding has been improved and can also find
+molecularly missing adapters or those obscured by a local decrease in accuracy.
+This may lead to missing or obscured bases in the flanking barcode.
+Such adapters are called "bad", since they don't align with the adapter reference
+sequence(s).
+Regions flanking those bad adapters are problematic, because they can fully or
+partially miss the barcode bases, leading to wrong classification of the
+molecule.
+*Lima* can handle those adapters, by ignoring regions flanking
+bad adapters. For this, *lima* computes the ratio of
+number of bad adapters divided by number of all adapters.
+
+By default, `--bad-adapter-ratio` is set to `0` and does not perform any filtering.
+In this mode, bad adapters are handled just like good adapters.
+But the `*.lima.summary` file contains one row with the number of
+ZMWs that have at least 25% bad adapters, but otherwise pass all other filters.
+This metric can be used as a diagnostic to assess the library prep.
+
+If `--bad-adapter-ratio` is set non-zero positive `(0,1]`,
+bad adapter flanking barcode regions are treated as missing.
+If a ZMW has a higher ratio of bad adapters than provided, the ZMW
+is being filtered and consequently removed from the output.
+The `*.lima.summary` file contains two additional rows.
+
+    With bad adapter              : 10349 (28%)
+    Bad adapter yield loss        : 10112 (5%)
+
+The first row counts the number of ZMWs that have too high bad adapter ratios
+and the percentage is with respected to the number of all ZMW not passing.
+The second row counts the number of ZMWs that only get removed because of
+too high bad adapter ratios and the percentage is with respect the number of all
+input ZMWs and consequently is the effective yield loss caused by bad adapters.
+
+If a ZMW has ~50% bad adapters, one side of the molecule is molecularly missing
+an adapter. For 100% bad adapter, both sides are missing adapters.
+A lower than ~40% percentage indicates decreased local accuracy during
+sequencing leading to adapter sequences not being found. If a high percentage
+of ZMWs is molecularly missing adapters, you should improve library prep.
+
+
 ### Why are *different* barcode pair hits reported in --same mode?
 *Lima* tries all barcode combinations and `--same` only filters BAM output.
 Sequences flanked by *different* barcodes are still reported, but are not
@@ -878,7 +927,7 @@ Even if you only want to remove IsoSeq primers, *lima* is the tool of choice.
     AAGCAGTGGTATCAACGCAGAGTACACACACAGACTGTGAG
 ```
 
-3) Use the `--isoseq` mode; cannot be combined with `--guess`.
+3) Use the `--isoseq` mode. Run in combination with `--peek-guess` to remove spurious false positive.
 4) Output will be only different pairs with a `5p` and `3p` combination:
 
 ```
@@ -939,6 +988,11 @@ false positives.
 
 ## Full Changelog
 
+ * **1.9.0**:
+   * Add `--bad-adapter-ratio` to remove ZMWs with molecularly missing adapters
+   * Fix rare case, where a read only matches one barcode and not a single alternative
+   * Fix `--no-bam` to automatically omit pbi
+   * Allow combination of `--isoseq` with `--peek-guess`
  * 1.8.0:
    * Add clip lengths as `bx` tag
    * Enable single-barcode samples

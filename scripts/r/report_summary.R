@@ -32,6 +32,14 @@ zmwYieldVsMeanScore1 = report %>% filter(Barcoded) %>% filter(BarcodePair %in% u
 zmwYieldVsMeanScore2 = report %>% filter(Barcoded) %>% filter(BarcodePair %in% unique_bps$BarcodePair) %>% select(BarcodePair, ZMW, ScoreCombined) %>% group_by(BarcodePair) %>% count(BarcodePair)
 zmwYieldVsMeanScore = full_join(zmwYieldVsMeanScore1,zmwYieldVsMeanScore2,by="BarcodePair") %>% rename(NumZMWs=n)
 
+g = ggplot(report) + 
+  geom_histogram(aes(NumBadAdapterRatio), binwidth = 0.05) + 
+  scale_x_continuous(breaks=seq(0,1,0.1),labels=seq(0,1,0.1),limits=c(-.05,1.05)) +
+  theme_minimal() + 
+  xlab("Ratio #BadAdapters/#Adapters")+
+  ylab("ZMW yield")
+ggsave("summary_bad_adapter_ratio.png",g,width=20,height=15,dpi=150,units="cm")
+
 g = ggplot(zmwYieldVsMeanScore) +
   geom_jitter(aes(MeanScore, NumZMWs)) +
   coord_cartesian(xlim = c(0, 100), ylim = c(0, max(zmwYieldVsMeanScore$NumZMWs)*1.1)) +

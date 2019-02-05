@@ -79,7 +79,7 @@ titration_pass = report %>% filter(Barcoded, PassedFilters) %>% filter(BarcodePa
 titration_pass$Filter = "PASS"
 
 readLengthsUnnested = report %>% select(ReadLengths, Barcoded) %>% unnest(ReadLengths)
-scoresCombinedUnnested = report %>% select(ScoresCombined, PassedFilters, BarcodePair) %>% filter(BarcodePair %in% unique_bps$BarcodePair) %>% mutate(Filter = PassedFilters) %>% mutate(Filter=ifelse(Filter==0,"NONE","PASS")) %>% unnest(ScoresCombined)
+scoresCombinedUnnested = report %>% select(ScoresCombined, PassedFilters, BarcodePair) %>% filter(BarcodePair %in% unique_bps$BarcodePair) %>% mutate(Filter = PassedFilters) %>% mutate(Filter=ifelse(Filter==0,"NONE","PASS")) %>% unnest(ScoresCombined) %>% filter(ScoresCombined >= 0)
 refSpans = report %>% select(NumBarcodedRegionsPassed, PassedFilters, BarcodePair) %>% filter(BarcodePair %in% unique_bps$BarcodePair) %>% mutate(Filter = PassedFilters) %>% mutate(Filter=ifelse(Filter==0,"NONE","PASS"))
 
 dpi = 150
