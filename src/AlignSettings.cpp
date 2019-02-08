@@ -245,7 +245,7 @@ const PlainOption DisableHPC{
     "disable_hpc",
     { "u", "no-kmer-compression" },
     "Disable Homopolymer-Compressed seeding",
-    "Disable homopolymer-compressed k-mer (compression is activate for SUBREAD & UNROLLED presets).",
+    "Disable homopolymer-compressed k-mer (compression is active for SUBREAD & UNROLLED presets).",
     CLI::Option::BoolType(false)
 };
 const PlainOption ZMW{

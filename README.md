@@ -151,7 +151,7 @@ please use the respective options:
 ```
   -k   k-mer size (no larger than 28). [-1]
   -w   Minimizer window size. [-1]
-  -u   Disable homopolymer-compressed k-mer (compression is activate for SUBREAD & UNROLLED presets).
+  -u   Disable homopolymer-compressed k-mer (compression is active for SUBREAD & UNROLLED presets).
   -A   Matching score. [-1]
   -B   Mismatch penalty. [-1]
   -z   Z-drop score. [-1]
@@ -391,6 +391,7 @@ Minimal accepted version:
 
  * **1.0.0**:
    * First stable release, included in SMRT Link v7.0
+   * Minor documentation changes
 
  * 0.12.0:
    * Enable `--unmapped` to add unmapped records to output
