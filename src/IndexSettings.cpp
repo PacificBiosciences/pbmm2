@@ -61,15 +61,15 @@ const PlainOption Kmer{
 const PlainOption MinimizerWindowSize{
     "minimizer_window_size",
     { "w" },
-    "Minizer Window Size",
-    "Minizer window size.",
+    "Minimizer Window Size",
+    "Minimizer window size.",
     CLI::Option::IntType(-1)
 };
 const PlainOption DisableHPC{
     "disable_hpc",
     { "u", "no-kmer-compression" },
     "Disable Homopolymer-Compressed seeding",
-    "Disable homopolymer-compressed k-mer (compression is activate for SUBREAD & UNROLLED presets).",
+    "Disable homopolymer-compressed k-mer (compression is active for SUBREAD & UNROLLED presets).",
     CLI::Option::BoolType(false)
 };
 // clang-format on
