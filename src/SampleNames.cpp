@@ -53,15 +53,15 @@ MovieToSampleToInfix SampleNames::DetermineMovieToSampleToInfix(const BAM::DataS
 
         DataSetElement collections = md.Child<DataSetElement>("Collections");
         for (const auto& collectionMetaData : collections.Children()) {
-            if (!collectionMetaData.HasAttribute("Context")) {
+            if (!collectionMetaData->HasAttribute("Context")) {
                 PBLOG_ERROR << "Cannot parse Context attribute of <CollectionMetadata> "
                                "element. Bailing on biosample parsing.";
                 continue;
             }
-            std::string movieName = collectionMetaData.Attribute("Context");
+            std::string movieName = collectionMetaData->Attribute("Context");
             std::string wellSampleName;
             std::string bioSampleName;
-            const auto wellSample = collectionMetaData.Child<DataSetElement>("WellSample");
+            const auto wellSample = collectionMetaData->Child<DataSetElement>("WellSample");
             if (wellSample.HasAttribute("Name")) wellSampleName = wellSample.Attribute("Name");
             if (wellSample.HasChild("BioSamples")) {
                 const auto bioSamples = wellSample.Child<DataSetElement>("BioSamples");

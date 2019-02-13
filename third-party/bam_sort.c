@@ -200,7 +200,7 @@ static inline int heap_lt(const heap1_t a, const heap1_t b)
     return a.idx > b.idx;
 }
 
-KSORT_INIT(heap, heap1_t, heap_lt)
+KSORT_INIT(bam_sort_heap, heap1_t, heap_lt)
 
 typedef struct merged_header
 {
@@ -1448,7 +1448,7 @@ int bam_merge_core2(int by_qname, char *sort_tag, const char *out, const char *m
     if (!(flag & MERGE_UNCOMP)) hts_set_threads(fpout, n_threads);
 
     // Begin the actual merge
-    ks_heapmake(heap, n, heap);
+    ks_heapmake(bam_sort_heap, n, heap);
     while (heap->pos != HEAP_EMPTY) {
         bam1_t *b = heap->entry.bam_record;
         if (flag & MERGE_RG) {
@@ -1481,7 +1481,7 @@ int bam_merge_core2(int by_qname, char *sort_tag, const char *out, const char *m
             print_error(cmd, "\"%s\" is truncated", fn[heap->i]);
             goto fail;
         }
-        ks_heapadjust(heap, 0, n, heap);
+        ks_heapadjust(bam_sort_heap, 0, n, heap);
     }
 
     // Clean up and close
@@ -1677,7 +1677,7 @@ static int bam_merge_simple(int by_qname, char *sort_tag, const char *out, const
     }
 
     // Now do the merge
-    ks_heapmake(heap, heap_size, heap);
+    ks_heapmake(bam_sort_heap, heap_size, heap);
     while (heap->pos != HEAP_EMPTY) {
         bam1_t *b = heap->entry.bam_record;
         if (sam_write1(fpout, hout, b) < 0) {
@@ -1690,7 +1690,7 @@ static int bam_merge_simple(int by_qname, char *sort_tag, const char *out, const
             print_error(cmd, "Error reading \"%s\" : %s", fn[heap->i], strerror(errno));
             goto fail;
         }
-        ks_heapadjust(heap, 0, heap_size, heap);
+        ks_heapadjust(bam_sort_heap, 0, heap_size, heap);
     }
     // Clean up and close
     for (i = 0; i < n; i++) {
