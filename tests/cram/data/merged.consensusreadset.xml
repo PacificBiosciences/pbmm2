@@ -403,6 +403,9 @@
 	<pbds:DataSetMetadata>
 		<pbds:TotalLength>0</pbds:TotalLength>
 		<pbds:NumRecords>36</pbds:NumRecords>
+		<pbsample:BioSamples>
+			<pbsample:BioSample Name="test test"/>
+		</pbsample:BioSamples>
 		<pbmeta:Collections>
 			<pbmeta:CollectionMetadata Context="m54075_180905_221350" CreatedAt="0001-01-01T00:00:00" InstrumentId="60001" InstrumentName="Inst60001" MetaType="CollectionMetadata" ModifiedAt="0001-01-01T00:00:00" Status="Ready" TimeStampedName="60001-CollectionMetadata-2015-07-09T09:30:47.833Z" UniqueId="ab0a16df-1bd5-4f09-aa98-35cbedde995d">
 				<pbmeta:InstCtrlVer>6.0.0.SNAPSHOT39495</pbmeta:InstCtrlVer>
