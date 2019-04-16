@@ -1,7 +1,7 @@
 project(
   'pbmm2',
   ['c', 'cpp'],
-  version : '1.0.0',
+  version : '1.1.0',
   default_options : [
     'buildtype=release',
     'warning_level=3',

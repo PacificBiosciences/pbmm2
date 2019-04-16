@@ -39,7 +39,7 @@
   $ samtools view -H $CRAMTMP/ccs6.bam | grep "@RG"
   *\tSM:bamSample\t* (glob)
   *\tSM:test_test\t* (glob)
-  *\tSM:3260208_188nM-GTAC_4xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494\t* (glob)
+  *\tSM:test_test\t* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $MERGED $REF $CRAMTMP/ccs7.bam --sample testSample
   $ samtools view -H $CRAMTMP/ccs7.bam | grep "@RG"

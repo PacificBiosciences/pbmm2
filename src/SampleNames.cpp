@@ -47,7 +47,19 @@ std::string SampleNames::SanitizeFileInfix(const std::string& in)
 MovieToSampleToInfix SampleNames::DetermineMovieToSampleToInfix(const BAM::DataSet& inFile)
 {
     MovieToSampleToInfix movieNameToSampleAndInfix;
-    const auto md = inFile.Metadata();
+    const auto& md = inFile.Metadata();
+    const auto& biosamples = md.BioSamples();
+    std::string nameFromMetadata;
+    if (biosamples.Size() > 0) {
+        if (biosamples.Size() > 1) {
+            PBLOG_WARN
+                << "Found more than 1 biosample, which is not yet supported. Will pick the first!";
+        }
+        for (const auto& biosample : biosamples) {
+            nameFromMetadata = biosample.Name();
+            break;
+        }
+    }
     if (md.HasChild("Collections")) {
         using DataSetElement = PacBio::BAM::internal::DataSetElement;
 
@@ -71,7 +83,9 @@ MovieToSampleToInfix SampleNames::DetermineMovieToSampleToInfix(const BAM::DataS
                 }
             }
             std::string finalName;
-            if (!bioSampleName.empty())
+            if (!nameFromMetadata.empty()) {
+                finalName = nameFromMetadata;
+            } else if (!bioSampleName.empty())
                 finalName = bioSampleName;
             else if (!wellSampleName.empty())
                 finalName = wellSampleName;

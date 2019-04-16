@@ -380,7 +380,7 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     MM2Settings::LongJoinFlankRatio = options[OptionNames::LongJoinFlankRatio];
     MM2Settings::NoTrimming = options[OptionNames::NoTrimming];
     MM2Settings::MaxNumAlns = options[OptionNames::MaxNumAlns];
-    TcOverrides = options[OptionNames::TCOverrides];
+    TcOverrides = options[OptionNames::TCOverrides].get<std::string>();
     if (!TcOverrides.empty()) {
         std::string tcOverrides = "recursion " + TcOverrides;
         std::vector<std::string> strs;
