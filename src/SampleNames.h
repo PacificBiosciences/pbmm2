@@ -20,9 +20,8 @@ class SampleNames
 public:
     static std::string SanitizeSampleName(const std::string& in);
     static std::string SanitizeFileInfix(const std::string& in);
-    static MovieToSampleToInfix DetermineMovieToSampleToInfix(const BAM::DataSet& inFile);
-    static BAM::BamHeader GenerateBamHeader(const BAM::DataSet& inFile,
-                                            const AlignSettings& settings, const UserIO& uio,
+    static MovieToSampleToInfix DetermineMovieToSampleToInfix(const UserIO& uio);
+    static BAM::BamHeader GenerateBamHeader(const AlignSettings& settings, const UserIO& uio,
                                             const MovieToSampleToInfix& mtsti,
                                             std::string& fastxRgId);
 };
