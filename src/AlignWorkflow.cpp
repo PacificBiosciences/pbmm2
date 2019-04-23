@@ -11,7 +11,6 @@
 #include <tuple>
 #include <vector>
 
-#include <pbcopper/PbcopperMakeUnique.h>
 #include <pbcopper/json/JSON.h>
 #include <pbcopper/logging/Logging.h>
 #include <pbcopper/utility/FileUtils.h>
