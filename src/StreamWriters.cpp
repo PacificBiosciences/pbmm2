@@ -7,7 +7,6 @@
 #include <pbbam/BamRecord.h>
 #include <pbbam/BamWriter.h>
 #include <pbbam/PbiFile.h>
-#include <pbcopper/PbcopperMakeUnique.h>
 #include <pbcopper/logging/Logging.h>
 #include <pbcopper/utility/FileUtils.h>
 #include <pbcopper/utility/Stopwatch.h>
