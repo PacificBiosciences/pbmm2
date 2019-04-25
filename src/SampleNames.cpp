@@ -5,6 +5,7 @@
 #include <pbbam/virtual/ZmwReadStitcher.h>
 #include <pbcopper/logging/Logging.h>
 #include <boost/algorithm/string.hpp>
+#include <fstream>
 
 #include <AlignSettings.h>
 #include <InputOutputUX.h>
@@ -44,93 +45,127 @@ std::string SampleNames::SanitizeFileInfix(const std::string& in)
     return sanitizedName;
 }
 
-MovieToSampleToInfix SampleNames::DetermineMovieToSampleToInfix(const BAM::DataSet& inFile)
+MovieToSampleToInfix SampleNames::DetermineMovieToSampleToInfix(const UserIO& uio)
 {
     MovieToSampleToInfix movieNameToSampleAndInfix;
-    const auto& md = inFile.Metadata();
-    const auto& biosamples = md.BioSamples();
-    std::string nameFromMetadata;
-    if (biosamples.Size() > 0) {
-        if (biosamples.Size() > 1) {
-            PBLOG_WARN
-                << "Found more than 1 biosample, which is not yet supported. Will pick the first!";
+    const auto FillForFile = [&](const std::string& f) {
+        BAM::DataSet ds;
+        try {
+            ds = BAM::DataSet{f};
+        } catch (...) {
+            PBLOG_FATAL << UNKNOWN_FILE_TYPES;
+            std::exit(EXIT_FAILURE);
         }
-        for (const auto& biosample : biosamples) {
-            nameFromMetadata = biosample.Name();
-            break;
-        }
-    }
-    if (md.HasChild("Collections")) {
-        using DataSetElement = PacBio::BAM::internal::DataSetElement;
-
-        DataSetElement collections = md.Child<DataSetElement>("Collections");
-        for (const auto& collectionMetaData : collections.Children()) {
-            if (!collectionMetaData->HasAttribute("Context")) {
-                PBLOG_ERROR << "Cannot parse Context attribute of <CollectionMetadata> "
-                               "element. Bailing on biosample parsing.";
-                continue;
+        const auto& md = ds.Metadata();
+        const auto& biosamples = md.BioSamples();
+        std::string nameFromMetadata;
+        if (biosamples.Size() > 0) {
+            if (biosamples.Size() > 1) {
+                PBLOG_WARN << "Found more than 1 biosample, which is not yet supported. Will pick "
+                              "the first!";
             }
-            std::string movieName = collectionMetaData->Attribute("Context");
-            std::string wellSampleName;
-            std::string bioSampleName;
-            const auto wellSample = collectionMetaData->Child<DataSetElement>("WellSample");
-            if (wellSample.HasAttribute("Name")) wellSampleName = wellSample.Attribute("Name");
-            if (wellSample.HasChild("BioSamples")) {
-                const auto bioSamples = wellSample.Child<DataSetElement>("BioSamples");
-                if (bioSamples.HasChild("BioSample")) {
-                    const auto bioSample = bioSamples.Child<DataSetElement>("BioSample");
-                    if (bioSample.HasAttribute("Name")) bioSampleName = bioSample.Attribute("Name");
+            for (const auto& biosample : biosamples) {
+                nameFromMetadata = biosample.Name();
+                break;
+            }
+        }
+        if (md.HasChild("Collections")) {
+            using DataSetElement = PacBio::BAM::internal::DataSetElement;
+
+            DataSetElement collections = md.Child<DataSetElement>("Collections");
+            for (const auto& collectionMetaData : collections.Children()) {
+                if (!collectionMetaData->HasAttribute("Context")) {
+                    PBLOG_ERROR << "Cannot parse Context attribute of <CollectionMetadata> "
+                                   "element. Bailing on biosample parsing.";
+                    continue;
                 }
-            }
-            std::string finalName;
-            if (!nameFromMetadata.empty()) {
-                finalName = nameFromMetadata;
-            } else if (!bioSampleName.empty())
-                finalName = bioSampleName;
-            else if (!wellSampleName.empty())
-                finalName = wellSampleName;
-            finalName = SanitizeSampleName(finalName);
+                std::string movieName = collectionMetaData->Attribute("Context");
+                std::string wellSampleName;
+                std::string bioSampleName;
+                const auto wellSample = collectionMetaData->Child<DataSetElement>("WellSample");
+                if (wellSample.HasAttribute("Name")) wellSampleName = wellSample.Attribute("Name");
+                if (wellSample.HasChild("BioSamples")) {
+                    const auto bioSamples = wellSample.Child<DataSetElement>("BioSamples");
+                    if (bioSamples.HasChild("BioSample")) {
+                        const auto bioSample = bioSamples.Child<DataSetElement>("BioSample");
+                        if (bioSample.HasAttribute("Name"))
+                            bioSampleName = bioSample.Attribute("Name");
+                    }
+                }
+                std::string finalName;
+                if (!nameFromMetadata.empty()) {
+                    finalName = nameFromMetadata;
+                } else if (!bioSampleName.empty())
+                    finalName = bioSampleName;
+                else if (!wellSampleName.empty())
+                    finalName = wellSampleName;
+                finalName = SanitizeSampleName(finalName);
 
-            movieNameToSampleAndInfix[movieName] = {finalName, SanitizeFileInfix(finalName)};
+                movieNameToSampleAndInfix[movieName] = {finalName, SanitizeFileInfix(finalName)};
+            }
         }
+    };
+    if (uio.isFromJson && uio.isFromXML) {
+        FillForFile(uio.unpackedFromJson);
+    } else if (uio.isFromXML) {
+        for (const auto& f : uio.inputFiles)
+            FillForFile(f);
     }
     return movieNameToSampleAndInfix;
 }
 
-BAM::BamHeader SampleNames::GenerateBamHeader(const BAM::DataSet& inFile,
-                                              const AlignSettings& settings, const UserIO& uio,
+BAM::BamHeader SampleNames::GenerateBamHeader(const AlignSettings& settings, const UserIO& uio,
                                               const MovieToSampleToInfix& mtsti,
                                               std::string& fastxRgId)
 {
-    BAM::BamHeader hdr;
+    std::unique_ptr<BAM::BamHeader> hdr;
     if ((settings.HQRegion || settings.ZMW) && !uio.isAlignedInput) {
-        BAM::ZmwReadStitcher reader(inFile);
+        if (uio.isFromFofn) {
+            PBLOG_FATAL << "Cannot combine --hqregion or --zmw with fofn input!";
+            std::exit(EXIT_FAILURE);
+        }
+        BAM::ZmwReadStitcher reader(uio.inFile);
         if (reader.HasNext()) {
             auto r = reader.Next();
-            hdr = r.Header();
+            hdr = std::make_unique<BAM::BamHeader>(r.Header().DeepCopy());
         }
     } else if (!uio.isFastaInput && !uio.isFastqInput) {
-        const auto bamFiles = inFile.BamFiles();
-        hdr = bamFiles.front().Header();
-        for (size_t i = 1; i < bamFiles.size(); ++i)
-            hdr += bamFiles.at(i).Header();
+        const auto Fill = [&](const std::string& f) {
+            BAM::DataSet ds{f};
+            const auto bamFiles = ds.BamFiles();
+            if (!hdr) {
+                hdr = std::make_unique<BAM::BamHeader>(bamFiles.front().Header().DeepCopy());
+                for (size_t i = 1; i < bamFiles.size(); ++i)
+                    *hdr += bamFiles.at(i).Header();
+            } else {
+                for (size_t i = 0; i < bamFiles.size(); ++i)
+                    *hdr += bamFiles.at(i).Header();
+            }
+        };
+        if (uio.isFromJson) {
+            Fill(uio.unpackedFromJson);
+        } else {
+            for (const auto& f : uio.inputFiles)
+                Fill(f);
+        };
     } else {
+        hdr = std::make_unique<BAM::BamHeader>();
         std::string rgString = settings.Rg;
         boost::replace_all(rgString, "\\t", "\t");
         if (rgString.empty()) rgString = "@RG\tID:default";
         BAM::ReadGroupInfo rg = BAM::ReadGroupInfo::FromSam(rgString);
         fastxRgId = rg.Id();
         if (rg.MovieName().empty()) rg.MovieName("default");
-        hdr.AddReadGroup(rg);
+        hdr->AddReadGroup(rg);
     }
     if (uio.isAlignedInput) {
-        hdr.ClearSequences();
+        hdr->ClearSequences();
     }
 
     bool performOverrideSampleName = !settings.SampleName.empty();
     std::string overridingSampleName = SampleNames::SanitizeSampleName(settings.SampleName);
-    auto rgs = hdr.ReadGroups();
-    hdr.ClearReadGroups();
+    auto rgs = hdr->ReadGroups();
+    hdr->ClearReadGroups();
     for (auto& rg : rgs) {
         if (performOverrideSampleName) {
             rg.Sample(overridingSampleName);
@@ -147,14 +182,14 @@ BAM::BamHeader SampleNames::GenerateBamHeader(const BAM::DataSet& inFile,
                 rg.Sample(SampleNames::SanitizeSampleName(""));
             }
         }
-        hdr.AddReadGroup(rg);
+        hdr->AddReadGroup(rg);
     }
     const auto version = PacBio::Pbmm2Version() + " (commit " + PacBio::Pbmm2GitSha1() + ")";
     auto pg = BAM::ProgramInfo("pbmm2").Name("pbmm2").Version(version).CommandLine("pbmm2 " +
                                                                                    settings.CLI);
     if (!settings.TcOverrides.empty()) pg.CustomTags({{"or", settings.TcOverrides}});
-    hdr.AddProgram(pg);
-    return hdr;
+    hdr->AddProgram(pg);
+    return hdr->DeepCopy();
 }
 }  // namespace minimap2
 }  // namespace PacBio

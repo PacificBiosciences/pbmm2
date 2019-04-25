@@ -21,7 +21,7 @@ Please refer to our [official pbbioconda page](https://github.com/PacificBioscie
 for information on Installation, Support, License, Copyright, and Disclaimer.
 
 ## Latest Version
-Version **1.0.0**: [Full changelog here](#full-changelog)
+Version **1.1.0**: [Full changelog here](#full-changelog)
 
 ## Usage
 _pbmm2_ offers following tools
@@ -76,10 +76,11 @@ and minus the number of threads specified for sorting.
 #### Sorting
 Sorted output can be generated using `--sort`.
 
-By default, 25% of threads specified with `-j`, maximum 8, are used for sorting.
+**Percentage:** By default, 25% of threads specified with `-j`, maximum 8, are used for sorting. Example: `--sort -j 12`, 9 threads for alignment, 3 threads for sorting.
 
-To override the default percentage, `-J,--sort-threads` defines the explicit number of threads
-used for on-the-fly sorting.
+**Manual override:** To override the default percentage, `-J,--sort-threads` defines the explicit number of threads
+used for on-the-fly sorting. Example: `--sort -j 12 -J 4`, 12 threads for alignment, 4 threads for sorting.
+
 The memory allocated per sort thread can be defined with `-m,--sort-memory`, accepting suffixes `M,G`.
 
 Benchmarks on human data have shown that 4 sort threads are recommended, but no more
@@ -87,30 +88,28 @@ than 8 threads can be effectively leveraged, even with 70 cores used for alignme
 It is recommended to provide more memory to each of a few sort threads, to avoid disk IO pressure,
 than providing less memory to each of many sort threads.
 
-#### Following dataset IO combinations are allowed:
+#### Input file types
 
-SubreadSet ⟶ AlignmentSet
+Following compatibility table shows allowed input file types, output file types,
+compatibility with GenomicConsensus, and recommended `--preset` choice.
+More info about our [dataset XML specification](https://pacbiofileformats.readthedocs.io/en/5.1/DataSet.html).
 
-```
-pbmm2 align hg38.referenceset.xml movie.subreadset.xml hg38.movie.alignmentset.xml
-```
-
-ConsensusReadSet ⟶ ConsensusAlignmentSet
-
-```
-pbmm2 align hg38.referenceset.xml movie.consensusreadset.xml hg38.movie.consensusalignmentset.xml --preset CCS
-```
-
-TranscriptSet ⟶ TranscriptAlignmentSet
-
-```
-pbmm2 align hg38.referenceset.xml movie.transcriptset.xml hg38.movie.transcriptalignmentset.xml --preset ISOSEQ
-```
+| Input                                     | Output                                 |GC | Preset   |
+| ------------------------------------------| -------------------------------------- |:-:| :------: |
+| `.bam` (aligned or unaliged)              | `.bam`                                 | Y |          |
+| `.fasta` / `.fa` / `.fasta.gz` / `.fa.gz` | `.bam`                                 | N |          |
+| `.fastq` / `.fq` / `.fastq.gz` / `.fq.gz` | `.bam`                                 | N |          |
+| `.Q20.fastq` / `Q20.fastq.gz`             | `.bam`                                 | N | `CCS`    |
+| `bam.fofn`                                | `.bam`                                 | N |          |
+| `fasta.fofn`                              | `.bam`                                 | N |          |
+| `fastq.fofn`                              | `.bam`                                 | N |          |
+| `.subreadset.xml`                         | `.bam` \ `.alignmentset.xml`           | Y |          |
+| `.consensusreadset.xml`                   | `.bam` \ `.consensusalignmentset.xml`  | Y | `CCS`    |
+| `.transcriptset.xml`                      | `.bam` \ `.transcriptalignmentset.xml` | Y | `ISOSEQ` |
 
 #### FASTA/Q input
-In addition to native PacBio BAM input, reads can also be provided in FASTA and FASTQ formats.
-
-**Attention: The resulting output BAM file cannot be used as input into GenomicConsensus!**
+In addition to native PacBio BAM input, reads can also be provided in FASTA
+and FASTQ formats, as shown above.
 
 With FASTA/Q input, option `--rg` sets the read group. Example call:
 
@@ -119,6 +118,22 @@ pbmm2 align hg38.fasta movie.Q20.fastq hg38.movie.bam --preset CCS --rg '@RG\tID
 ```
 
 All three reference file formats `.fasta`, `.referenceset.xml`, and `.mmi` can be combined with FASTA/Q input.
+
+#### Multiple input files
+_pbmm2_ supports the `.fofn` file type (File Of File Names), containing the same
+datatype. Supported are `.fofn` files with FASTA, FASTQ, or BAM.
+
+**Examples:**
+```
+echo "m64001_190131_212703.Q20.fastq.gz" > myfiles.fofn
+echo "m64001_190228_200412.Q20.fastq.gz" >> myfiles.fofn
+pbmm2 align hg38.fasta myfiles.fofn hg38.myfiles.bam --preset CCS --rg '@RG\tID:myid\tSM:mysample'
+```
+
+```
+ls *.subreads.bam > mymovies.fofn
+pbmm2 align hg38.fasta mymovies.fofn hg38.mymovies.bam
+```
 
 ## FAQ
 
@@ -389,7 +404,11 @@ Minimal accepted version:
 
 ## Full Changelog
 
- * **1.0.0**:
+ * **1.1.0**:
+   * Add support for gzipped FASTA and FASTQ
+   * Allow multiple input files via `.fofn`
+
+ * 1.0.0:
    * First stable release, included in SMRT Link v7.0
    * Minor documentation changes
 

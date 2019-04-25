@@ -1,6 +1,7 @@
 // Author: Armin Töpfer
 
 #include <pbmm2/MM2Helper.h>
+#include <memory>
 
 namespace PacBio {
 namespace minimap2 {
