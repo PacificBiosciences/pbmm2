@@ -58,7 +58,7 @@ pbmm2_thread_dep = dependency('threads', required : true)
 pbmm2_boost_dep = dependency('boost', required : true)
 
 ## zlib
-pbmm2_zlib_dep = dependency('zlib', required : true)
+pbmm2_zlib_dep = dependency('zlib', required : true, fallback : ['zlib', 'zlib_dep'])
 
 ## pbbam
 pbmm2_pbbam_dep = dependency('pbbam', fallback : ['pbbam', 'pbbam_dep'])
@@ -69,13 +69,17 @@ pbmm2_pbcopper_dep = dependency('pbcopper', fallback : ['pbcopper', 'pbcopper_de
 ## minimap2
 pbmm2_minimap2_dep = dependency('minimap2', fallback : ['minimap2', 'mm2_dep'])
 
+# htslib
+pbmm2_htslib_dep = dependency('htslib', required : true, version : '>=1.4', fallback : ['htslib', 'htslib_dep'])
+
 pbmm2_lib_deps = [
   pbmm2_thread_dep,
   pbmm2_boost_dep,
   pbmm2_zlib_dep,
   pbmm2_pbbam_dep,
   pbmm2_pbcopper_dep,
-  pbmm2_minimap2_dep]
+  pbmm2_minimap2_dep,
+  pbmm2_htslib_dep]
 
 # include
 subdir('include')
