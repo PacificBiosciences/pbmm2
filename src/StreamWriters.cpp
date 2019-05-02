@@ -1,5 +1,6 @@
 // Author: Armin Töpfer
 
+#include <cstdlib>
 #include <memory>
 #include <thread>
 
@@ -10,6 +11,7 @@
 #include <pbcopper/logging/Logging.h>
 #include <pbcopper/utility/FileUtils.h>
 #include <pbcopper/utility/Stopwatch.h>
+#include <boost/algorithm/string.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
@@ -133,8 +135,15 @@ StreamWriter::StreamWriter(BAM::BamHeader header, const std::string& outPrefix, 
         sortThread_ = std::make_unique<std::thread>([&]() {
             int numFiles = 0;
             int numBlocks = 0;
-            int ret = bam_sort(pipeName_.c_str(), finalOutputName_.c_str(), sortThreads_,
-                               sortThreads_ + numThreads_, sortMemory_, &numFiles, &numBlocks);
+            std::string tmpdir;
+            if (const char* env_p = std::getenv("TMPDIR")) {
+                tmpdir = env_p;
+                if (!boost::ends_with(tmpdir, "/")) tmpdir += '/';
+            }
+            const bool useTmpDir = Utility::FileExists(tmpdir);
+            int ret = bam_sort(pipeName_.c_str(), finalOutputName_.c_str(), tmpdir.c_str(),
+                               useTmpDir, sortThreads_, sortThreads_ + numThreads_, sortMemory_,
+                               &numFiles, &numBlocks);
             if (ret == EXIT_FAILURE) {
                 PBLOG_FATAL << "Fatal error in bam sort. Aborting.";
                 std::exit(EXIT_FAILURE);
