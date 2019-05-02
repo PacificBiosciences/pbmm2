@@ -2288,8 +2288,8 @@ void sam_global_args_free(sam_global_args *ga)
     if (ga->reference) free(ga->reference);
 }
 
-int bam_sort(const char *inputName, const char *outputName, int numThreads, int merge_threads,
-             size_t memory, int *numFiles, int *numBlocks)
+int bam_sort(const char *inputName, const char *outputName, const char *tmpDir, bool useTmpDir,
+             int numThreads, int merge_threads, size_t memory, int *numFiles, int *numBlocks)
 {
     size_t max_mem = memory;
     int is_by_qname = 0;
@@ -2316,7 +2316,10 @@ int bam_sort(const char *inputName, const char *outputName, int numThreads, int 
         if (tmpprefix.s[tmpprefix.l - 1] != '/') kputc('/', &tmpprefix);
     }
     unsigned t = ((unsigned)time(NULL)) ^ ((unsigned)clock());
-    ksprintf(&tmpprefix, "samtools.%d.%u.tmp", (int)getpid(), t % 10000);
+    if (useTmpDir)
+        ksprintf(&tmpprefix, "%ssamtools.%d.%u.tmp", tmpDir, (int)getpid(), t % 10000);
+    else
+        ksprintf(&tmpprefix, "samtools.%d.%u.tmp", (int)getpid(), t % 10000);
 
     ret =
         bam_sort_core_ext(is_by_qname, sort_tag, inputName, tmpprefix.s, outputName, modeout,
