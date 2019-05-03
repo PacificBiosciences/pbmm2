@@ -54,6 +54,7 @@ struct UserIO
     bool isFromSubreadset = false;
     bool isFromConsensuReadSet = false;
     bool isFromTranscriptSet = false;
+    bool isFromMmi = false;
     BAM::DataSet::TypeEnum inputType;
     std::vector<std::string> inputFiles;
 };

@@ -87,6 +87,11 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         }
     }
 
+    if (uio.isFromMmi && settings.CompressSequenceHomopolymers) {
+        PBLOG_FATAL << "Cannot combine --collapse-homopolymers with MMI input.";
+        std::exit(EXIT_FAILURE);
+    }
+
     if (uio.isFromFofn && settings.SplitBySample) {
         PBLOG_FATAL << "Cannot combine --split-by-sample with fofn input.";
         std::exit(EXIT_FAILURE);
@@ -104,8 +109,29 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         return true;
     };
 
+    const auto CompressHomopolymers = [&](const std::string& bases) -> std::string {
+        const int32_t numBases = bases.size();
+        std::string compressed{bases.at(0)};
+        for (int32_t i = 1; i < numBases; ++i)
+            if (std::toupper(bases.at(i)) != std::toupper(bases.at(i - 1)))
+                compressed += bases.at(i);
+        return compressed;
+    };
+
     Timer indexTime;
-    MM2Helper mm2helper(uio.refFile, settings);
+    std::unique_ptr<MM2Helper> mm2helper;
+    if (settings.CompressSequenceHomopolymers) {
+        std::vector<BAM::FastaSequence> refs = BAM::FastaReader::ReadAll(uio.refFile);
+        std::ofstream compressedRef(uio.outPrefix + ".ref.collapsed.fasta");
+        for (size_t i = 0; i < refs.size(); ++i) {
+            const std::string rle = CompressHomopolymers(refs[i].Bases());
+            compressedRef << '>' << refs[i].Name() << '\n' << rle << '\n';
+            refs[i] = BAM::FastaSequence(refs[i].Name(), std::move(rle));
+        }
+        mm2helper = std::make_unique<MM2Helper>(refs, settings);
+    } else {
+        mm2helper = std::make_unique<MM2Helper>(uio.refFile, settings);
+    }
     indexTime.Freeze();
     Timer alignmentTime;
 
@@ -157,7 +183,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
 
         std::string fastxRgId = "default";
         BAM::BamHeader hdr = SampleNames::GenerateBamHeader(settings, uio, mtsti, fastxRgId);
-        for (const auto& si : mm2helper.SequenceInfos())
+        for (const auto& si : mm2helper->SequenceInfos())
             hdr.AddSequence(si);
 
         PacBio::Parallel::FireAndForget faf(settings.NumThreads, 3);
@@ -176,20 +202,33 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         const auto firstTime = std::chrono::steady_clock::now();
         auto lastTime = std::chrono::steady_clock::now();
         auto Submit = [&](const std::unique_ptr<std::vector<BAM::BamRecord>>& recs) {
+            const auto Strip = [](BAM::BamRecord& record) {
+                auto& impl = record.Impl();
+                for (const auto& t : {"dq", "dt", "ip", "iq", "mq", "pa", "pc", "pd", "pe", "pg",
+                                      "pm", "pq", "pt", "pv", "pw", "px", "sf", "sq", "st"})
+                    impl.RemoveTag(t);
+            };
             if (settings.Strip) {
-                const auto Strip = [](BAM::BamRecord& record) {
-                    auto& impl = record.Impl();
-                    for (const auto& t :
-                         {"dq", "dt", "ip", "iq", "mq", "pa", "pc", "pd", "pe", "pg", "pm", "pq",
-                          "pt", "pv", "pw", "px", "sf", "sq", "st"})
-                        impl.RemoveTag(t);
-                };
                 for (auto& r : *recs)
                     Strip(r);
             }
+            if (settings.CompressSequenceHomopolymers) {
+                const auto Compress = [&](BAM::BamRecord& record) {
+                    std::string newSeq = CompressHomopolymers(record.Sequence());
+                    record.Impl().SetSequenceAndQualities(newSeq);
+                    if (record.HasQueryStart() && record.HasQueryEnd()) {
+                        record.Impl().EditTag(
+                            "qe", record.QueryStart() + static_cast<int32_t>(newSeq.size()));
+                    }
+                };
+                for (auto& r : *recs) {
+                    Compress(r);
+                    Strip(r);
+                }
+            }
             int32_t aligned = 0;
             try {
-                auto output = mm2helper.Align(recs, filter, &aligned);
+                auto output = mm2helper->Align(recs, filter, &aligned);
                 if (output) {
                     std::lock_guard<std::mutex> lock(outputMutex);
                     alignedReads += aligned;

@@ -154,6 +154,8 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
         return (file0Type == type0 && file1Type == type1);
     };
 
+    if (file0Type == InputType::MMI || file1Type == InputType::MMI) uio.isFromMmi = true;
+
     const std::string noGC = " Output BAM file cannot be used for polishing with GenomicConsensus!";
     if (IsExactCombination(InputType::BAM, InputType::BAM)) {
         PBLOG_FATAL << "Both input files are of type BAM. Please check your inputs.";
