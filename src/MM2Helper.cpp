@@ -1,6 +1,7 @@
 // Author: Armin Töpfer
 
 #include <pbmm2/MM2Helper.h>
+#include <iostream>
 #include <memory>
 
 namespace PacBio {
@@ -362,10 +363,8 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
         int r = aln.qe;
         for (int s = l; s < r; ++s) {
             if (!started) {
-                if (queryHits[s] == 1) {
+                if (queryHits[s] == 0) {
                     queryHits[s] = 1;
-                    continue;
-                } else if (queryHits[s] == 0) {
                     *begin = s;
                     started = true;
                 }
@@ -373,16 +372,15 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
                 if (!ended) {
                     if (queryHits[s] == 0) {
                         queryHits[s] = 1;
-                        continue;
                     } else if (queryHits[s] == 1) {
-                        *end = s - 1;
+                        *end = s;
                         ended = true;
                         break;
                     }
                 }
             }
         }
-        if (!ended) *end = r - 1;
+        if (!ended) *end = r;
         return started;
     };
 

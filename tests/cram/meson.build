@@ -7,6 +7,7 @@ pbmm2_cram_test_data = files([
   'jsoninput.t',
   'misc.t',
   'nohpc.t',
+  'overlap.t',
   'readgroup.t',
   'refxml.t',
   'rtc.t',
