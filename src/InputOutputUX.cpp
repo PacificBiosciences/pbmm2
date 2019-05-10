@@ -586,8 +586,8 @@ std::string InputOutputUX::CreateDataSet(const BAM::DataSet& dsIn, const std::st
         boost::split(splits, fileName, boost::is_any_of("/"));
         fileName = splits.back();
     }
-    BAM::ExternalResource resource(metatype, fileName + ".bam");
-    BAM::FileIndex pbi("PacBio.Index.PacBioIndex", fileName + ".bam.pbi");
+    BAM::ExternalResource resource(metatype, outputFile + ".bam");
+    BAM::FileIndex pbi("PacBio.Index.PacBioIndex", outputFile + ".bam.pbi");
     resource.FileIndices().Add(pbi);
     BAM::ExternalResource refResource("PacBio.ReferenceFile.ReferenceFastaFile", refFile);
     resource.ExternalResources().Add(refResource);
