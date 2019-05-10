@@ -17,6 +17,26 @@
   $ gzip $CRAMTMP/median_compressed.fasta
   $ FASTAGZ=$CRAMTMP/median_compressed.fasta.gz
 
+  $ $__PBTEST_PBMM2_EXE align $REF $IN $CRAMTMP/global.alignmentset.xml --log-level FATAL
+  $ grep PacBio.AlignmentFile.AlignmentBamFile $CRAMTMP/global.alignmentset.xml
+  */global.bam* (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $REF $IN local.alignmentset.xml --log-level FATAL
+  $ grep PacBio.AlignmentFile.AlignmentBamFile local.alignmentset.xml
+  */local.bam* (glob)
+
+  $ mkdir -p $CRAMTMP/sub/dir/foo
+  $ $__PBTEST_PBMM2_EXE align $REF $IN $CRAMTMP/sub/dir/foo/test.alignmentset.xml --log-level FATAL
+  $ grep PacBio.AlignmentFile.AlignmentBamFile $CRAMTMP/sub/dir/foo/test.alignmentset.xml
+  */sub/dir/foo/test.bam* (glob)
+
+  $ mkdir -p $CRAMTMP/bla/other/bar
+  $ cd $CRAMTMP/sub/dir/foo
+  $ $__PBTEST_PBMM2_EXE align $REF $IN ../../../bla/other/bar/test.alignmentset.xml --log-level FATAL
+  $ grep PacBio.AlignmentFile.AlignmentBamFile $CRAMTMP/bla/other/bar/test.alignmentset.xml
+  */bla/other/bar/test.bam* (glob)
+
+  $ cd ../../../
 
   $ $__PBTEST_PBMM2_EXE align $IN 2>&1
   *Please provide at least the input arguments: reference input output!* (glob)
