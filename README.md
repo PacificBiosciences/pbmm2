@@ -348,6 +348,13 @@ Using `--median-filter`, only the subread closest to the median subread length
 per ZMW is being aligned.
 Preferably, full-length subreads flanked by adapters are chosen.
 
+### What is `--collapse-homopolymers`?
+The idea behind `--collapse-homopolymers` is to collapse any two or more
+consecutive bases of the same type. In this mode, the reference is collapsed and
+written to disk with the same prefix as your output alignment and appended
+with suffix `.ref.collapsed.fasta`. In addition, each read is collapsed
+before alignment. This mode cannot be combined with `.mmi` input.
+
 ### How does _pbmm2_ get invoked in pbsmrtpipe?
 The goal was to simplify the interface of _pbmm2_ with pbsmrtpipe.
 The input is polymorphic and the input dataset has to be wrapped into a JSON datastore.
@@ -407,6 +414,7 @@ Minimal accepted version:
  * **1.1.0**:
    * Add support for gzipped FASTA and FASTQ
    * Allow multiple input files via `.fofn`
+   * Add `--collapse-homopolymers`
 
  * 1.0.0:
    * First stable release, included in SMRT Link v7.0

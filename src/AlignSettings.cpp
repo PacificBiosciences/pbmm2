@@ -338,6 +338,13 @@ const PlainOption MaxNumAlns{
     "Output at maximum N alignments for each read, 0 means no maximum.",
     CLI::Option::IntType(0)
 };
+const PlainOption CompressSequenceHomopolymers{
+    "compress",
+    { "collapse-homopolymers" },
+    "",
+    "Collapse homopolymers in reads and reference.",
+    CLI::Option::BoolType(false)
+};
 // clang-format on
 }  // namespace OptionNames
 
@@ -361,6 +368,7 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     , CreatePbi(options[OptionNames::CreatePbi])
     , NoBAI(options[OptionNames::NoBAI])
     , OutputUnmapped(options[OptionNames::OutputUnmapped])
+    , CompressSequenceHomopolymers(options[OptionNames::CompressSequenceHomopolymers])
 {
     MM2Settings::Kmer = options[OptionNames::Kmer];
     MM2Settings::MinimizerWindowSize = options[OptionNames::MinimizerWindowSize];
@@ -660,6 +668,10 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         OptionNames::MedianFilter,
         OptionNames::ZMW,
         OptionNames::HQRegion,
+    });
+
+    i.AddGroup("Sequence Manipulation Options", {
+        OptionNames::CompressSequenceHomopolymers
     });
 
     i.AddGroup("Output File Options", {

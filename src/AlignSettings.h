@@ -48,6 +48,8 @@ struct AlignSettings : MM2Settings
     bool NoBAI;
     bool OutputUnmapped;
 
+    bool CompressSequenceHomopolymers;
+
     std::string TcOverrides;
 
     /// Parses the provided CLI::Results and retrieves a defined set of options.

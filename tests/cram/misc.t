@@ -84,6 +84,11 @@
 
   $ $__PBTEST_PBMM2_EXE index $REF $CRAMTMP/index_logging.mmi --log-file $CRAMTMP/index_logging.txt 2>&1
 
+  $ $__PBTEST_PBMM2_EXE index $REF $CRAMTMP/ref.mmi
+  $ $__PBTEST_PBMM2_EXE align $CRAMTMP/ref.mmi $IN $CRAMTMP/mmi.fail.bam --collapse-homopolymers
+  *Cannot combine --collapse-homopolymers with MMI input.* (glob)
+  [1]
+
   $ $__PBTEST_PBMM2_EXE index $REF 2>&1
   *Please provide both arguments: input output!* (glob)
   *EXAMPLE: pbmm2 index reference.fasta output.mmi* (glob)

@@ -12,6 +12,8 @@
   0
   $ ls -alh $CRAMTMP/unsorted.json 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/unsorted.ref.collapsed.fasta 2> /dev/null | wc -l | tr -d ' '
+  0
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/unsorted_pbi.bam --pbi
   $ samtools view -H $CRAMTMP/unsorted_pbi.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
@@ -317,3 +319,17 @@ Test that median filter does not fail
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/bestn1.bam --best-n 1
   $ samtools view $CRAMTMP/bestn1.bam | wc -l | tr -d ' '
   52
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/rle.bam --collapse-homopolymers
+  $ samtools view -H $CRAMTMP/rle.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/rle.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/rle.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/rle.*.xml 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/rle.json 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/rle.ref.collapsed.fasta 2> /dev/null | wc -l | tr -d ' '
+  1
