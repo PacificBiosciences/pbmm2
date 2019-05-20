@@ -91,7 +91,7 @@ Run on raw subread data:
 
 Run on CCS data:
 
-    lima --css movie.ccs.bam barcodes.fasta prefix.bam
+    lima --ccs movie.ccs.bam barcodes.fasta prefix.bam
     lima --ccs movie.consensusreadset.xml barcodes.barcodeset.xml prefix.consensusreadset.xml
 
 If you do not need to import the demultiplexed data into SMRT Link, it is advised
@@ -967,7 +967,7 @@ The score lead measures how close the best barcode call is to the second best.
 Possible solutions without seeing your data:
  * Is that sample actually barcoded?
  * Are your barcode sequences genetically too close for SMRT sequencing?
-   Try CCS2 calling first and demultiplex with `--css`.
+   Try CCS2 calling first and demultiplex with `--ccs`.
  * Are the synthesized products clean and not degenerate?
  * Did the sequencing run perform optimally, is the accuracy in the expected range?
  * Did you run lima twice, first on the original and then on the already
