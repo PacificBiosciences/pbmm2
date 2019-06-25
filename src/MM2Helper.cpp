@@ -118,6 +118,17 @@ MM2Helper::MM2Helper(const std::vector<BAM::FastaSequence>& refs, const MM2Setti
     Idx = std::make_unique<Index>(refs, IdxOpts);
     PostInit(settings, preset, true);
 }
+MM2Helper::MM2Helper(std::vector<BAM::FastaSequence>&& refs, const MM2Settings& settings)
+    : NumThreads{settings.NumThreads}
+    , alnMode_(settings.AlignMode)
+    , trimRepeatedMatches_(!settings.NoTrimming)
+    , maxNumAlns_(settings.MaxNumAlns)
+{
+    std::string preset;
+    PreInit(settings, &preset);
+    Idx = std::make_unique<Index>(std::move(refs), IdxOpts);
+    PostInit(settings, preset, true);
+}
 void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
 {
     mm_idxopt_init(&IdxOpts);
@@ -581,17 +592,26 @@ std::vector<PacBio::BAM::SequenceInfo> MM2Helper::SequenceInfos() const
 
 Index::Index(const std::vector<BAM::FastaSequence>& refs, const mm_idxopt_t& opts)
 {
-    const auto numRefs = refs.size();
-    const char** seq;
-    seq = (const char**)calloc(numRefs + 1, sizeof(char*));
-    for (size_t i = 0; i < numRefs; ++i)
-        seq[i] = refs[i].Bases().c_str();
-    const char** name;
-    name = (const char**)calloc(numRefs + 1, sizeof(char*));
-    for (size_t i = 0; i < numRefs; ++i)
-        name[i] = refs[i].Name().c_str();
+    IndexFrom(refs, opts);
+}
 
-    idx_ = mm_idx_str(opts.w, opts.k, opts.flag & MM_I_HPC, 0, numRefs, seq, name);
+Index::Index(std::vector<BAM::FastaSequence>&& refs, const mm_idxopt_t& opts)
+    : refs_{std::move(refs)}
+{
+    IndexFrom(refs_, opts);
+}
+
+void Index::IndexFrom(const std::vector<BAM::FastaSequence>& refs, const mm_idxopt_t& opts)
+{
+    const auto numRefs = refs.size();
+    seq_ = (const char**)calloc(numRefs + 1, sizeof(char*));
+    for (size_t i = 0; i < numRefs; ++i)
+        seq_[i] = refs[i].Bases().c_str();
+    name_ = (const char**)calloc(numRefs + 1, sizeof(char*));
+    for (size_t i = 0; i < numRefs; ++i)
+        name_[i] = refs[i].Name().c_str();
+
+    idx_ = mm_idx_str(opts.w, opts.k, opts.flag & MM_I_HPC, 0, numRefs, seq_, name_);
 }
 
 Index::Index(const std::string& fname, const mm_idxopt_t& opts, const int32_t& numThreads,
@@ -608,7 +628,13 @@ Index::Index(const std::string& fname, const mm_idxopt_t& opts, const int32_t& n
     PBLOG_INFO << "Finished reading/building index";
 }
 
-Index::~Index() { mm_idx_destroy(idx_); }
+Index::~Index()
+{
+    free(seq_);
+    free(name_);
+
+    mm_idx_destroy(idx_);
+}
 
 std::vector<PacBio::BAM::SequenceInfo> Index::SequenceInfos() const
 {
