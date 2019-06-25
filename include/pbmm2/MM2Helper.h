@@ -29,15 +29,23 @@ using FilterFunc = std::function<bool(const AlignedRecord&)>;
 
 struct Index
 {
+    Index(std::vector<BAM::FastaSequence>&& refs, const mm_idxopt_t& opts);
+    // If you use this ctor, you have to be very careful, because refs must live
+    // as long as this Index instance.
     Index(const std::vector<BAM::FastaSequence>& refs, const mm_idxopt_t& opts);
     Index(const std::string& fname, const mm_idxopt_t& opts, const int32_t& numThreads,
           const std::string& outputMmi = "");
 
     ~Index();
 
+    void IndexFrom(const std::vector<BAM::FastaSequence>& refs, const mm_idxopt_t& opts);
+
     std::vector<PacBio::BAM::SequenceInfo> SequenceInfos() const;
 
     mm_idx_t* idx_;
+    const char** seq_ = nullptr;
+    const char** name_ = nullptr;
+    const std::vector<BAM::FastaSequence> refs_;
 };
 
 struct ThreadBuffer
@@ -52,6 +60,9 @@ struct ThreadBuffer
 class MM2Helper
 {
 public:
+    MM2Helper(std::vector<BAM::FastaSequence>&& refs, const MM2Settings& settings);
+    // If you use this ctor, you have to be very careful, because refs must live
+    // as long as this MM2Helper instance!
     MM2Helper(const std::vector<BAM::FastaSequence>& refs, const MM2Settings& settings);
     MM2Helper(const std::string& refs, const MM2Settings& settings,
               const std::string& outputMmi = "");
