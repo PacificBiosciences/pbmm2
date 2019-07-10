@@ -20,7 +20,7 @@ pbmm2_version_sources = [
 
 pbmm2_lib_cpp_sources = files(['MM2Helper.cpp'])
 
-pbmm2_install = not meson.is_subproject()
+pbmm2_install = (not meson.is_subproject()) or (get_option('default_library') != 'static')
 
 pbmm2_lib = library(
   'pbmm2',
