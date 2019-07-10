@@ -482,13 +482,13 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
         std::vector<std::pair<int32_t, int32_t>> spans;
         for (size_t j = 0; j < numAlignments; ++j) {
             std::ostringstream sa;
-            const auto& record = localResults.at(j).Record;
-            int32_t qryStart = BAM::IsCcsOrTranscript(record.Type()) ? 0 : record.QueryStart();
-            const auto qqs = record.AlignedStart() - qryStart;
-            const auto qqe = record.AlignedEnd() - qryStart;
-            const auto qrs = record.ReferenceStart();
-            const auto qre = record.ReferenceEnd();
-            const bool qrev = record.AlignedStrand() == BAM::Strand::REVERSE;
+            const auto& rec = localResults.at(j).Record;
+            int32_t qryStart = BAM::IsCcsOrTranscript(rec.Type()) ? 0 : rec.QueryStart();
+            const auto qqs = rec.AlignedStart() - qryStart;
+            const auto qqe = rec.AlignedEnd() - qryStart;
+            const auto qrs = rec.ReferenceStart();
+            const auto qre = rec.ReferenceEnd();
+            const bool qrev = rec.AlignedStrand() == BAM::Strand::REVERSE;
             int l_M, l_I = 0, l_D = 0, clip5 = 0, clip3 = 0;
             if (qqe - qqs < qre - qrs)
                 l_M = qqe - qqs, l_D = (qre - qrs) - l_M;
@@ -496,15 +496,14 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
                 l_M = qre - qrs, l_I = (qqe - qqs) - l_M;
             clip5 = qrev ? qlen - qqe : qqs;
             clip3 = qrev ? qqs : qlen - qqe;
-            sa << Idx->idx_->seq[record.ReferenceId()].name << ',' << qrs + 1 << ',' << "+-"[qrev]
+            sa << Idx->idx_->seq[rec.ReferenceId()].name << ',' << qrs + 1 << ',' << "+-"[qrev]
                << ',';
             if (clip5) sa << clip5 << 'S';
             if (l_M) sa << l_M << 'M';
             if (l_I) sa << l_I << 'I';
             if (l_D) sa << l_D << 'D';
             if (clip3) sa << clip3 << 'S';
-            sa << ',' << static_cast<int>(record.MapQuality()) << ',' << record.NumMismatches()
-               << ';';
+            sa << ',' << static_cast<int>(rec.MapQuality()) << ',' << rec.NumMismatches() << ';';
             sas.emplace_back(sa.str());
             if (qrev)
                 spans.emplace_back(clip3, qlen - clip5);
