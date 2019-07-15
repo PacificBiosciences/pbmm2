@@ -1,5 +1,7 @@
 // Author: Armin Töpfer
 
+#include <limits.h>
+#include <unistd.h>
 #include <cstdlib>
 #include <memory>
 #include <thread>
@@ -141,6 +143,21 @@ StreamWriter::StreamWriter(BAM::BamHeader header, const std::string& outPrefix, 
                 if (!boost::ends_with(tmpdir, "/")) tmpdir += '/';
             }
             const bool useTmpDir = Utility::FileExists(tmpdir);
+            if (useTmpDir) {
+                PBLOG_DEBUG << "[TMPDIR] Using directory for sorting: " << tmpdir;
+            } else if (tmpdir.empty()) {
+                char cwd[PATH_MAX];
+                if (getcwd(cwd, sizeof(cwd)) != NULL) {
+                    PBLOG_DEBUG
+                        << "[TMPDIR] Could not find environment variable, using working directory: "
+                        << cwd;
+                } else {
+                    PBLOG_DEBUG
+                        << "[TMPDIR] Could not find environment variable, using working directory";
+                }
+            } else {
+                PBLOG_DEBUG << "[TMPDIR] Specified directory does not exist: " << tmpdir;
+            }
             int ret = bam_sort(pipeName_.c_str(), finalOutputName_.c_str(), tmpdir.c_str(),
                                useTmpDir, sortThreads_, sortThreads_ + numThreads_, sortMemory_,
                                &numFiles, &numBlocks);
