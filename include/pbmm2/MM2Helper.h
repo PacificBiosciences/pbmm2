@@ -17,7 +17,15 @@
 
 #include <pbmm2/MM2Settings.h>
 
+// In file included from ../include/pbmm2/MM2Helper.h:20,
+//                  from ../src/MM2Helper.cpp:3:
+// minimap.h:78:17: warning: ISO C++ forbids flexible array member 'cigar' [-Wpedantic]
+//   uint32_t cigar[];
+//                  ^
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 #include <minimap.h>
+#pragma GCC diagnostic pop
 
 extern "C" void mm_idxopt_init(mm_idxopt_t*);
 
