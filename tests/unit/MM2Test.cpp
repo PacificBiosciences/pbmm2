@@ -18,12 +18,6 @@ namespace MM2Tests {
 
 using namespace PacBio::minimap2;
 
-static void SetGlobalLogger(const Logging::LogLevel logLevel = Logging::LogLevel::FATAL)
-{
-    PacBio::Logging::InstallSignalHandlers(
-        PacBio::Logging::Logger::Default(new PacBio::Logging::Logger(std::cerr, logLevel)));
-}
-
 static std::vector<BAM::BamRecord> SimpleAlign()
 {
     const auto refFile = tests::DataDir + '/' + "ecoliK12_pbi_March2013.fasta";
@@ -42,14 +36,12 @@ static std::vector<BAM::BamRecord> SimpleAlign()
 
 TEST(MM2Test, SimpleAlign)
 {
-    SetGlobalLogger();
     std::vector<BAM::BamRecord> alignedBam = SimpleAlign();
     EXPECT_EQ(96ul, alignedBam.size());
 }
 
 TEST(MM2Test, Filter)
 {
-    SetGlobalLogger();
     const auto refFile = tests::DataDir + '/' + "ecoliK12_pbi_March2013.fasta";
     MM2Settings settings;
     MM2Helper mm2helper(refFile, settings);
@@ -71,7 +63,6 @@ TEST(MM2Test, Filter)
 
 TEST(MM2Test, UseCommonThreadBuffer)
 {
-    SetGlobalLogger();
     const auto refFile = tests::DataDir + '/' + "ecoliK12_pbi_March2013.fasta";
     MM2Settings settings;
     MM2Helper mm2helper(refFile, settings);
@@ -92,7 +83,6 @@ TEST(MM2Test, UseCommonThreadBuffer)
 
 TEST(MM2Test, FilterAndBuffer)
 {
-    SetGlobalLogger();
     const auto refFile = tests::DataDir + '/' + "ecoliK12_pbi_March2013.fasta";
     MM2Settings settings;
     MM2Helper mm2helper(refFile, settings);
@@ -115,7 +105,6 @@ TEST(MM2Test, FilterAndBuffer)
 
 TEST(MM2Test, AlignCCS)
 {
-    SetGlobalLogger();
     const auto refFile = tests::DataDir + '/' + "ecoliK12_pbi_March2013.fasta";
     MM2Settings settings;
     settings.AlignMode = AlignmentMode::CCS;
@@ -138,7 +127,6 @@ TEST(MM2Test, AlignCCS)
 
 TEST(MM2Test, AlignCCSWithOverrides)
 {
-    SetGlobalLogger(Logging::LogLevel::DEBUG);
     const auto refFile = tests::DataDir + '/' + "ecoliK12_pbi_March2013.fasta";
     MM2Settings settings;
     settings.AlignMode = AlignmentMode::CCS;
@@ -165,7 +153,6 @@ TEST(MM2Test, AlignCCSWithOverrides)
 // For a proper test of idempotence, see tests/cram/idempotence.t
 TEST(MM2Test, ReAlign)
 {
-    SetGlobalLogger();
     const auto refFile = tests::DataDir + '/' + "ecoliK12_pbi_March2013.fasta";
     MM2Settings settings;
     MM2Helper mm2helper(refFile, settings);
@@ -209,7 +196,6 @@ static std::vector<BAM::BamRecord> FastaRefAlign()
 
 TEST(MM2Test, FastaRefAlign)
 {
-    SetGlobalLogger();
 
     std::vector<BAM::BamRecord> alignedFastaRefBam = FastaRefAlign();
     EXPECT_EQ(96ul, alignedFastaRefBam.size());
@@ -256,7 +242,6 @@ static std::vector<BAM::BamRecord> FastaRefAlignMove()
 
 TEST(MM2Test, FastaRefAlignMove)
 {
-    SetGlobalLogger();
 
     std::vector<BAM::BamRecord> alignedFastaRefBam = FastaRefAlignMove();
     EXPECT_EQ(96ul, alignedFastaRefBam.size());
