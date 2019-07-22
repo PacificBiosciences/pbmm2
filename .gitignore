@@ -1,8 +1,10 @@
+.DS_Store
 /build*
 
+# cram
+*.pyc
+/tests/cram/*.t.err
+
 # Meson WrapDB stuff
-/subprojects/packagecache/
-/subprojects/googletest*
-/subprojects/pbcopper*
-/subprojects/pbbam*
-/subprojects/minimap2*
+/subprojects/*
+!/subprojects/*.wrap
