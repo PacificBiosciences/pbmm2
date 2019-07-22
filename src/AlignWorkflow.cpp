@@ -16,11 +16,11 @@
 #include <pbcopper/utility/FileUtils.h>
 
 #include <pbbam/BamWriter.h>
+#include <pbbam/DataSet.h>
+#include <pbbam/EntireFileQuery.h>
 #include <pbbam/FastaReader.h>
 #include <pbbam/FastqReader.h>
 #include <pbbam/LocalContextFlags.h>
-#include <pbbam/DataSet.h>
-#include <pbbam/EntireFileQuery.h>
 #include <pbbam/PbiFilter.h>
 #include <pbbam/PbiFilterQuery.h>
 #include <pbbam/virtual/ZmwReadStitcher.h>
