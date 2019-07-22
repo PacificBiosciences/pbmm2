@@ -5,8 +5,8 @@
 #include <iostream>
 #include <memory>
 
-#include <pbbam/Position.h>
 #include <pbbam/Cigar.h>
+#include <pbbam/Position.h>
 #include <pbbam/Strand.h>
 
 namespace PacBio {
