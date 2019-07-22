@@ -4,6 +4,8 @@
 
 PLATFORM=$(uname)
 TOOLSPATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
-CLANGFORMAT="clang-format -style=file"
+CLANGFORMAT="${TOOLSPATH}/${PLATFORM}/clang-format"
 
-find src include \( -name *.cpp -or -name *.h \) -print0 | xargs -n1 -0 ${CLANGFORMAT} -i
+while IFS="" read -d $'\0' -r f ; do
+    "${CLANGFORMAT}" -style=file -i "${f}"
+done < <(find include src tests/unit \( -name '*.cpp' -o -name '*.h' \) -print0)
