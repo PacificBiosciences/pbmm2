@@ -311,7 +311,7 @@
   *Long join flank ratio  : 0.4 (glob)
 
 Test bam_sort
-  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sorted_small.bam --sort -J 1 -m 1M --log-level TRACE --log-file $CRAMTMP/sorted_small.txt
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sorted_small.bam --sort -J 1 -m 1M --log-level INFO --log-file $CRAMTMP/sorted_small.txt
 
 Test that median filter does not fail
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/median_output.bam --median-filter
