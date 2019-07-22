@@ -1,8 +1,13 @@
 // Author: Armin Töpfer
 
 #include <pbmm2/MM2Helper.h>
+
 #include <iostream>
 #include <memory>
+
+#include <pbbam/Position.h>
+#include <pbbam/Cigar.h>
+#include <pbbam/Strand.h>
 
 namespace PacBio {
 namespace minimap2 {

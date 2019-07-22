@@ -18,7 +18,7 @@
 #include <pbbam/BamWriter.h>
 #include <pbbam/FastaReader.h>
 #include <pbbam/FastqReader.h>
-
+#include <pbbam/LocalContextFlags.h>
 #include <pbbam/DataSet.h>
 #include <pbbam/EntireFileQuery.h>
 #include <pbbam/PbiFilter.h>
