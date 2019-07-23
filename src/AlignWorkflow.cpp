@@ -20,10 +20,10 @@
 #include <pbbam/EntireFileQuery.h>
 #include <pbbam/FastaReader.h>
 #include <pbbam/FastqReader.h>
-#include <pbbam/LocalContextFlags.h>
 #include <pbbam/PbiFilter.h>
 #include <pbbam/PbiFilterQuery.h>
 #include <pbbam/virtual/ZmwReadStitcher.h>
+#include <pbcopper/data/LocalContextFlags.h>
 
 #include <pbcopper/parallel/FireAndForget.h>
 
@@ -344,7 +344,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                 {
                     if (Record.HasLocalContextFlags()) {
                         const auto flags = Record.LocalContextFlags();
-                        if (flags & BAM::ADAPTER_BEFORE && flags & BAM::ADAPTER_AFTER) {
+                        if (flags & Data::ADAPTER_BEFORE && flags & Data::ADAPTER_AFTER) {
                             FullLength = true;
                         }
                     }

@@ -5,17 +5,17 @@
 #include <iostream>
 #include <memory>
 
-#include <pbbam/Cigar.h>
-#include <pbbam/Position.h>
-#include <pbbam/Strand.h>
+#include <pbcopper/data/Cigar.h>
+#include <pbcopper/data/Position.h>
+#include <pbcopper/data/Strand.h>
 
 namespace PacBio {
 namespace minimap2 {
 namespace {
 
-PacBio::BAM::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const int opt_flag)
+Data::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const int opt_flag)
 {
-    using PacBio::BAM::Cigar;
+    using Data::Cigar;
 
     Cigar cigar;
 
@@ -35,10 +35,10 @@ PacBio::BAM::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const i
     return cigar;
 }
 
-PacBio::BAM::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const int opt_flag,
-                               int newQs, int newQe, int* refStartOffset)
+Data::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const int opt_flag, int newQs,
+                        int newQe, int* refStartOffset)
 {
-    using PacBio::BAM::Cigar;
+    using Data::Cigar;
 
     Cigar cigar;
 
@@ -407,14 +407,14 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
         int end = trim ? 0 : aln.qe;
         if (trim && !SetQryHits(aln, &begin, &end)) return;
         const int32_t refId = aln.rid;
-        const BAM::Strand strand = aln.rev ? BAM::Strand::REVERSE : BAM::Strand::FORWARD;
+        const Data::Strand strand = aln.rev ? Data::Strand::REVERSE : Data::Strand::FORWARD;
         int refStartOffset = 0;
-        BAM::Cigar cigar;
+        Data::Cigar cigar;
         if (trim)
             cigar = RenderCigar(&aln, qlen, MapOpts.flag, begin, end, &refStartOffset);
         else
             cigar = RenderCigar(&aln, qlen, MapOpts.flag);
-        const BAM::Position refStart = aln.rs + refStartOffset;
+        const Data::Position refStart = aln.rs + refStartOffset;
         auto mapped = BAM::BamRecord::Mapped(unalignedCopy ? *unalignedCopy : record, refId,
                                              refStart, strand, cigar, aln.mapq);
         if (mapped.Impl().HasTag("rm")) mapped.Impl().RemoveTag("rm");
@@ -493,7 +493,7 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
             const auto qqe = rec.AlignedEnd() - qryStart;
             const auto qrs = rec.ReferenceStart();
             const auto qre = rec.ReferenceEnd();
-            const bool qrev = rec.AlignedStrand() == BAM::Strand::REVERSE;
+            const bool qrev = rec.AlignedStrand() == Data::Strand::REVERSE;
             int l_M, l_I = 0, l_D = 0, clip5 = 0, clip3 = 0;
             if (qqe - qqs < qre - qrs)
                 l_M = qqe - qqs, l_D = (qre - qrs) - l_M;
@@ -589,10 +589,7 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record,
     return Align(record, noopFilter, tbuf);
 }
 
-std::vector<PacBio::BAM::SequenceInfo> MM2Helper::SequenceInfos() const
-{
-    return Idx->SequenceInfos();
-}
+std::vector<BAM::SequenceInfo> MM2Helper::SequenceInfos() const { return Idx->SequenceInfos(); }
 
 Index::Index(const std::vector<BAM::FastaSequence>& refs, const mm_idxopt_t& opts)
 {
@@ -640,13 +637,13 @@ Index::~Index()
     mm_idx_destroy(idx_);
 }
 
-std::vector<PacBio::BAM::SequenceInfo> Index::SequenceInfos() const
+std::vector<BAM::SequenceInfo> Index::SequenceInfos() const
 {
-    std::vector<PacBio::BAM::SequenceInfo> result;
+    std::vector<BAM::SequenceInfo> result;
     for (unsigned i = 0; i < idx_->n_seq; ++i) {
         const std::string name = idx_->seq[i].name;
         const std::string len = std::to_string(idx_->seq[i].len);
-        result.emplace_back(PacBio::BAM::SequenceInfo(name, len));
+        result.emplace_back(BAM::SequenceInfo(name, len));
     }
     return result;
 }
@@ -666,26 +663,26 @@ void AlignedRecord::ComputeAccuracyBases()
     for (const auto& cigar : Record.CigarData()) {
         int32_t len = cigar.Length();
         switch (cigar.Type()) {
-            case BAM::CigarOperationType::INSERTION:
+            case Data::CigarOperationType::INSERTION:
                 ins += len;
                 break;
-            case BAM::CigarOperationType::DELETION:
+            case Data::CigarOperationType::DELETION:
                 del += len;
                 break;
-            case BAM::CigarOperationType::SEQUENCE_MISMATCH:
+            case Data::CigarOperationType::SEQUENCE_MISMATCH:
                 mismatch += len;
                 break;
-            case BAM::CigarOperationType::REFERENCE_SKIP:
+            case Data::CigarOperationType::REFERENCE_SKIP:
                 break;
-            case BAM::CigarOperationType::SEQUENCE_MATCH:
-            case BAM::CigarOperationType::ALIGNMENT_MATCH:
+            case Data::CigarOperationType::SEQUENCE_MATCH:
+            case Data::CigarOperationType::ALIGNMENT_MATCH:
                 match += len;
                 break;
-            case BAM::CigarOperationType::PADDING:
-            case BAM::CigarOperationType::SOFT_CLIP:
-            case BAM::CigarOperationType::HARD_CLIP:
+            case Data::CigarOperationType::PADDING:
+            case Data::CigarOperationType::SOFT_CLIP:
+            case Data::CigarOperationType::HARD_CLIP:
                 break;
-            case BAM::CigarOperationType::UNKNOWN_OP:
+            case Data::CigarOperationType::UNKNOWN_OP:
             default:
                 PBLOG_FATAL << "UNKNOWN OP";
                 std::exit(EXIT_FAILURE);
