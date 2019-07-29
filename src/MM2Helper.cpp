@@ -5,6 +5,9 @@
 #include <iostream>
 #include <memory>
 
+#include <boost/assert.hpp>
+#include <boost/optional.hpp>
+
 #include <pbcopper/data/Cigar.h>
 #include <pbcopper/data/Position.h>
 #include <pbcopper/data/Strand.h>
@@ -329,17 +332,29 @@ std::unique_ptr<std::vector<AlignedRecord>> MM2Helper::Align(
     return result;
 }
 
-std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const FilterFunc& filter,
-                                            std::unique_ptr<ThreadBuffer>& tbuf) const
+namespace {
+
+bool checkIsSupplementaryAlignment(const BAM::BamRecord& record)
 {
-    std::vector<AlignedRecord> localResults;
-    if (record.IsMapped() && record.Impl().IsSupplementaryAlignment()) return localResults;
+    return record.IsMapped() && record.Impl().IsSupplementaryAlignment();
+}
 
-    std::unique_ptr<ThreadBuffer> tbufLocal;
-    if (!tbuf) tbufLocal = std::make_unique<ThreadBuffer>();
+bool checkIsSupplementaryAlignment(const Data::Read&) { return false; }
 
-    int numAlns;
-    const auto seq = record.Sequence(BAM::Orientation::NATIVE);
+std::string getNativeOrientationSequence(const BAM::BamRecord& record)
+{
+    return record.Sequence(BAM::Orientation::NATIVE);
+}
+
+const std::string& getNativeOrientationSequence(const Data::Read& record)
+{
+    // Data::Read's Seq field is always in native orientation
+    return record.Seq;
+}
+
+std::unique_ptr<BAM::BamRecord> createUnalignedCopy(const BAM::BamRecord& record,
+                                                    const std::string& seq)
+{
     std::unique_ptr<BAM::BamRecord> unalignedCopy;
     if (record.IsMapped()) {
         unalignedCopy = std::make_unique<BAM::BamRecord>(record.Header());
@@ -353,6 +368,65 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
         unalignedCopy->ReadGroupId(record.ReadGroupId());
         unalignedCopy->Impl().Name(record.FullName());
     }
+    return unalignedCopy;
+}
+
+std::unique_ptr<Data::Read> createUnalignedCopy(const Data::Read&, const std::string&)
+{
+    return nullptr;
+}
+
+BAM::BamRecord Mapped(const BAM::BamRecord& record, int32_t refId, Data::Position refStart,
+                      Data::Strand strand, Data::Cigar cigar, uint8_t mapq)
+{
+    return BAM::BamRecord::Mapped(record, refId, refStart, strand, std::move(cigar), mapq);
+}
+
+CompatMappedRead Mapped(const Data::Read& record, int32_t refId, Data::Position refStart,
+                        Data::Strand strand, Data::Cigar cigar, uint8_t mapq)
+{
+    return CompatMappedRead{Data::MappedRead{record, strand, refStart, std::move(cigar), mapq},
+                            refId};
+}
+
+void postprocess(std::vector<AlignedRecord>& localResults,
+                 std::unique_ptr<BAM::BamRecord>& unalignedCopy, const BAM::BamRecord& record)
+{
+    if (localResults.empty()) {
+        if (record.IsMapped()) {
+            const auto RemovePbmm2MappedTags = [](BAM::BamRecord& r) {
+                for (const auto& t : {"SA", "rm", "mc"})
+                    r.Impl().RemoveTag(t);
+            };
+            if (unalignedCopy) {
+                RemovePbmm2MappedTags(*unalignedCopy);
+                localResults.emplace_back(*unalignedCopy);
+            }
+        } else {
+            localResults.emplace_back(AlignedRecord{record});
+        }
+    }
+}
+
+void postprocess(std::vector<AlignedRead>&, std::unique_ptr<Data::Read>&, const Data::Read&) {}
+
+}  // namespace
+
+template <typename In, typename Out>
+std::vector<Out> MM2Helper::AlignImpl(const In& record,
+                                      const std::function<bool(const Out&)>& filter,
+                                      std::unique_ptr<ThreadBuffer>& tbuf) const
+{
+    std::vector<Out> localResults;
+    if (checkIsSupplementaryAlignment(record)) return localResults;
+
+    std::unique_ptr<ThreadBuffer> tbufLocal;
+    if (!tbuf) tbufLocal = std::make_unique<ThreadBuffer>();
+
+    int numAlns;
+    // watch out for lifetime issues when changing from const-ref to ref
+    const auto& seq = getNativeOrientationSequence(record);
+    std::unique_ptr<In> unalignedCopy = createUnalignedCopy(record, seq);
 
     const int qlen = seq.length();
     auto alns = mm_map(Idx->idx_, qlen, seq.c_str(), &numAlns,
@@ -415,11 +489,12 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
         else
             cigar = RenderCigar(&aln, qlen, MapOpts.flag);
         const Data::Position refStart = aln.rs + refStartOffset;
-        auto mapped = BAM::BamRecord::Mapped(unalignedCopy ? *unalignedCopy : record, refId,
-                                             refStart, strand, cigar, aln.mapq);
-        if (mapped.Impl().HasTag("rm")) mapped.Impl().RemoveTag("rm");
+
+        auto mapped = Mapped(unalignedCopy ? *unalignedCopy : record, refId, refStart, strand,
+                             std::move(cigar), aln.mapq);
+        mapped.Impl().RemoveTag("rm");
         mapped.Impl().SetSupplementaryAlignment(aln.sam_pri == 0);
-        AlignedRecord alnRec{std::move(mapped)};
+        Out alnRec{std::move(mapped)};
         if (filter(alnRec)) localResults.emplace_back(std::move(alnRec));
     };
 
@@ -550,22 +625,69 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
         if (alns[i].p) free(alns[i].p);
     free(alns);
 
-    if (localResults.empty()) {
-        if (record.IsMapped()) {
-            const auto RemovePbmm2MappedTags = [](BAM::BamRecord& r) {
-                for (const auto& t : {"SA", "rm", "mc"})
-                    if (r.Impl().HasTag(t)) r.Impl().RemoveTag(t);
-            };
-            if (unalignedCopy) {
-                RemovePbmm2MappedTags(*unalignedCopy);
-                localResults.emplace_back(*unalignedCopy);
-            }
-        } else {
-            localResults.emplace_back(AlignedRecord{record});
-        }
-    }
+    postprocess(localResults, unalignedCopy, record);
 
     return localResults;
+}
+
+// Read/MappedRead API
+std::unique_ptr<std::vector<AlignedRead>> MM2Helper::Align(
+    const std::unique_ptr<std::vector<Data::Read>>& records,
+    const std::function<bool(const AlignedRead&)>& filter, int32_t* alignedReads) const
+{
+    auto tbuf = std::make_unique<ThreadBuffer>();
+    auto result = std::make_unique<std::vector<AlignedRead>>();
+    result->reserve(records->size());
+
+    for (auto& record : *records) {
+        std::vector<AlignedRead> localResults = Align(record, filter, tbuf);
+        for (const auto& aln : localResults) {
+            if (aln.IsAligned) {
+                *alignedReads += 1;
+                break;
+            }
+        }
+
+        for (auto&& a : localResults)
+            result->emplace_back(std::move(a));
+    }
+
+    return result;
+}
+
+std::vector<AlignedRead> MM2Helper::Align(const Data::Read& record,
+                                          const std::function<bool(const AlignedRead&)>& filter,
+                                          std::unique_ptr<ThreadBuffer>& tbuf) const
+{
+    return AlignImpl(record, filter, tbuf);
+}
+
+std::vector<AlignedRead> MM2Helper::Align(const Data::Read& record) const
+{
+    auto tbuf = std::make_unique<ThreadBuffer>();
+    const auto noopFilter = [](const AlignedRead&) { return true; };
+    return Align(record, noopFilter, tbuf);
+}
+
+std::vector<AlignedRead> MM2Helper::Align(
+    const Data::Read& record, const std::function<bool(const AlignedRead&)>& filter) const
+{
+    auto tbuf = std::make_unique<ThreadBuffer>();
+    return Align(record, filter, tbuf);
+}
+
+std::vector<AlignedRead> MM2Helper::Align(const Data::Read& record,
+                                          std::unique_ptr<ThreadBuffer>& tbuf) const
+{
+    const auto noopFilter = [](const AlignedRead&) { return true; };
+    return Align(record, noopFilter, tbuf);
+}
+
+// BamRecord API
+std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const FilterFunc& filter,
+                                            std::unique_ptr<ThreadBuffer>& tbuf) const
+{
+    return AlignImpl(record, filter, tbuf);
 }
 
 std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record) const
@@ -648,13 +770,15 @@ std::vector<BAM::SequenceInfo> Index::SequenceInfos() const
     return result;
 }
 
-AlignedRecord::AlignedRecord(BAM::BamRecord record) : Record(std::move(record))
+template <typename T>
+AlignedRecordImpl<T>::AlignedRecordImpl(T record) : Record(std::move(record))
 {
     IsAligned = Record.IsMapped();
     if (IsAligned) ComputeAccuracyBases();
 }
 
-void AlignedRecord::ComputeAccuracyBases()
+template <typename T>
+void AlignedRecordImpl<T>::ComputeAccuracyBases()
 {
     int32_t ins = 0;
     int32_t del = 0;
@@ -697,6 +821,49 @@ void AlignedRecord::ComputeAccuracyBases()
         Record.Impl().EditTag("mc", static_cast<float>(Concordance));
     else
         Record.Impl().AddTag("mc", static_cast<float>(Concordance));
+}
+
+AlignedRecord::AlignedRecord(BAM::BamRecord record) : AlignedRecordImpl{std::move(record)} {}
+
+const std::string& CompatMappedRead::Sequence(...) const { return Seq; }
+
+uint8_t CompatMappedRead::MapQuality() const
+{
+    return static_cast<const Data::MappedRead&>(*this).MapQuality;
+}
+
+BAM::RecordType CompatMappedRead::Type() const { return BAM::RecordType::SUBREAD; }
+
+Data::Position CompatMappedRead::QueryStart() const
+{
+    return static_cast<const Data::Read&>(*this).QueryStart;
+}
+
+Data::Position CompatMappedRead::QueryEnd() const
+{
+    return static_cast<const Data::Read&>(*this).QueryEnd;
+}
+
+int32_t CompatMappedRead::ReferenceId() const { return refId; }
+
+bool CompatMappedRead::IsMapped() const { return true; }
+
+const Data::Cigar& CompatMappedRead::CigarData() const { return this->Cigar; }
+
+void CompatMappedRead::SetSupplementaryAlignment(bool supplAlnArg) { supplAln = supplAlnArg; }
+
+bool CompatMappedRead::IsSupplementaryAlignment() const { return supplAln; }
+
+CompatMappedRead& CompatMappedRead::Impl() { return *this; }
+
+const CompatMappedRead& CompatMappedRead::Impl() const { return *this; }
+
+AlignedRead::AlignedRead(CompatMappedRead record) : AlignedRecordImpl{std::move(record)} {}
+
+CompatMappedRead AlignedRead::Mapped(Data::Read record, int32_t refId, Data::Position refStart,
+                                     Data::Strand strand, Data::Cigar cigar, uint8_t mapq)
+{
+    return {Data::MappedRead{std::move(record), strand, refStart, std::move(cigar), mapq}, refId};
 }
 
 }  // namespace minimap2
