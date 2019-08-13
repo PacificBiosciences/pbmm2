@@ -2226,21 +2226,6 @@ err:
     return ret;
 }
 
-static void sort_usage(FILE *fp)
-{
-    fprintf(fp,
-            "Usage: samtools sort [options...] [in.bam]\n"
-            "Options:\n"
-            "  -l INT     Set compression level, from 0 (uncompressed) to 9 (best)\n"
-            "  -m INT     Set maximum memory per thread; suffix K/M/G recognized [768M]\n"
-            "  -n         Sort by read name\n"
-            "  -t TAG     Sort by value of TAG. Uses position as secondary index (or read name if "
-            "-n is set)\n"
-            "  -o FILE    Write final output to FILE rather than standard output\n"
-            "  -T PREFIX  Write temporary files to PREFIX.nnnn.bam\n");
-    sam_global_opt_help(fp, "-.O..@");
-}
-
 static void complain_about_memory_setting(size_t max_mem)
 {
     char *suffix = "";
