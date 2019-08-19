@@ -83,6 +83,10 @@ used for on-the-fly sorting. Example: `--sort -j 12 -J 4`, 12 threads for alignm
 
 The memory allocated per sort thread can be defined with `-m,--sort-memory`, accepting suffixes `M,G`.
 
+Temporary files during sorting are stored in the current working directory,
+unless explicitly defined with environment variable `TMPDIR`.
+The path used for temporary files is also printed if `--log-level DEBUG` is set.
+
 Benchmarks on human data have shown that 4 sort threads are recommended, but no more
 than 8 threads can be effectively leveraged, even with 70 cores used for alignment.
 It is recommended to provide more memory to each of a few sort threads, to avoid disk IO pressure,
@@ -415,6 +419,9 @@ Minimal accepted version:
    * Add support for gzipped FASTA and FASTQ
    * Allow multiple input files via `.fofn`
    * Add `--collapse-homopolymers`
+   * Use `TMPDIR` env variable to set path for temporary files
+   * Minor memory leak fix, if you used the API directly
+   * Updated CLI UX
 
  * 1.0.0:
    * First stable release, included in SMRT Link v7.0
