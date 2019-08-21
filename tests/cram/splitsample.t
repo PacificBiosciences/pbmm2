@@ -49,3 +49,11 @@
   1
   $ grep -c split_dataset.UCLA_1023.alignmentset.xml $CRAMTMP/split_dataset.json
   1
+
+When both --split-by-sample and --sample were set, expect to see only one bam file with SM overridden.
+  $ IN=$TESTDIR/data/merged.consensusreadset.xml
+  $ $__PBTEST_PBMM2_EXE align $REF $IN $CRAMTMP/splitsampleoverride.consensusalignmentset.xml --sort -j 8 --split-by-sample --sample "MySample"
+  *Options --split-by-sample and --sample are mutually exclusive. Option --sample will be applied and --split-by-sample is ignored! (glob)
+  $ [[ -f $CRAMTMP/splitsampleoverride.bam ]] || echo "File does not exist!"
+  $ samtools view -H $CRAMTMP/splitsampleoverride.bam | grep "@RG" | cut -f 6 | sort | uniq
+  SM:MySample

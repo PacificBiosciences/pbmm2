@@ -578,6 +578,13 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
         PBLOG_FATAL << "Parameter --best-n, -N must be positive.";
         std::exit(EXIT_FAILURE);
     }
+
+    // Override Sample Name for all Read Groups, disable SplitBySample.
+    if (!SampleName.empty() && SplitBySample) {
+        PBLOG_WARN << "Options --split-by-sample and --sample are mutually exclusive. Option "
+                      "--sample will be applied and --split-by-sample is ignored!";
+        SplitBySample = false;
+    }
 }
 
 int32_t AlignSettings::ThreadCount(int32_t n)
