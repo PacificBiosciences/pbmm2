@@ -78,7 +78,7 @@ TEST(MM2Test, VectorAlignRead)
     }
 
     int32_t alignedReads{};
-    const auto myFilter = [](const AlignedRead& r) { return true; };
+    const auto myFilter = [](const AlignedRead&) { return true; };
     const auto alns = mm2helper.Align(rawReads, myFilter, &alignedReads);
     EXPECT_EQ(numReadsBam, alignedReads);
 }
