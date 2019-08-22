@@ -118,50 +118,49 @@
   Usage:
     pbmm2 <tool>
   * (glob)
-  Options:
-    -h, --help   Output this help.
-    --version    Output version info.
+    -h,--help    Show this help and exit.
+    --version    Show application version and exit.
   * (glob)
   Tools:
-      index      Index reference and store as .mmi file
-      align      Align PacBio reads to reference sequences
+    index      Index reference and store as .mmi file
+    align      Align PacBio reads to reference sequences
   * (glob)
   Examples:
-    pbmm2 align ref.referenceset.xml movie.subreadset.xml ref.movie.alignmentset.xml
     pbmm2 index ref.referenceset.xml ref.mmi
+    pbmm2 align ref.referenceset.xml movie.subreadset.xml ref.movie.alignmentset.xml
   * (glob)
   Typical workflows:
     A. Generate index file for reference and reuse it to align reads
-      $ pbmm2 index ref.fasta ref.mmi
-      $ pbmm2 align ref.mmi movie.subreads.bam ref.movie.bam
+       $ pbmm2 index ref.fasta ref.mmi
+       $ pbmm2 align ref.mmi movie.subreads.bam ref.movie.bam
   * (glob)
     B. Align reads and sort on-the-fly, with 4 alignment and 2 sort threads
-      $ pbmm2 align ref.fasta movie.subreads.bam ref.movie.bam --sort -j 4 -J 2
+       $ pbmm2 align ref.fasta movie.subreads.bam ref.movie.bam --sort -j 4 -J 2
   * (glob)
     C. Align reads, sort on-the-fly, and create PBI
-      $ pbmm2 align ref.fasta movie.subreadset.xml ref.movie.alignmentset.xml --sort
+       $ pbmm2 align ref.fasta movie.subreadset.xml ref.movie.alignmentset.xml --sort
   * (glob)
     D. Omit output file and stream BAM output to stdout
-      $ pbmm2 align hg38.mmi movie1.subreadset.xml | samtools sort > hg38.movie1.sorted.bam
+       $ pbmm2 align hg38.mmi movie1.subreadset.xml | samtools sort > hg38.movie1.sorted.bam
   * (glob)
     E. Align CCS fastq input and sort on-the-fly
-      $ pbmm2 align ref.fasta movie.Q20.fastq ref.movie.bam --preset CCS --sort --rg '@RG\tID:myid\tSM:mysample'
+       $ pbmm2 align ref.fasta movie.Q20.fastq ref.movie.bam --preset CCS --sort --rg '@RG\tID:myid\tSM:mysample'
 
   $ $__PBTEST_PBMM2_EXE --help 2>&1 | head -n 1
   pbmm2 - minimap2 with native PacBio BAM support* (glob)
 
   $ $__PBTEST_PBMM2_EXE bla
-  ERROR: Unknown tool bla* (glob)
+  pbmm2 ERROR: [pbcopper] command line ERROR: unknown tool 'bla' requested (glob)
   [1]
 
-  $ $__PBTEST_PBMM2_EXE align 2>&1 | grep Usage
-  Usage: pbmm2 align [options] <ref.fa|xml|mmi> <in.bam|xml|fa|fq|gz|fofn> [out.aligned.bam|xml]* (glob)
+  $ $__PBTEST_PBMM2_EXE align 2>&1 | grep "\[options\]"
+    pbmm2 align [options] <ref.fa|xml|mmi> <in.bam|xml|fa|fq|gz|fofn> [out.aligned.bam|xml]* (glob)
 
-  $ $__PBTEST_PBMM2_EXE align --help 2>&1 | grep Usage
-  Usage: pbmm2 align [options] <ref.fa|xml|mmi> <in.bam|xml|fa|fq|gz|fofn> [out.aligned.bam|xml]* (glob)
+  $ $__PBTEST_PBMM2_EXE align --help 2>&1 | grep "\[options\]"
+    pbmm2 align [options] <ref.fa|xml|mmi> <in.bam|xml|fa|fq|gz|fofn> [out.aligned.bam|xml]* (glob)
 
-  $ $__PBTEST_PBMM2_EXE index 2>&1 | grep Usage
-  Usage: pbmm2 index [options] <ref.fa|xml> <out.mmi>* (glob)
+  $ $__PBTEST_PBMM2_EXE index 2>&1 | grep "\[options\]"
+    pbmm2 index [options] <ref.fa|xml> <out.mmi>* (glob)
 
   $ $__PBTEST_PBMM2_EXE --version
   pbmm2 *.*.* (*) (glob)
@@ -490,55 +489,55 @@
   *Option --no-bai has no effect without option --sort!* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -o -2
-  *Gap options have to be strictly positive. (glob)
+  *Gap options have to be strictly positive.* (glob)
   [1]
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -O -2
-  *Gap options have to be strictly positive. (glob)
+  *Gap options have to be strictly positive.* (glob)
   [1]
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -e -2
-  *Gap options have to be strictly positive. (glob)
+  *Gap options have to be strictly positive.* (glob)
   [1]
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -E -2
-  *Gap options have to be strictly positive. (glob)
+  *Gap options have to be strictly positive.* (glob)
   [1]
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -k 0
-  *Index parameter -k and -w must be positive. (glob)
+  *Index parameter -k and -w must be positive.* (glob)
   [1]
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -k -2
-  *Index parameter -k and -w must be positive. (glob)
+  *Index parameter -k and -w must be positive.* (glob)
   [1]
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -w 0
-  *Index parameter -k and -w must be positive. (glob)
+  *Index parameter -k and -w must be positive.* (glob)
   [1]
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -w -2
-  *Index parameter -k and -w must be positive. (glob)
+  *Index parameter -k and -w must be positive.* (glob)
   [1]
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -o 150
-  *Violation of dual gap penalties, E1>E2 and O1+E1<O2+E2 (glob)
+  *Violation of dual gap penalties, E1>E2 and O1+E1<O2+E2* (glob)
   [1]
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -z 100 -Z 200
-  *Z-drop should not be less than inversion-Z-drop (glob)
+  *Z-drop should not be less than inversion-Z-drop* (glob)
   [1]
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -o 20 -O 5 -e 1 -E 2
-  *Violation of dual gap penalties, E1>E2 and O1+E1<O2+E2 (glob)
+  *Violation of dual gap penalties, E1>E2 and O1+E1<O2+E2* (glob)
   [1]
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam --best-n -1
-  *Parameter --best-n, -N must be positive. (glob)
+  *Parameter --best-n, -N must be positive.* (glob)
   [1]
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -N -2
-  *Parameter --best-n, -N must be positive. (glob)
+  *Parameter --best-n, -N must be positive.* (glob)
   [1]
 
   $ $__PBTEST_PBMM2_EXE align $REF $BAM $BAM $CRAMTMP/fail.bam

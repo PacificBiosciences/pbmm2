@@ -11,7 +11,6 @@ pbmm2_cram_test_data = files([
   'overlap.t',
   'readgroup.t',
   'refxml.t',
-  'rtc.t',
   'sa.t',
   'splitsample.t',
   'splitsamplejson.t',

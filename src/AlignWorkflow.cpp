@@ -1,19 +1,19 @@
 // Author: Armin Töpfer
 
+#include "AlignWorkflow.h"
+
 #include <sys/stat.h>
+
+#include <cstdio>
+
 #include <atomic>
 #include <chrono>
-#include <cstdio>
 #include <functional>
 #include <iostream>
 #include <mutex>
 #include <thread>
 #include <tuple>
 #include <vector>
-
-#include <pbcopper/json/JSON.h>
-#include <pbcopper/logging/Logging.h>
-#include <pbcopper/utility/FileUtils.h>
 
 #include <pbbam/BamWriter.h>
 #include <pbbam/DataSet.h>
@@ -23,13 +23,17 @@
 #include <pbbam/PbiFilter.h>
 #include <pbbam/PbiFilterQuery.h>
 #include <pbbam/virtual/ZmwReadStitcher.h>
-#include <pbcopper/data/LocalContextFlags.h>
 
+#include <pbcopper/data/LocalContextFlags.h>
+#include <pbcopper/json/JSON.h>
+#include <pbcopper/logging/Logging.h>
 #include <pbcopper/parallel/FireAndForget.h>
+#include <pbcopper/utility/FileUtils.h>
+
+#include <pbmm2/MM2Helper.h>
 
 #include <mmpriv.h>
 
-#include <pbmm2/MM2Helper.h>
 #include "AlignSettings.h"
 #include "InputOutputUX.h"
 #include "SampleNames.h"
@@ -37,37 +41,12 @@
 #include "Timer.h"
 #include "bam_sort.h"
 
-#include "AlignWorkflow.h"
-
 namespace PacBio {
 namespace minimap2 {
-namespace {
-Logging::LogLevel CreateLogger(const CLI::Results& options, std::ofstream& logStream)
-{
-    const Logging::LogLevel logLevel(options.IsFromRTC() ? options.LogLevel()
-                                                         : options["log_level"].get<std::string>());
-    const std::string logFile = options["log_file"];
 
-    using Logger = PacBio::Logging::Logger;
-
-    Logger* logger;
-    if (!logFile.empty()) {
-        logStream.open(logFile);
-        logger = &Logger::Default(new Logger(logStream, logLevel));
-    } else {
-        logger = &Logger::Default(new Logger(std::cerr, logLevel));
-    }
-    PacBio::Logging::InstallSignalHandlers(*logger);
-    return logLevel;
-}
-}  // namespace
-
-int AlignWorkflow::Runner(const CLI::Results& options)
+int AlignWorkflow::Runner(const CLI_v2::Results& options)
 {
     const Timer startTime;
-    std::ofstream logStream;
-    const Logging::LogLevel logLevel = CreateLogger(options, logStream);
-
     AlignSettings settings(options);
 
     UserIO uio = InputOutputUX::CheckPositionalArgs(options.PositionalArguments(), settings);
@@ -77,29 +56,29 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             PBLOG_FATAL
                 << "Option --zmw can only be used with a subreadset.xml containing subread + "
                    "scraps BAM files.";
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
         if (settings.HQRegion) {
             PBLOG_FATAL
                 << "Option --hqregion can only be used with a subreadset.xml containing subread + "
                    "scraps BAM files.";
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
     }
 
     if (uio.isFromMmi && settings.CompressSequenceHomopolymers) {
         PBLOG_FATAL << "Cannot combine --collapse-homopolymers with MMI input.";
-        std::exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
 
     if (uio.isFromFofn && settings.SplitBySample) {
         PBLOG_FATAL << "Cannot combine --split-by-sample with fofn input.";
-        std::exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
 
     if (!uio.isFastaInput && !uio.isFastqInput && !settings.Rg.empty()) {
         PBLOG_FATAL << "Cannot override read groups with BAM input. Remove option --rg.";
-        std::exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
 
     const FilterFunc filter = [&settings](const AlignedRecord& aln) {
@@ -380,7 +359,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                                             std::tie(r.FullLength, r.Length);
                                  });
                 size_t mid = tmp.size() / 2;
-                if (logLevel == Logging::LogLevel::TRACE) {
+                if (options.LogLevel() == Logging::LogLevel::TRACE) {
                     std::ostringstream ss;
                     for (size_t x = 0; x < tmp.size(); ++x) {
                         const auto& ra = tmp[x];
@@ -522,15 +501,6 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         maxMappedLength = std::max(maxMappedLength, l);
     }
     double meanMappedConcordance = 1.0 * s.Concordance / s.NumAlns;
-    if (settings.IsFromRTC) {
-        JSON::Json root;
-        root["mapped_concordance_percentage"] = meanMappedConcordance;
-        root["num_aligned_reads"] = alignedReads;
-        root["num_alignments"] = s.NumAlns;
-        root["num_aligned_bases"] = s.Bases;
-        std::ofstream out(".pbmm2_stats.json");
-        out << root.dump(2);
-    }
 
     std::string pbiTiming;
     if (uio.isToXML || uio.isToJson)
