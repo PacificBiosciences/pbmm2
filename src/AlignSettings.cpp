@@ -338,6 +338,13 @@ const PlainOption MaxNumAlns{
     "Output at maximum N alignments for each read, 0 means no maximum.",
     CLI::Option::IntType(0)
 };
+const PlainOption CompressSequenceHomopolymers{
+    "compress",
+    { "collapse-homopolymers" },
+    "",
+    "Collapse homopolymers in reads and reference.",
+    CLI::Option::BoolType(false)
+};
 // clang-format on
 }  // namespace OptionNames
 
@@ -361,6 +368,7 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     , CreatePbi(options[OptionNames::CreatePbi])
     , NoBAI(options[OptionNames::NoBAI])
     , OutputUnmapped(options[OptionNames::OutputUnmapped])
+    , CompressSequenceHomopolymers(options[OptionNames::CompressSequenceHomopolymers])
 {
     MM2Settings::Kmer = options[OptionNames::Kmer];
     MM2Settings::MinimizerWindowSize = options[OptionNames::MinimizerWindowSize];
@@ -380,7 +388,7 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     MM2Settings::LongJoinFlankRatio = options[OptionNames::LongJoinFlankRatio];
     MM2Settings::NoTrimming = options[OptionNames::NoTrimming];
     MM2Settings::MaxNumAlns = options[OptionNames::MaxNumAlns];
-    TcOverrides = options[OptionNames::TCOverrides];
+    TcOverrides = options[OptionNames::TCOverrides].get<std::string>();
     if (!TcOverrides.empty()) {
         std::string tcOverrides = "recursion " + TcOverrides;
         std::vector<std::string> strs;
@@ -570,6 +578,13 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
         PBLOG_FATAL << "Parameter --best-n, -N must be positive.";
         std::exit(EXIT_FAILURE);
     }
+
+    // Override Sample Name for all Read Groups, disable SplitBySample.
+    if (!SampleName.empty() && SplitBySample) {
+        PBLOG_WARN << "Options --split-by-sample and --sample are mutually exclusive. Option "
+                      "--sample will be applied and --split-by-sample is ignored!";
+        SplitBySample = false;
+    }
 }
 
 int32_t AlignSettings::ThreadCount(int32_t n)
@@ -662,13 +677,17 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         OptionNames::HQRegion,
     });
 
+    i.AddGroup("Sequence Manipulation Options", {
+        OptionNames::CompressSequenceHomopolymers
+    });
+
     i.AddGroup("Output File Options", {
 
     });
 
     i.AddPositionalArguments({
         { "ref.fa|xml|mmi", "Reference FASTA, ReferenceSet XML, or Reference Index", "<ref.fa|xml|mmi>" },
-        { "in.bam|xml|fa|fq", "Input BAM, DataSet XML, FASTA, or FASTQ", "<in.bam|xml|fa|fq>" },
+        { "in.bam|xml|fa|fq|gz|fofn", "Input BAM, DataSet XML, FASTA, or FASTQ", "<in.bam|xml|fa|fq|gz|fofn>" },
         { "out.aligned.bam|xml", "Output BAM or DataSet XML", "[out.aligned.bam|xml]" }
     });
 

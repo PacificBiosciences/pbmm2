@@ -36,11 +36,11 @@
   $ [[ -f $CRAMTMP/split_dataset.test_test.bam.pbi ]] || echo "File does not exist!"
   $ [[ -f $CRAMTMP/split_dataset.UCLA_1023.bam.pbi ]] || echo "File does not exist!"
 
-  $ grep "PacBio.AlignmentFile.AlignmentBamFile" $CRAMTMP/split_dataset.3260208_188nM-GTAC_2xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494.alignmentset.xml | tr -d '\t' | cut -f 4 -d ' ' | cut -f 2 -d '=' | tr -d '"'
+  $ grep "PacBio.AlignmentFile.AlignmentBamFile" $CRAMTMP/split_dataset.3260208_188nM-GTAC_2xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494.alignmentset.xml | tr -d '\t' | cut -f 4 -d ' ' | cut -f 2 -d '=' | tr -d '"' | sed 's|^.*/||g'
   split_dataset.3260208_188nM-GTAC_2xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494.bam
-  $ grep "PacBio.AlignmentFile.AlignmentBamFile" $CRAMTMP/split_dataset.test_test.alignmentset.xml | tr -d '\t' | cut -f 4 -d ' ' | cut -f 2 -d '=' | tr -d '"'
+  $ grep "PacBio.AlignmentFile.AlignmentBamFile" $CRAMTMP/split_dataset.test_test.alignmentset.xml | tr -d '\t' | cut -f 4 -d ' ' | cut -f 2 -d '=' | tr -d '"' | sed 's|^.*/||g'
   split_dataset.test_test.bam
-  $ grep "PacBio.AlignmentFile.AlignmentBamFile" $CRAMTMP/split_dataset.UCLA_1023.alignmentset.xml | tr -d '\t' | cut -f 4 -d ' ' | cut -f 2 -d '=' | tr -d '"'
+  $ grep "PacBio.AlignmentFile.AlignmentBamFile" $CRAMTMP/split_dataset.UCLA_1023.alignmentset.xml | tr -d '\t' | cut -f 4 -d ' ' | cut -f 2 -d '=' | tr -d '"' | sed 's|^.*/||g'
   split_dataset.UCLA_1023.bam
 
   $ grep -c split_dataset.3260208_188nM-GTAC_2xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494.alignmentset.xml $CRAMTMP/split_dataset.json
@@ -49,3 +49,11 @@
   1
   $ grep -c split_dataset.UCLA_1023.alignmentset.xml $CRAMTMP/split_dataset.json
   1
+
+When both --split-by-sample and --sample were set, expect to see only one bam file with SM overridden.
+  $ IN=$TESTDIR/data/merged.consensusreadset.xml
+  $ $__PBTEST_PBMM2_EXE align $REF $IN $CRAMTMP/splitsampleoverride.consensusalignmentset.xml --sort -j 8 --split-by-sample --sample "MySample"
+  *Options --split-by-sample and --sample are mutually exclusive. Option --sample will be applied and --split-by-sample is ignored! (glob)
+  $ [[ -f $CRAMTMP/splitsampleoverride.bam ]] || echo "File does not exist!"
+  $ samtools view -H $CRAMTMP/splitsampleoverride.bam | grep "@RG" | cut -f 6 | sort | uniq
+  SM:MySample

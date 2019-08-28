@@ -1,11 +1,11 @@
 project(
   'pbmm2',
   ['c', 'cpp'],
-  version : '1.0.0',
+  version : '1.1.0',
   default_options : [
     'buildtype=release',
     'warning_level=3',
-    'cpp_std=c++11',
+    'cpp_std=c++14',
     'c_std=gnu11'],
   license : 'BSD-3',
   meson_version : '>= 0.46.0')
@@ -58,7 +58,7 @@ pbmm2_thread_dep = dependency('threads', required : true)
 pbmm2_boost_dep = dependency('boost', required : true)
 
 ## zlib
-pbmm2_zlib_dep = dependency('zlib', required : true)
+pbmm2_zlib_dep = dependency('zlib', required : true, fallback : ['zlib', 'zlib_dep'])
 
 ## pbbam
 pbmm2_pbbam_dep = dependency('pbbam', fallback : ['pbbam', 'pbbam_dep'])
@@ -69,13 +69,17 @@ pbmm2_pbcopper_dep = dependency('pbcopper', fallback : ['pbcopper', 'pbcopper_de
 ## minimap2
 pbmm2_minimap2_dep = dependency('minimap2', fallback : ['minimap2', 'mm2_dep'])
 
+# htslib
+pbmm2_htslib_dep = dependency('htslib', required : true, version : '>=1.4', fallback : ['htslib', 'htslib_dep'])
+
 pbmm2_lib_deps = [
   pbmm2_thread_dep,
   pbmm2_boost_dep,
   pbmm2_zlib_dep,
   pbmm2_pbbam_dep,
   pbmm2_pbcopper_dep,
-  pbmm2_minimap2_dep]
+  pbmm2_minimap2_dep,
+  pbmm2_htslib_dep]
 
 # include
 subdir('include')
@@ -86,6 +90,7 @@ subdir('src')
 # tests
 if not meson.is_subproject()
   if get_option('tests')
+    pbmm2_clang_formatter = find_program('tools/check-formatting')
     pbmm2_cram_script = find_program('cram', required : true)
     subdir('tests')
   endif

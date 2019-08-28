@@ -12,6 +12,8 @@
   0
   $ ls -alh $CRAMTMP/unsorted.json 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/unsorted.ref.collapsed.fasta 2> /dev/null | wc -l | tr -d ' '
+  0
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/unsorted_pbi.bam --pbi
   $ samtools view -H $CRAMTMP/unsorted_pbi.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
@@ -242,7 +244,7 @@
   *Generating BAI (glob)
   *Mapped Reads: 52 (glob)
   *Alignments: 96 (glob)
-  *Mapped Bases: 242356 (glob)
+  *Mapped Bases: 242437 (glob)
   *Mean Mapped Concordance: 91* (glob)
   *Max Mapped Read Length* (glob)
   *Mean Mapped Read Length* (glob)
@@ -309,7 +311,7 @@
   *Long join flank ratio  : 0.4 (glob)
 
 Test bam_sort
-  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sorted_small.bam --sort -J 1 -m 1M --log-level TRACE --log-file $CRAMTMP/sorted_small.txt
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sorted_small.bam --sort -J 1 -m 1M --log-level INFO --log-file $CRAMTMP/sorted_small.txt
 
 Test that median filter does not fail
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/median_output.bam --median-filter
@@ -317,3 +319,17 @@ Test that median filter does not fail
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/bestn1.bam --best-n 1
   $ samtools view $CRAMTMP/bestn1.bam | wc -l | tr -d ' '
   52
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/rle.bam --collapse-homopolymers
+  $ samtools view -H $CRAMTMP/rle.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/rle.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/rle.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/rle.*.xml 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/rle.json 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/rle.ref.collapsed.fasta 2> /dev/null | wc -l | tr -d ' '
+  1

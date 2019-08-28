@@ -6,12 +6,37 @@
   $ REF=$TESTDIR/data/ecoliK12_pbi_March2013.fasta
 
   $ BAM=$TESTDIR/data/median.bam
-  $ REF=$TESTDIR/data/ecoliK12_pbi_March2013.fasta
-
   $ samtools view ${BAM} | awk '{ print "@"$1"\n"$10"\n+\n"$11 }' > $CRAMTMP/median.fastq
   $ FASTQ=$CRAMTMP/median.fastq
+  $ cp $CRAMTMP/median.fastq $CRAMTMP/median_compressed.fastq
+  $ gzip $CRAMTMP/median_compressed.fastq
+  $ FASTQGZ=$CRAMTMP/median_compressed.fastq.gz
   $ samtools view ${BAM} | awk '{ print ">"$1"\n"$10 }' > $CRAMTMP/median.fasta
   $ FASTA=$CRAMTMP/median.fasta
+  $ cp $CRAMTMP/median.fasta $CRAMTMP/median_compressed.fasta
+  $ gzip $CRAMTMP/median_compressed.fasta
+  $ FASTAGZ=$CRAMTMP/median_compressed.fasta.gz
+
+  $ $__PBTEST_PBMM2_EXE align $REF $IN $CRAMTMP/global.alignmentset.xml --log-level FATAL
+  $ grep PacBio.AlignmentFile.AlignmentBamFile $CRAMTMP/global.alignmentset.xml
+  */global.bam* (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $REF $IN local.alignmentset.xml --log-level FATAL
+  $ grep PacBio.AlignmentFile.AlignmentBamFile local.alignmentset.xml
+  */local.bam* (glob)
+
+  $ mkdir -p $CRAMTMP/sub/dir/foo
+  $ $__PBTEST_PBMM2_EXE align $REF $IN $CRAMTMP/sub/dir/foo/test.alignmentset.xml --log-level FATAL
+  $ grep PacBio.AlignmentFile.AlignmentBamFile $CRAMTMP/sub/dir/foo/test.alignmentset.xml
+  */sub/dir/foo/test.bam* (glob)
+
+  $ mkdir -p $CRAMTMP/bla/other/bar
+  $ cd $CRAMTMP/sub/dir/foo
+  $ $__PBTEST_PBMM2_EXE align $REF $IN ../../../bla/other/bar/test.alignmentset.xml --log-level FATAL
+  $ grep PacBio.AlignmentFile.AlignmentBamFile $CRAMTMP/bla/other/bar/test.alignmentset.xml
+  */bla/other/bar/test.bam* (glob)
+
+  $ cd ../../../
 
   $ $__PBTEST_PBMM2_EXE align $IN 2>&1
   *Please provide at least the input arguments: reference input output!* (glob)
@@ -58,6 +83,11 @@
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam --sort -J 1 -m 10000000000 2>&1; rm -rf $CRAMTMP/fail.bam
 
   $ $__PBTEST_PBMM2_EXE index $REF $CRAMTMP/index_logging.mmi --log-file $CRAMTMP/index_logging.txt 2>&1
+
+  $ $__PBTEST_PBMM2_EXE index $REF $CRAMTMP/ref.mmi
+  $ $__PBTEST_PBMM2_EXE align $CRAMTMP/ref.mmi $IN $CRAMTMP/mmi.fail.bam --collapse-homopolymers
+  *Cannot combine --collapse-homopolymers with MMI input.* (glob)
+  [1]
 
   $ $__PBTEST_PBMM2_EXE index $REF 2>&1
   *Please provide both arguments: input output!* (glob)
@@ -125,10 +155,10 @@
   [1]
 
   $ $__PBTEST_PBMM2_EXE align 2>&1 | grep Usage
-  Usage: pbmm2 align [options] <ref.fa|xml|mmi> <in.bam|xml|fa|fq> [out.aligned.bam|xml]* (glob)
+  Usage: pbmm2 align [options] <ref.fa|xml|mmi> <in.bam|xml|fa|fq|gz|fofn> [out.aligned.bam|xml]* (glob)
 
   $ $__PBTEST_PBMM2_EXE align --help 2>&1 | grep Usage
-  Usage: pbmm2 align [options] <ref.fa|xml|mmi> <in.bam|xml|fa|fq> [out.aligned.bam|xml]* (glob)
+  Usage: pbmm2 align [options] <ref.fa|xml|mmi> <in.bam|xml|fa|fq|gz|fofn> [out.aligned.bam|xml]* (glob)
 
   $ $__PBTEST_PBMM2_EXE index 2>&1 | grep Usage
   Usage: pbmm2 index [options] <ref.fa|xml> <out.mmi>* (glob)
@@ -280,26 +310,178 @@
   $ echo $BAM > $CRAMTMP/mixed-bam-fq.fofn
   $ echo $FASTQ >> $CRAMTMP/mixed-bam-fq.fofn
   $ $__PBTEST_PBMM2_EXE align $CRAMTMP/mixed-bam-fq.fofn $REF $CRAMTMP/mixed-bam-fq.bam
-  *Could not determine read input type(s). Please do not mix data types, such as BAM+FASTQ. File of files may only contain BAMs or datasets.* (glob)
+  *Input fofn contains different file types. This is not supported.* (glob)
   [1]
 
   $ echo $BAM > $CRAMTMP/mixed-bam-fa.fofn
   $ echo $FASTA >> $CRAMTMP/mixed-bam-fa.fofn
   $ $__PBTEST_PBMM2_EXE align $CRAMTMP/mixed-bam-fa.fofn $REF $CRAMTMP/mixed-bam-fq.bam
-  *Could not determine read input type(s). Please do not mix data types, such as BAM+FASTQ. File of files may only contain BAMs or datasets.* (glob)
+  *Input fofn contains different file types. This is not supported.* (glob)
   [1]
 
   $ echo $FASTQ > $CRAMTMP/mixed-fq-fa.fofn
   $ echo $FASTA >> $CRAMTMP/mixed-fq-fa.fofn
   $ $__PBTEST_PBMM2_EXE align $CRAMTMP/mixed-fq-fa.fofn $REF $CRAMTMP/mixed-fq-fa.bam
-  *Could not determine read input type(s). Please do not mix data types, such as BAM+FASTQ. File of files may only contain BAMs or datasets.* (glob)
+  *Input fofn contains different file types. This is not supported.* (glob)
+  [1]
+
+  $ echo $FASTQGZ > $CRAMTMP/mixed-fqgz-fa.fofn
+  $ echo $FASTA >> $CRAMTMP/mixed-fqgz-fa.fofn
+  $ $__PBTEST_PBMM2_EXE align $CRAMTMP/mixed-fqgz-fa.fofn $REF $CRAMTMP/mixed-fq-fa.bam
+  *Input fofn contains different file types. This is not supported.* (glob)
+  [1]
+
+  $ echo $FASTQ > $CRAMTMP/mixed-fq-fagz.fofn
+  $ echo $FASTAGZ >> $CRAMTMP/mixed-fq-fagz.fofn
+  $ $__PBTEST_PBMM2_EXE align $CRAMTMP/mixed-fq-fagz.fofn $REF $CRAMTMP/mixed-fq-fa.bam
+  *Input fofn contains different file types. This is not supported.* (glob)
   [1]
 
   $ echo $FASTQ > $CRAMTMP/mixed-fq-fq.fofn
   $ echo $FASTQ >> $CRAMTMP/mixed-fq-fq.fofn
-  $ $__PBTEST_PBMM2_EXE align $CRAMTMP/mixed-fq-fq.fofn $REF $CRAMTMP/mixed-fq-fq.bam
-  *Could not determine read input type(s). Please do not mix data types, such as BAM+FASTQ. File of files may only contain BAMs or datasets.* (glob)
-  [1]
+  $ $__PBTEST_PBMM2_EXE align $CRAMTMP/mixed-fq-fq.fofn $REF $CRAMTMP/mixed-fq-fq.bam -j 4 --log-level INFO 2>&1
+  *Using 4 threads for alignments.* (glob)
+  *Input is FASTQ FOFN. Output BAM file cannot be used for polishing with GenomicConsensus!* (glob)
+  *READ input file: *mixed-fq-fq.fofn* (glob)
+  *REF  input file: *ecoli.referenceset.xml* (glob)
+  *Start reading/building index (glob)
+  *Finished reading/building index (glob)
+  *Mapped Reads: 104 (glob)
+  *Alignments: 192 (glob)
+  *Mapped Bases: 484874 (glob)
+  *Mean Mapped Concordance: 91* (glob)
+  *Max Mapped Read Length* (glob)
+  *Mean Mapped Read Length* (glob)
+  *Index Build/Read Time: * (glob)
+  *Alignment Time: * (glob)
+  *Run Time: * (glob)
+  *CPU Time: * (glob)
+  *Peak RSS: * (glob)
+
+  $ echo $FASTA > $CRAMTMP/mixed-fa-fa.fofn
+  $ echo $FASTA >> $CRAMTMP/mixed-fa-fa.fofn
+  $ $__PBTEST_PBMM2_EXE align $CRAMTMP/mixed-fa-fa.fofn $REF $CRAMTMP/mixed-fa-fa.bam -j 4 --log-level INFO 2>&1
+  *Using 4 threads for alignments.* (glob)
+  *Input is FASTA FOFN. Output BAM file cannot be used for polishing with GenomicConsensus!* (glob)
+  *READ input file: *mixed-fa-fa.fofn* (glob)
+  *REF  input file: *ecoli.referenceset.xml* (glob)
+  *Start reading/building index (glob)
+  *Finished reading/building index (glob)
+  *Mapped Reads: 104 (glob)
+  *Alignments: 192 (glob)
+  *Mapped Bases: 484874 (glob)
+  *Mean Mapped Concordance: 91* (glob)
+  *Max Mapped Read Length* (glob)
+  *Mean Mapped Read Length* (glob)
+  *Index Build/Read Time: * (glob)
+  *Alignment Time: * (glob)
+  *Run Time: * (glob)
+  *CPU Time: * (glob)
+  *Peak RSS: * (glob)
+
+  $ echo $FASTQGZ > $CRAMTMP/mixed-fqgz-fqgz.fofn
+  $ echo $FASTQGZ >> $CRAMTMP/mixed-fqgz-fqgz.fofn
+  $ $__PBTEST_PBMM2_EXE align $CRAMTMP/mixed-fqgz-fqgz.fofn $REF $CRAMTMP/mixed-fqgz-fqgz.bam -j 4 --log-level INFO 2>&1
+  *Using 4 threads for alignments.* (glob)
+  *Input is FASTQ FOFN. Output BAM file cannot be used for polishing with GenomicConsensus!* (glob)
+  *READ input file: *mixed-fqgz-fqgz.fofn* (glob)
+  *REF  input file: *ecoli.referenceset.xml* (glob)
+  *Start reading/building index (glob)
+  *Finished reading/building index (glob)
+  *Mapped Reads: 104 (glob)
+  *Alignments: 192 (glob)
+  *Mapped Bases: 484874 (glob)
+  *Mean Mapped Concordance: 91* (glob)
+  *Max Mapped Read Length* (glob)
+  *Mean Mapped Read Length* (glob)
+  *Index Build/Read Time: * (glob)
+  *Alignment Time: * (glob)
+  *Run Time: * (glob)
+  *CPU Time: * (glob)
+  *Peak RSS: * (glob)
+
+  $ echo $FASTAGZ > $CRAMTMP/mixed-fagz-fagz.fofn
+  $ echo $FASTAGZ >> $CRAMTMP/mixed-fagz-fagz.fofn
+  $ $__PBTEST_PBMM2_EXE align $CRAMTMP/mixed-fagz-fagz.fofn $REF $CRAMTMP/mixed-fagz-fagz.bam -j 4 --log-level INFO 2>&1
+  *Using 4 threads for alignments.* (glob)
+  *Input is FASTA FOFN. Output BAM file cannot be used for polishing with GenomicConsensus!* (glob)
+  *READ input file: *mixed-fagz-fagz.fofn* (glob)
+  *REF  input file: *ecoli.referenceset.xml* (glob)
+  *Start reading/building index (glob)
+  *Finished reading/building index (glob)
+  *Mapped Reads: 104 (glob)
+  *Alignments: 192 (glob)
+  *Mapped Bases: 484874 (glob)
+  *Mean Mapped Concordance: 91* (glob)
+  *Max Mapped Read Length* (glob)
+  *Mean Mapped Read Length* (glob)
+  *Index Build/Read Time: * (glob)
+  *Alignment Time: * (glob)
+  *Run Time: * (glob)
+  *CPU Time: * (glob)
+  *Peak RSS: * (glob)
+
+  $ echo $FASTQGZ > $CRAMTMP/mixed-fqgz-fq.fofn
+  $ echo $FASTQ >> $CRAMTMP/mixed-fqgz-fq.fofn
+  $ $__PBTEST_PBMM2_EXE align $CRAMTMP/mixed-fqgz-fq.fofn $REF $CRAMTMP/mixed-fqgz-fq.bam -j 4 --log-level INFO 2>&1
+  *Using 4 threads for alignments.* (glob)
+  *Input is FASTQ FOFN. Output BAM file cannot be used for polishing with GenomicConsensus!* (glob)
+  *READ input file: *mixed-fqgz-fq.fofn* (glob)
+  *REF  input file: *ecoli.referenceset.xml* (glob)
+  *Start reading/building index (glob)
+  *Finished reading/building index (glob)
+  *Mapped Reads: 104 (glob)
+  *Alignments: 192 (glob)
+  *Mapped Bases: 484874 (glob)
+  *Mean Mapped Concordance: 91* (glob)
+  *Max Mapped Read Length* (glob)
+  *Mean Mapped Read Length* (glob)
+  *Index Build/Read Time: * (glob)
+  *Alignment Time: * (glob)
+  *Run Time: * (glob)
+  *CPU Time: * (glob)
+  *Peak RSS: * (glob)
+
+  $ echo $FASTA > $CRAMTMP/mixed-fa-fagz.fofn
+  $ echo $FASTAGZ >> $CRAMTMP/mixed-fa-fagz.fofn
+  $ $__PBTEST_PBMM2_EXE align $CRAMTMP/mixed-fa-fagz.fofn $REF $CRAMTMP/mixed-fa-fagz.bam -j 4 --log-level INFO 2>&1
+  *Using 4 threads for alignments.* (glob)
+  *Input is FASTA FOFN. Output BAM file cannot be used for polishing with GenomicConsensus!* (glob)
+  *READ input file: *mixed-fa-fagz.fofn* (glob)
+  *REF  input file: *ecoli.referenceset.xml* (glob)
+  *Start reading/building index (glob)
+  *Finished reading/building index (glob)
+  *Mapped Reads: 104 (glob)
+  *Alignments: 192 (glob)
+  *Mapped Bases: 484874 (glob)
+  *Mean Mapped Concordance: 91* (glob)
+  *Max Mapped Read Length* (glob)
+  *Mean Mapped Read Length* (glob)
+  *Index Build/Read Time: * (glob)
+  *Alignment Time: * (glob)
+  *Run Time: * (glob)
+  *CPU Time: * (glob)
+  *Peak RSS: * (glob)
+
+  $ echo $BAM > $CRAMTMP/mixed-bam-bam.fofn
+  $ echo $BAM >> $CRAMTMP/mixed-bam-bam.fofn
+  $ $__PBTEST_PBMM2_EXE align $CRAMTMP/mixed-bam-bam.fofn $REF $CRAMTMP/mixed-bam-bam.bam -j 4 --log-level INFO 2>&1
+  *Using 4 threads for alignments.* (glob)
+  *READ input file: *mixed-bam-bam.fofn* (glob)
+  *REF  input file: *ecoli.referenceset.xml* (glob)
+  *Start reading/building index (glob)
+  *Finished reading/building index (glob)
+  *Mapped Reads: 104 (glob)
+  *Alignments: 192 (glob)
+  *Mapped Bases: 484874 (glob)
+  *Mean Mapped Concordance: 91* (glob)
+  *Max Mapped Read Length* (glob)
+  *Mean Mapped Read Length* (glob)
+  *Index Build/Read Time: * (glob)
+  *Alignment Time: * (glob)
+  *Run Time: * (glob)
+  *CPU Time: * (glob)
+  *Peak RSS: * (glob)
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF --sort --no-bai > $CRAMTMP/warn_bai_pipe.bam
   *Option --no-bai has no effect when using an output pipe!* (glob)
@@ -357,4 +539,8 @@
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam -N -2
   *Parameter --best-n, -N must be positive. (glob)
+  [1]
+
+  $ $__PBTEST_PBMM2_EXE align $REF $BAM $BAM $CRAMTMP/fail.bam
+  *Incorrect number of arguments. Accepted are at most three!* (glob)
   [1]

@@ -11,20 +11,19 @@
 #include <tuple>
 #include <vector>
 
-#include <pbcopper/PbcopperMakeUnique.h>
 #include <pbcopper/json/JSON.h>
 #include <pbcopper/logging/Logging.h>
 #include <pbcopper/utility/FileUtils.h>
 
 #include <pbbam/BamWriter.h>
-#include <pbbam/FastaReader.h>
-#include <pbbam/FastqReader.h>
-
 #include <pbbam/DataSet.h>
 #include <pbbam/EntireFileQuery.h>
+#include <pbbam/FastaReader.h>
+#include <pbbam/FastqReader.h>
 #include <pbbam/PbiFilter.h>
 #include <pbbam/PbiFilterQuery.h>
 #include <pbbam/virtual/ZmwReadStitcher.h>
+#include <pbcopper/data/LocalContextFlags.h>
 
 #include <pbcopper/parallel/FireAndForget.h>
 
@@ -72,13 +71,6 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     AlignSettings settings(options);
 
     UserIO uio = InputOutputUX::CheckPositionalArgs(options.PositionalArguments(), settings);
-    BAM::DataSet inFile;
-    try {
-        if (!uio.isFastaInput && !uio.isFastqInput) inFile = BAM::DataSet(uio.inFile);
-    } catch (...) {
-        PBLOG_FATAL << UNKNOWN_FILE_TYPES;
-        std::exit(EXIT_FAILURE);
-    }
 
     if (!uio.isAlignedInput && (!uio.isFromXML || !uio.isFromSubreadset)) {
         if (settings.ZMW) {
@@ -95,6 +87,16 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         }
     }
 
+    if (uio.isFromMmi && settings.CompressSequenceHomopolymers) {
+        PBLOG_FATAL << "Cannot combine --collapse-homopolymers with MMI input.";
+        std::exit(EXIT_FAILURE);
+    }
+
+    if (uio.isFromFofn && settings.SplitBySample) {
+        PBLOG_FATAL << "Cannot combine --split-by-sample with fofn input.";
+        std::exit(EXIT_FAILURE);
+    }
+
     if (!uio.isFastaInput && !uio.isFastqInput && !settings.Rg.empty()) {
         PBLOG_FATAL << "Cannot override read groups with BAM input. Remove option --rg.";
         std::exit(EXIT_FAILURE);
@@ -107,22 +109,43 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         return true;
     };
 
+    const auto CompressHomopolymers = [&](const std::string& bases) -> std::string {
+        const int32_t numBases = bases.size();
+        std::string compressed{bases.at(0)};
+        for (int32_t i = 1; i < numBases; ++i)
+            if (std::toupper(bases.at(i)) != std::toupper(bases.at(i - 1)))
+                compressed += bases.at(i);
+        return compressed;
+    };
+
     Timer indexTime;
-    MM2Helper mm2helper(uio.refFile, settings);
+    std::unique_ptr<MM2Helper> mm2helper;
+    if (settings.CompressSequenceHomopolymers) {
+        std::vector<BAM::FastaSequence> refs = BAM::FastaReader::ReadAll(uio.refFile);
+        std::ofstream compressedRef(uio.outPrefix + ".ref.collapsed.fasta");
+        for (size_t i = 0; i < refs.size(); ++i) {
+            const std::string rle = CompressHomopolymers(refs[i].Bases());
+            compressedRef << '>' << refs[i].Name() << '\n' << rle << '\n';
+            refs[i] = BAM::FastaSequence(refs[i].Name(), std::move(rle));
+        }
+        mm2helper = std::make_unique<MM2Helper>(refs, settings);
+    } else {
+        mm2helper = std::make_unique<MM2Helper>(uio.refFile, settings);
+    }
     indexTime.Freeze();
     Timer alignmentTime;
 
     Summary s;
     int64_t alignedReads = 0;
 
-    const auto BamQuery = [&inFile]() {
+    const auto BamQueryFile = [](const std::string& file) {
         try {
-            const auto filter = BAM::PbiFilter::FromDataSet(inFile);
+            const auto filter = BAM::PbiFilter::FromDataSet(file);
             std::unique_ptr<BAM::internal::IQuery> query(nullptr);
             if (filter.IsEmpty())
-                query = std::make_unique<BAM::EntireFileQuery>(inFile);
+                query = std::make_unique<BAM::EntireFileQuery>(file);
             else
-                query = std::make_unique<BAM::PbiFilterQuery>(filter, inFile);
+                query = std::make_unique<BAM::PbiFilterQuery>(filter, file);
             return query;
         } catch (...) {
             PBLOG_FATAL << UNKNOWN_FILE_TYPES;
@@ -134,7 +157,9 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     {
         static const std::string fallbackSampleName{"UnnamedSample"};
 
-        auto mtsti = SampleNames::DetermineMovieToSampleToInfix(inFile);
+        MovieToSampleToInfix mtsti;
+        if (!uio.isFastaInput && !uio.isFastqInput)
+            mtsti = SampleNames::DetermineMovieToSampleToInfix(uio);
 
         std::map<std::string, std::set<std::string>> infixToSamples;
         for (const auto& movie_sampleInfix : mtsti)
@@ -157,9 +182,8 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         }
 
         std::string fastxRgId = "default";
-        BAM::BamHeader hdr =
-            SampleNames::GenerateBamHeader(inFile, settings, uio, mtsti, fastxRgId);
-        for (const auto& si : mm2helper.SequenceInfos())
+        BAM::BamHeader hdr = SampleNames::GenerateBamHeader(settings, uio, mtsti, fastxRgId);
+        for (const auto& si : mm2helper->SequenceInfos())
             hdr.AddSequence(si);
 
         PacBio::Parallel::FireAndForget faf(settings.NumThreads, 3);
@@ -178,20 +202,33 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         const auto firstTime = std::chrono::steady_clock::now();
         auto lastTime = std::chrono::steady_clock::now();
         auto Submit = [&](const std::unique_ptr<std::vector<BAM::BamRecord>>& recs) {
+            const auto Strip = [](BAM::BamRecord& record) {
+                auto& impl = record.Impl();
+                for (const auto& t : {"dq", "dt", "ip", "iq", "mq", "pa", "pc", "pd", "pe", "pg",
+                                      "pm", "pq", "pt", "pv", "pw", "px", "sf", "sq", "st"})
+                    impl.RemoveTag(t);
+            };
             if (settings.Strip) {
-                const auto Strip = [](BAM::BamRecord& record) {
-                    auto& impl = record.Impl();
-                    for (const auto& t :
-                         {"dq", "dt", "ip", "iq", "mq", "pa", "pc", "pd", "pe", "pg", "pm", "pq",
-                          "pt", "pv", "pw", "px", "sf", "sq", "st"})
-                        impl.RemoveTag(t);
-                };
                 for (auto& r : *recs)
                     Strip(r);
             }
+            if (settings.CompressSequenceHomopolymers) {
+                const auto Compress = [&](BAM::BamRecord& record) {
+                    std::string newSeq = CompressHomopolymers(record.Sequence());
+                    record.Impl().SetSequenceAndQualities(newSeq);
+                    if (record.HasQueryStart() && record.HasQueryEnd()) {
+                        record.Impl().EditTag(
+                            "qe", record.QueryStart() + static_cast<int32_t>(newSeq.size()));
+                    }
+                };
+                for (auto& r : *recs) {
+                    Compress(r);
+                    Strip(r);
+                }
+            }
             int32_t aligned = 0;
             try {
-                auto output = mm2helper.Align(recs, filter, &aligned);
+                auto output = mm2helper->Align(recs, filter, &aligned);
                 if (output) {
                     std::lock_guard<std::mutex> lock(outputMutex);
                     alignedReads += aligned;
@@ -244,28 +281,32 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         };
 
         if (uio.isFastaInput) {
-            BAM::FastaReader reader(uio.inFile);
-            BAM::FastaSequence fa;
-            while (reader.GetNext(fa)) {
-                (*records)[i++] = FastxToUnalignedBam(fa.Bases(), fa.Name(), "");
-                if (i >= chunkSize) {
-                    waiting++;
-                    faf.ProduceWith(Submit, std::move(records));
-                    records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
-                    i = 0;
+            for (const auto& f : uio.inputFiles) {
+                BAM::FastaReader reader(f);
+                BAM::FastaSequence fa;
+                while (reader.GetNext(fa)) {
+                    (*records)[i++] = FastxToUnalignedBam(fa.Bases(), fa.Name(), "");
+                    if (i >= chunkSize) {
+                        waiting++;
+                        faf.ProduceWith(Submit, std::move(records));
+                        records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
+                        i = 0;
+                    }
                 }
             }
         } else if (uio.isFastqInput) {
-            BAM::FastqReader reader(uio.inFile);
-            BAM::FastqSequence fq;
-            while (reader.GetNext(fq)) {
-                (*records)[i++] =
-                    FastxToUnalignedBam(fq.Bases(), fq.Name(), fq.Qualities().Fastq());
-                if (i >= chunkSize) {
-                    waiting++;
-                    faf.ProduceWith(Submit, std::move(records));
-                    records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
-                    i = 0;
+            for (const auto& f : uio.inputFiles) {
+                BAM::FastqReader reader(f);
+                BAM::FastqSequence fq;
+                while (reader.GetNext(fq)) {
+                    (*records)[i++] =
+                        FastxToUnalignedBam(fq.Bases(), fq.Name(), fq.Qualities().Fastq());
+                    if (i >= chunkSize) {
+                        waiting++;
+                        faf.ProduceWith(Submit, std::move(records));
+                        records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
+                        i = 0;
+                    }
                 }
             }
         } else if (uio.isAlignedInput) {
@@ -274,18 +315,26 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             if (settings.ZMW) PBLOG_WARN << "Option --zmw is ignored with aligned input!";
             if (settings.HQRegion) PBLOG_WARN << "Option --hqregion is ignored with aligned input!";
 
-            auto reader = BamQuery();
-            BAM::BamRecord tmp;
-            while (reader->GetNext(tmp)) {
-                if (tmp.Impl().IsSupplementaryAlignment()) continue;
-                (*records)[i++] = std::move(tmp);
-                tmp = BAM::BamRecord();
-                if (i >= chunkSize) {
-                    waiting++;
-                    faf.ProduceWith(Submit, std::move(records));
-                    records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
-                    i = 0;
+            const auto Fill = [&](const std::string& f) {
+                auto reader = BamQueryFile(f);
+                BAM::BamRecord tmp;
+                while (reader->GetNext(tmp)) {
+                    if (tmp.Impl().IsSupplementaryAlignment()) continue;
+                    (*records)[i++] = std::move(tmp);
+                    tmp = BAM::BamRecord();
+                    if (i >= chunkSize) {
+                        waiting++;
+                        faf.ProduceWith(Submit, std::move(records));
+                        records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
+                        i = 0;
+                    }
                 }
+            };
+            if (uio.isFromJson) {
+                Fill(uio.unpackedFromJson);
+            } else {
+                for (const auto& f : uio.inputFiles)
+                    Fill(f);
             }
         } else if (settings.MedianFilter) {
             struct RecordAnnotated
@@ -295,7 +344,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                 {
                     if (Record.HasLocalContextFlags()) {
                         const auto flags = Record.LocalContextFlags();
-                        if (flags & BAM::ADAPTER_BEFORE && flags & BAM::ADAPTER_AFTER) {
+                        if (flags & Data::ADAPTER_BEFORE && flags & Data::ADAPTER_AFTER) {
                             FullLength = true;
                         }
                     }
@@ -350,70 +399,103 @@ int AlignWorkflow::Runner(const CLI::Results& options)
             const auto Flush = [&]() {
                 if (!ras.empty()) (*records)[i++] = PickMedian(std::move(ras));
             };
-            auto reader = BamQuery();
-            for (auto& record : *reader) {
-                const auto nextHoleNumber = record.HoleNumber();
-                const auto nextMovieName = record.MovieName();
-                if (holeNumber != nextHoleNumber || movieName != nextMovieName) {
-                    Flush();
-                    holeNumber = nextHoleNumber;
-                    movieName = nextMovieName;
-                    ras = std::vector<RecordAnnotated>();
-                }
-                if (i >= chunkSize) {
-                    waiting++;
-                    faf.ProduceWith(Submit, std::move(records));
-                    records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
-                    i = 0;
-                }
-                ras.emplace_back(record);
-            }
-            Flush();
-        } else if (settings.HQRegion) {
-            BAM::ZmwReadStitcher reader(inFile);
-            while (reader.HasNext()) {
-                auto r = reader.Next();
-                if (r.HasVirtualRegionType(BAM::VirtualRegionType::HQREGION)) {
-                    auto hqs = r.VirtualRegionsTable(BAM::VirtualRegionType::HQREGION);
-                    if (hqs.empty()) {
-                        PBLOG_WARN << "Skipping ZMW record " << r.FullName()
-                                   << " missing HQ region";
-                    } else if (hqs.size() > 1) {
-                        PBLOG_WARN << "ZMW record " << r.FullName()
-                                   << " has more than one HQ region, will use first";
+
+            const auto Fill = [&](const std::string& f) {
+                auto reader = BamQueryFile(f);
+                for (auto& record : *reader) {
+                    const auto nextHoleNumber = record.HoleNumber();
+                    const auto nextMovieName = record.MovieName();
+                    if (holeNumber != nextHoleNumber || movieName != nextMovieName) {
+                        Flush();
+                        holeNumber = nextHoleNumber;
+                        movieName = nextMovieName;
+                        ras = std::vector<RecordAnnotated>();
                     }
-                    r.Clip(BAM::ClipType::CLIP_TO_QUERY, hqs.at(0).beginPos, hqs.at(0).endPos);
+                    if (i >= chunkSize) {
+                        waiting++;
+                        faf.ProduceWith(Submit, std::move(records));
+                        records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
+                        i = 0;
+                    }
+                    ras.emplace_back(record);
                 }
-                (*records)[i++] = std::move(r);
-                if (i >= chunkSize) {
-                    waiting++;
-                    faf.ProduceWith(Submit, std::move(records));
-                    records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
-                    i = 0;
+                Flush();
+            };
+            if (uio.isFromJson) {
+                Fill(uio.unpackedFromJson);
+            } else {
+                for (const auto& f : uio.inputFiles)
+                    Fill(f);
+            }
+        } else if (settings.HQRegion) {
+            const auto Fill = [&](const std::string& f) {
+                BAM::ZmwReadStitcher reader(f);
+                while (reader.HasNext()) {
+                    auto r = reader.Next();
+                    if (r.HasVirtualRegionType(BAM::VirtualRegionType::HQREGION)) {
+                        auto hqs = r.VirtualRegionsTable(BAM::VirtualRegionType::HQREGION);
+                        if (hqs.empty()) {
+                            PBLOG_WARN << "Skipping ZMW record " << r.FullName()
+                                       << " missing HQ region";
+                        } else if (hqs.size() > 1) {
+                            PBLOG_WARN << "ZMW record " << r.FullName()
+                                       << " has more than one HQ region, will use first";
+                        }
+                        r.Clip(BAM::ClipType::CLIP_TO_QUERY, hqs.at(0).beginPos, hqs.at(0).endPos);
+                    }
+                    (*records)[i++] = std::move(r);
+                    if (i >= chunkSize) {
+                        waiting++;
+                        faf.ProduceWith(Submit, std::move(records));
+                        records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
+                        i = 0;
+                    }
                 }
+            };
+            if (uio.isFromJson) {
+                Fill(uio.unpackedFromJson);
+            } else {
+                for (const auto& f : uio.inputFiles)
+                    Fill(f);
             }
         } else if (settings.ZMW) {
-            BAM::ZmwReadStitcher reader(inFile);
-            while (reader.HasNext()) {
-                (*records)[i++] = reader.Next();
-                if (i >= chunkSize) {
-                    waiting++;
-                    faf.ProduceWith(Submit, std::move(records));
-                    records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
-                    i = 0;
+            const auto Fill = [&](const std::string& f) {
+                BAM::ZmwReadStitcher reader(f);
+                while (reader.HasNext()) {
+                    (*records)[i++] = reader.Next();
+                    if (i >= chunkSize) {
+                        waiting++;
+                        faf.ProduceWith(Submit, std::move(records));
+                        records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
+                        i = 0;
+                    }
                 }
+            };
+            if (uio.isFromJson) {
+                Fill(uio.unpackedFromJson);
+            } else {
+                for (const auto& f : uio.inputFiles)
+                    Fill(f);
             }
         } else {
-            auto reader = BamQuery();
-            while (reader->GetNext((*records)[i++])) {
-                if (i >= chunkSize) {
-                    waiting++;
-                    faf.ProduceWith(Submit, std::move(records));
-                    records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
-                    i = 0;
+            const auto Fill = [&](const std::string& f) {
+                auto reader = BamQueryFile(f);
+                while (reader->GetNext((*records)[i++])) {
+                    if (i >= chunkSize) {
+                        waiting++;
+                        faf.ProduceWith(Submit, std::move(records));
+                        records = std::make_unique<std::vector<BAM::BamRecord>>(chunkSize);
+                        i = 0;
+                    }
                 }
+                if (i > 0) i--;
+            };
+            if (uio.isFromJson) {
+                Fill(uio.unpackedFromJson);
+            } else {
+                for (const auto& f : uio.inputFiles)
+                    Fill(f);
             }
-            if (i > 0) i--;
         }
         // terminal records, if they exist
         if (i > 0) {
@@ -452,9 +534,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
 
     std::string pbiTiming;
     if (uio.isToXML || uio.isToJson)
-        pbiTiming =
-            writers->WriteDatasetsJson(inFile, uio.outFile, uio.refFile, uio.isFromXML,
-                                       uio.isToJson, s, uio.outPrefix, settings.SplitBySample);
+        pbiTiming = writers->WriteDatasetsJson(uio, s, settings.SplitBySample);
     else if (settings.CreatePbi)
         pbiTiming = writers->ForcePbiOutput();
 

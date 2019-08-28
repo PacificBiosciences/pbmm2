@@ -54,7 +54,8 @@
   *Bandwidth              : 1234 (glob)
   *Long join flank ratio  : 0.1 (glob)
   *Trying pipe* (glob)
+  *[TMPDIR] Using directory for sorting* (glob)
   *Alignment finished, merging sorted chunks using* (glob)
 
   $ samtools view -H rtc_overrides_out.bam | grep "ID:pbmm2" | sed 's/\t/X/g' | tr 'X' '\n' | grep "or:"
-  or:-k 13 -w 14 -u -A 1 -B 2 -z 100 -Z 10 -r 1234 -o 11 -O 20 -e 2 -E 1 -L 0.1
+  *or:-k 13 -w 14 -u -A 1 -B 2 -z 100 -Z 10 -r 1234 -o 11 -O 20 -e 2 -E 1 -L 0.1* (glob)

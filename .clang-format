@@ -7,6 +7,7 @@ BreakConstructorInitializersBeforeComma: true
 ColumnLimit: 100
 IndentWidth: 4
 PointerAlignment: Left
+DerivePointerAlignment: false
 TabWidth: 4
 
 ReflowComments: false  # protect ASCII art in comments

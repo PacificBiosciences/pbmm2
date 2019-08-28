@@ -2,13 +2,23 @@
 
 #include <pbmm2/MM2Helper.h>
 
+#include <iostream>
+#include <memory>
+
+#include <boost/assert.hpp>
+#include <boost/optional.hpp>
+
+#include <pbcopper/data/Cigar.h>
+#include <pbcopper/data/Position.h>
+#include <pbcopper/data/Strand.h>
+
 namespace PacBio {
 namespace minimap2 {
 namespace {
 
-PacBio::BAM::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const int opt_flag)
+Data::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const int opt_flag)
 {
-    using PacBio::BAM::Cigar;
+    using Data::Cigar;
 
     Cigar cigar;
 
@@ -28,10 +38,10 @@ PacBio::BAM::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const i
     return cigar;
 }
 
-PacBio::BAM::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const int opt_flag,
-                               int newQs, int newQe, int* refStartOffset)
+Data::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const int opt_flag, int newQs,
+                        int newQe, int* refStartOffset)
 {
-    using PacBio::BAM::Cigar;
+    using Data::Cigar;
 
     Cigar cigar;
 
@@ -114,6 +124,17 @@ MM2Helper::MM2Helper(const std::vector<BAM::FastaSequence>& refs, const MM2Setti
     std::string preset;
     PreInit(settings, &preset);
     Idx = std::make_unique<Index>(refs, IdxOpts);
+    PostInit(settings, preset, true);
+}
+MM2Helper::MM2Helper(std::vector<BAM::FastaSequence>&& refs, const MM2Settings& settings)
+    : NumThreads{settings.NumThreads}
+    , alnMode_(settings.AlignMode)
+    , trimRepeatedMatches_(!settings.NoTrimming)
+    , maxNumAlns_(settings.MaxNumAlns)
+{
+    std::string preset;
+    PreInit(settings, &preset);
+    Idx = std::make_unique<Index>(std::move(refs), IdxOpts);
     PostInit(settings, preset, true);
 }
 void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
@@ -311,17 +332,29 @@ std::unique_ptr<std::vector<AlignedRecord>> MM2Helper::Align(
     return result;
 }
 
-std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const FilterFunc& filter,
-                                            std::unique_ptr<ThreadBuffer>& tbuf) const
+namespace {
+
+bool checkIsSupplementaryAlignment(const BAM::BamRecord& record)
 {
-    std::vector<AlignedRecord> localResults;
-    if (record.IsMapped() && record.Impl().IsSupplementaryAlignment()) return localResults;
+    return record.IsMapped() && record.Impl().IsSupplementaryAlignment();
+}
 
-    std::unique_ptr<ThreadBuffer> tbufLocal;
-    if (!tbuf) tbufLocal = std::make_unique<ThreadBuffer>();
+bool checkIsSupplementaryAlignment(const Data::Read&) { return false; }
 
-    int numAlns;
-    const auto seq = record.Sequence(BAM::Orientation::NATIVE);
+std::string getNativeOrientationSequence(const BAM::BamRecord& record)
+{
+    return record.Sequence(BAM::Orientation::NATIVE);
+}
+
+const std::string& getNativeOrientationSequence(const Data::Read& record)
+{
+    // Data::Read's Seq field is always in native orientation
+    return record.Seq;
+}
+
+std::unique_ptr<BAM::BamRecord> createUnalignedCopy(const BAM::BamRecord& record,
+                                                    const std::string& seq)
+{
     std::unique_ptr<BAM::BamRecord> unalignedCopy;
     if (record.IsMapped()) {
         unalignedCopy = std::make_unique<BAM::BamRecord>(record.Header());
@@ -335,6 +368,65 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
         unalignedCopy->ReadGroupId(record.ReadGroupId());
         unalignedCopy->Impl().Name(record.FullName());
     }
+    return unalignedCopy;
+}
+
+std::unique_ptr<Data::Read> createUnalignedCopy(const Data::Read&, const std::string&)
+{
+    return nullptr;
+}
+
+BAM::BamRecord Mapped(const BAM::BamRecord& record, int32_t refId, Data::Position refStart,
+                      Data::Strand strand, Data::Cigar cigar, uint8_t mapq)
+{
+    return BAM::BamRecord::Mapped(record, refId, refStart, strand, std::move(cigar), mapq);
+}
+
+CompatMappedRead Mapped(const Data::Read& record, int32_t refId, Data::Position refStart,
+                        Data::Strand strand, Data::Cigar cigar, uint8_t mapq)
+{
+    return CompatMappedRead{Data::MappedRead{record, strand, refStart, std::move(cigar), mapq},
+                            refId};
+}
+
+void postprocess(std::vector<AlignedRecord>& localResults,
+                 std::unique_ptr<BAM::BamRecord>& unalignedCopy, const BAM::BamRecord& record)
+{
+    if (localResults.empty()) {
+        if (record.IsMapped()) {
+            const auto RemovePbmm2MappedTags = [](BAM::BamRecord& r) {
+                for (const auto& t : {"SA", "rm", "mc"})
+                    r.Impl().RemoveTag(t);
+            };
+            if (unalignedCopy) {
+                RemovePbmm2MappedTags(*unalignedCopy);
+                localResults.emplace_back(*unalignedCopy);
+            }
+        } else {
+            localResults.emplace_back(AlignedRecord{record});
+        }
+    }
+}
+
+void postprocess(std::vector<AlignedRead>&, std::unique_ptr<Data::Read>&, const Data::Read&) {}
+
+}  // namespace
+
+template <typename In, typename Out>
+std::vector<Out> MM2Helper::AlignImpl(const In& record,
+                                      const std::function<bool(const Out&)>& filter,
+                                      std::unique_ptr<ThreadBuffer>& tbuf) const
+{
+    std::vector<Out> localResults;
+    if (checkIsSupplementaryAlignment(record)) return localResults;
+
+    std::unique_ptr<ThreadBuffer> tbufLocal;
+    if (!tbuf) tbufLocal = std::make_unique<ThreadBuffer>();
+
+    int numAlns;
+    // watch out for lifetime issues when changing from const-ref to ref
+    const auto& seq = getNativeOrientationSequence(record);
+    std::unique_ptr<In> unalignedCopy = createUnalignedCopy(record, seq);
 
     const int qlen = seq.length();
     auto alns = mm_map(Idx->idx_, qlen, seq.c_str(), &numAlns,
@@ -361,10 +453,8 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
         int r = aln.qe;
         for (int s = l; s < r; ++s) {
             if (!started) {
-                if (queryHits[s] == 1) {
+                if (queryHits[s] == 0) {
                     queryHits[s] = 1;
-                    continue;
-                } else if (queryHits[s] == 0) {
                     *begin = s;
                     started = true;
                 }
@@ -372,16 +462,15 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
                 if (!ended) {
                     if (queryHits[s] == 0) {
                         queryHits[s] = 1;
-                        continue;
                     } else if (queryHits[s] == 1) {
-                        *end = s - 1;
+                        *end = s;
                         ended = true;
                         break;
                     }
                 }
             }
         }
-        if (!ended) *end = r - 1;
+        if (!ended) *end = r;
         return started;
     };
 
@@ -392,19 +481,20 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
         int end = trim ? 0 : aln.qe;
         if (trim && !SetQryHits(aln, &begin, &end)) return;
         const int32_t refId = aln.rid;
-        const BAM::Strand strand = aln.rev ? BAM::Strand::REVERSE : BAM::Strand::FORWARD;
+        const Data::Strand strand = aln.rev ? Data::Strand::REVERSE : Data::Strand::FORWARD;
         int refStartOffset = 0;
-        BAM::Cigar cigar;
+        Data::Cigar cigar;
         if (trim)
             cigar = RenderCigar(&aln, qlen, MapOpts.flag, begin, end, &refStartOffset);
         else
             cigar = RenderCigar(&aln, qlen, MapOpts.flag);
-        const BAM::Position refStart = aln.rs + refStartOffset;
-        auto mapped = BAM::BamRecord::Mapped(unalignedCopy ? *unalignedCopy : record, refId,
-                                             refStart, strand, cigar, aln.mapq);
-        if (mapped.Impl().HasTag("rm")) mapped.Impl().RemoveTag("rm");
+        const Data::Position refStart = aln.rs + refStartOffset;
+
+        auto mapped = Mapped(unalignedCopy ? *unalignedCopy : record, refId, refStart, strand,
+                             std::move(cigar), aln.mapq);
+        mapped.Impl().RemoveTag("rm");
         mapped.Impl().SetSupplementaryAlignment(aln.sam_pri == 0);
-        AlignedRecord alnRec{std::move(mapped)};
+        Out alnRec{std::move(mapped)};
         if (filter(alnRec)) localResults.emplace_back(std::move(alnRec));
     };
 
@@ -472,13 +562,13 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
         std::vector<std::pair<int32_t, int32_t>> spans;
         for (size_t j = 0; j < numAlignments; ++j) {
             std::ostringstream sa;
-            const auto& record = localResults.at(j).Record;
-            int32_t qryStart = BAM::IsCcsOrTranscript(record.Type()) ? 0 : record.QueryStart();
-            const auto qqs = record.AlignedStart() - qryStart;
-            const auto qqe = record.AlignedEnd() - qryStart;
-            const auto qrs = record.ReferenceStart();
-            const auto qre = record.ReferenceEnd();
-            const bool qrev = record.AlignedStrand() == BAM::Strand::REVERSE;
+            const auto& rec = localResults.at(j).Record;
+            int32_t qryStart = BAM::IsCcsOrTranscript(rec.Type()) ? 0 : rec.QueryStart();
+            const auto qqs = rec.AlignedStart() - qryStart;
+            const auto qqe = rec.AlignedEnd() - qryStart;
+            const auto qrs = rec.ReferenceStart();
+            const auto qre = rec.ReferenceEnd();
+            const bool qrev = rec.AlignedStrand() == Data::Strand::REVERSE;
             int l_M, l_I = 0, l_D = 0, clip5 = 0, clip3 = 0;
             if (qqe - qqs < qre - qrs)
                 l_M = qqe - qqs, l_D = (qre - qrs) - l_M;
@@ -486,15 +576,14 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
                 l_M = qre - qrs, l_I = (qqe - qqs) - l_M;
             clip5 = qrev ? qlen - qqe : qqs;
             clip3 = qrev ? qqs : qlen - qqe;
-            sa << Idx->idx_->seq[record.ReferenceId()].name << ',' << qrs + 1 << ',' << "+-"[qrev]
+            sa << Idx->idx_->seq[rec.ReferenceId()].name << ',' << qrs + 1 << ',' << "+-"[qrev]
                << ',';
             if (clip5) sa << clip5 << 'S';
             if (l_M) sa << l_M << 'M';
             if (l_I) sa << l_I << 'I';
             if (l_D) sa << l_D << 'D';
             if (clip3) sa << clip3 << 'S';
-            sa << ',' << static_cast<int>(record.MapQuality()) << ',' << record.NumMismatches()
-               << ';';
+            sa << ',' << static_cast<int>(rec.MapQuality()) << ',' << rec.NumMismatches() << ';';
             sas.emplace_back(sa.str());
             if (qrev)
                 spans.emplace_back(clip3, qlen - clip5);
@@ -536,22 +625,69 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const 
         if (alns[i].p) free(alns[i].p);
     free(alns);
 
-    if (localResults.empty()) {
-        if (record.IsMapped()) {
-            const auto RemovePbmm2MappedTags = [](BAM::BamRecord& r) {
-                for (const auto& t : {"SA", "rm", "mc"})
-                    if (r.Impl().HasTag(t)) r.Impl().RemoveTag(t);
-            };
-            if (unalignedCopy) {
-                RemovePbmm2MappedTags(*unalignedCopy);
-                localResults.emplace_back(*unalignedCopy);
-            }
-        } else {
-            localResults.emplace_back(AlignedRecord{record});
-        }
-    }
+    postprocess(localResults, unalignedCopy, record);
 
     return localResults;
+}
+
+// Read/MappedRead API
+std::unique_ptr<std::vector<AlignedRead>> MM2Helper::Align(
+    const std::unique_ptr<std::vector<Data::Read>>& records,
+    const std::function<bool(const AlignedRead&)>& filter, int32_t* alignedReads) const
+{
+    auto tbuf = std::make_unique<ThreadBuffer>();
+    auto result = std::make_unique<std::vector<AlignedRead>>();
+    result->reserve(records->size());
+
+    for (auto& record : *records) {
+        std::vector<AlignedRead> localResults = Align(record, filter, tbuf);
+        for (const auto& aln : localResults) {
+            if (aln.IsAligned) {
+                *alignedReads += 1;
+                break;
+            }
+        }
+
+        for (auto&& a : localResults)
+            result->emplace_back(std::move(a));
+    }
+
+    return result;
+}
+
+std::vector<AlignedRead> MM2Helper::Align(const Data::Read& record,
+                                          const std::function<bool(const AlignedRead&)>& filter,
+                                          std::unique_ptr<ThreadBuffer>& tbuf) const
+{
+    return AlignImpl(record, filter, tbuf);
+}
+
+std::vector<AlignedRead> MM2Helper::Align(const Data::Read& record) const
+{
+    auto tbuf = std::make_unique<ThreadBuffer>();
+    const auto noopFilter = [](const AlignedRead&) { return true; };
+    return Align(record, noopFilter, tbuf);
+}
+
+std::vector<AlignedRead> MM2Helper::Align(
+    const Data::Read& record, const std::function<bool(const AlignedRead&)>& filter) const
+{
+    auto tbuf = std::make_unique<ThreadBuffer>();
+    return Align(record, filter, tbuf);
+}
+
+std::vector<AlignedRead> MM2Helper::Align(const Data::Read& record,
+                                          std::unique_ptr<ThreadBuffer>& tbuf) const
+{
+    const auto noopFilter = [](const AlignedRead&) { return true; };
+    return Align(record, noopFilter, tbuf);
+}
+
+// BamRecord API
+std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record, const FilterFunc& filter,
+                                            std::unique_ptr<ThreadBuffer>& tbuf) const
+{
+    return AlignImpl(record, filter, tbuf);
 }
 
 std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record) const
@@ -575,24 +711,30 @@ std::vector<AlignedRecord> MM2Helper::Align(const BAM::BamRecord& record,
     return Align(record, noopFilter, tbuf);
 }
 
-std::vector<PacBio::BAM::SequenceInfo> MM2Helper::SequenceInfos() const
-{
-    return Idx->SequenceInfos();
-}
+std::vector<BAM::SequenceInfo> MM2Helper::SequenceInfos() const { return Idx->SequenceInfos(); }
 
 Index::Index(const std::vector<BAM::FastaSequence>& refs, const mm_idxopt_t& opts)
 {
-    const auto numRefs = refs.size();
-    const char** seq;
-    seq = (const char**)calloc(numRefs + 1, sizeof(char*));
-    for (size_t i = 0; i < numRefs; ++i)
-        seq[i] = refs[i].Bases().c_str();
-    const char** name;
-    name = (const char**)calloc(numRefs + 1, sizeof(char*));
-    for (size_t i = 0; i < numRefs; ++i)
-        name[i] = refs[i].Name().c_str();
+    IndexFrom(refs, opts);
+}
 
-    idx_ = mm_idx_str(opts.w, opts.k, opts.flag & MM_I_HPC, 0, numRefs, seq, name);
+Index::Index(std::vector<BAM::FastaSequence>&& refs, const mm_idxopt_t& opts)
+    : refs_{std::move(refs)}
+{
+    IndexFrom(refs_, opts);
+}
+
+void Index::IndexFrom(const std::vector<BAM::FastaSequence>& refs, const mm_idxopt_t& opts)
+{
+    const auto numRefs = refs.size();
+    seq_ = (const char**)calloc(numRefs + 1, sizeof(char*));
+    for (size_t i = 0; i < numRefs; ++i)
+        seq_[i] = refs[i].Bases().c_str();
+    name_ = (const char**)calloc(numRefs + 1, sizeof(char*));
+    for (size_t i = 0; i < numRefs; ++i)
+        name_[i] = refs[i].Name().c_str();
+
+    idx_ = mm_idx_str(opts.w, opts.k, opts.flag & MM_I_HPC, 0, numRefs, seq_, name_);
 }
 
 Index::Index(const std::string& fname, const mm_idxopt_t& opts, const int32_t& numThreads,
@@ -609,26 +751,34 @@ Index::Index(const std::string& fname, const mm_idxopt_t& opts, const int32_t& n
     PBLOG_INFO << "Finished reading/building index";
 }
 
-Index::~Index() { mm_idx_destroy(idx_); }
-
-std::vector<PacBio::BAM::SequenceInfo> Index::SequenceInfos() const
+Index::~Index()
 {
-    std::vector<PacBio::BAM::SequenceInfo> result;
+    free(seq_);
+    free(name_);
+
+    mm_idx_destroy(idx_);
+}
+
+std::vector<BAM::SequenceInfo> Index::SequenceInfos() const
+{
+    std::vector<BAM::SequenceInfo> result;
     for (unsigned i = 0; i < idx_->n_seq; ++i) {
         const std::string name = idx_->seq[i].name;
         const std::string len = std::to_string(idx_->seq[i].len);
-        result.emplace_back(PacBio::BAM::SequenceInfo(name, len));
+        result.emplace_back(BAM::SequenceInfo(name, len));
     }
     return result;
 }
 
-AlignedRecord::AlignedRecord(BAM::BamRecord record) : Record(std::move(record))
+template <typename T>
+AlignedRecordImpl<T>::AlignedRecordImpl(T record) : Record(std::move(record))
 {
     IsAligned = Record.IsMapped();
     if (IsAligned) ComputeAccuracyBases();
 }
 
-void AlignedRecord::ComputeAccuracyBases()
+template <typename T>
+void AlignedRecordImpl<T>::ComputeAccuracyBases()
 {
     int32_t ins = 0;
     int32_t del = 0;
@@ -637,26 +787,26 @@ void AlignedRecord::ComputeAccuracyBases()
     for (const auto& cigar : Record.CigarData()) {
         int32_t len = cigar.Length();
         switch (cigar.Type()) {
-            case BAM::CigarOperationType::INSERTION:
+            case Data::CigarOperationType::INSERTION:
                 ins += len;
                 break;
-            case BAM::CigarOperationType::DELETION:
+            case Data::CigarOperationType::DELETION:
                 del += len;
                 break;
-            case BAM::CigarOperationType::SEQUENCE_MISMATCH:
+            case Data::CigarOperationType::SEQUENCE_MISMATCH:
                 mismatch += len;
                 break;
-            case BAM::CigarOperationType::REFERENCE_SKIP:
+            case Data::CigarOperationType::REFERENCE_SKIP:
                 break;
-            case BAM::CigarOperationType::SEQUENCE_MATCH:
-            case BAM::CigarOperationType::ALIGNMENT_MATCH:
+            case Data::CigarOperationType::SEQUENCE_MATCH:
+            case Data::CigarOperationType::ALIGNMENT_MATCH:
                 match += len;
                 break;
-            case BAM::CigarOperationType::PADDING:
-            case BAM::CigarOperationType::SOFT_CLIP:
-            case BAM::CigarOperationType::HARD_CLIP:
+            case Data::CigarOperationType::PADDING:
+            case Data::CigarOperationType::SOFT_CLIP:
+            case Data::CigarOperationType::HARD_CLIP:
                 break;
-            case BAM::CigarOperationType::UNKNOWN_OP:
+            case Data::CigarOperationType::UNKNOWN_OP:
             default:
                 PBLOG_FATAL << "UNKNOWN OP";
                 std::exit(EXIT_FAILURE);
@@ -671,6 +821,49 @@ void AlignedRecord::ComputeAccuracyBases()
         Record.Impl().EditTag("mc", static_cast<float>(Concordance));
     else
         Record.Impl().AddTag("mc", static_cast<float>(Concordance));
+}
+
+AlignedRecord::AlignedRecord(BAM::BamRecord record) : AlignedRecordImpl{std::move(record)} {}
+
+const std::string& CompatMappedRead::Sequence(...) const { return Seq; }
+
+uint8_t CompatMappedRead::MapQuality() const
+{
+    return static_cast<const Data::MappedRead&>(*this).MapQuality;
+}
+
+BAM::RecordType CompatMappedRead::Type() const { return BAM::RecordType::SUBREAD; }
+
+Data::Position CompatMappedRead::QueryStart() const
+{
+    return static_cast<const Data::Read&>(*this).QueryStart;
+}
+
+Data::Position CompatMappedRead::QueryEnd() const
+{
+    return static_cast<const Data::Read&>(*this).QueryEnd;
+}
+
+int32_t CompatMappedRead::ReferenceId() const { return refId; }
+
+bool CompatMappedRead::IsMapped() const { return true; }
+
+const Data::Cigar& CompatMappedRead::CigarData() const { return this->Cigar; }
+
+void CompatMappedRead::SetSupplementaryAlignment(bool supplAlnArg) { supplAln = supplAlnArg; }
+
+bool CompatMappedRead::IsSupplementaryAlignment() const { return supplAln; }
+
+CompatMappedRead& CompatMappedRead::Impl() { return *this; }
+
+const CompatMappedRead& CompatMappedRead::Impl() const { return *this; }
+
+AlignedRead::AlignedRead(CompatMappedRead record) : AlignedRecordImpl{std::move(record)} {}
+
+CompatMappedRead AlignedRead::Mapped(Data::Read record, int32_t refId, Data::Position refStart,
+                                     Data::Strand strand, Data::Cigar cigar, uint8_t mapq)
+{
+    return {Data::MappedRead{std::move(record), strand, refStart, std::move(cigar), mapq}, refId};
 }
 
 }  // namespace minimap2

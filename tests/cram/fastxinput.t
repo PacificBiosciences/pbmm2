@@ -3,8 +3,14 @@
 
   $ samtools view ${BAM} | awk '{ print "@"$1"\n"$10"\n+\n"$11 }' > $CRAMTMP/median.fastq
   $ FASTQ=$CRAMTMP/median.fastq
+  $ cp $CRAMTMP/median.fastq $CRAMTMP/median_compressed.fastq
+  $ gzip $CRAMTMP/median_compressed.fastq
+  $ FASTQGZ=$CRAMTMP/median_compressed.fastq.gz
   $ samtools view ${BAM} | awk '{ print ">"$1"\n"$10 }' > $CRAMTMP/median.fasta
   $ FASTA=$CRAMTMP/median.fasta
+  $ cp $CRAMTMP/median.fasta $CRAMTMP/median_compressed.fasta
+  $ gzip $CRAMTMP/median_compressed.fasta
+  $ FASTAGZ=$CRAMTMP/median_compressed.fasta.gz
 
   $ $__PBTEST_PBMM2_EXE align $REF $FASTA $CRAMTMP/fasta_unsorted.bam 2>&1
   *Input is FASTA.* (glob)
@@ -85,6 +91,19 @@
   $ ls -alh $CRAMTMP/fasta_unsortedoutstream.json 2> /dev/null | wc -l | tr -d ' '
   0
 
+  $ $__PBTEST_PBMM2_EXE align $REF $FASTAGZ > $CRAMTMP/fasta_compressed_unsortedoutstream.bam
+  *Input is FASTA.* (glob)
+  $ samtools view -H $CRAMTMP/fasta_compressed_unsortedoutstream.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/fasta_compressed_unsortedoutstream.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fasta_compressed_unsortedoutstream.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fasta_compressed_unsortedoutstream.*.xml 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fasta_compressed_unsortedoutstream.json 2> /dev/null | wc -l | tr -d ' '
+  0
+
   $ $__PBTEST_PBMM2_EXE align $REF $FASTA > $CRAMTMP/fasta_sortedoutstream.bam --sort
   *Input is FASTA.* (glob)
   $ samtools view -H $CRAMTMP/fasta_sortedoutstream.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
@@ -139,7 +158,7 @@
   *Generating BAI (glob)
   *Mapped Reads: 52 (glob)
   *Alignments: 96 (glob)
-  *Mapped Bases: 242356 (glob)
+  *Mapped Bases: 242437 (glob)
   *Mean Mapped Concordance: 91*% (glob)
   *Max Mapped Read Length* (glob)
   *Mean Mapped Read Length* (glob)
@@ -162,6 +181,19 @@
   $ ls -alh $CRAMTMP/fastq_unsorted.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_unsorted.json 2> /dev/null | wc -l | tr -d ' '
+  0
+
+  $ $__PBTEST_PBMM2_EXE align $REF $FASTQGZ $CRAMTMP/fastq_compressed_unsorted.bam 2>&1
+  *Input is FASTQ.* (glob)
+  $ samtools view -H $CRAMTMP/fastq_compressed_unsorted.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/fastq_compressed_unsorted.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fastq_compressed_unsorted.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fastq_compressed_unsorted.*.xml 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fastq_compressed_unsorted.json 2> /dev/null | wc -l | tr -d ' '
   0
 
   $ $__PBTEST_PBMM2_EXE align $REF $FASTQ $CRAMTMP/fastq_sorted.bam --sort
@@ -284,7 +316,7 @@
   *Generating BAI (glob)
   *Mapped Reads: 52 (glob)
   *Alignments: 96 (glob)
-  *Mapped Bases: 242356 (glob)
+  *Mapped Bases: 242437 (glob)
   *Mean Mapped Concordance: 91*% (glob)
   *Max Mapped Read Length* (glob)
   *Mean Mapped Read Length* (glob)

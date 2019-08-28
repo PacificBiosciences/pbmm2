@@ -7,6 +7,8 @@
 #include <string>
 #include <tuple>
 
+#include "InputOutputUX.h"
+
 namespace PacBio {
 namespace BAM {
 class BamWriter;
@@ -58,10 +60,7 @@ struct StreamWriters
 
     StreamWriter& at(const std::string& infix, const std::string& sample);
 
-    std::string WriteDatasetsJson(const BAM::DataSet& inFile, const std::string& origOutFile,
-                                  const std::string& refFile, const bool isFromXML,
-                                  const bool outputIsJson, const Summary& s,
-                                  const std::string& outPrefix, const bool splitSample);
+    std::string WriteDatasetsJson(const UserIO& uio, const Summary& s, const bool splitSample);
     std::string ForcePbiOutput();
 
     std::pair<std::string, std::string> Close();

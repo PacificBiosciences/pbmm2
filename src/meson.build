@@ -20,7 +20,7 @@ pbmm2_version_sources = [
 
 pbmm2_lib_cpp_sources = files(['MM2Helper.cpp'])
 
-pbmm2_install = not meson.is_subproject()
+pbmm2_install = (not meson.is_subproject()) or (get_option('default_library') != 'static')
 
 pbmm2_lib = library(
   'pbmm2',
@@ -54,11 +54,9 @@ pbmm2_cpp_sources += pbmm2_version_sources
 
 # executables
 ## pbmm2
-if not meson.is_subproject()
-  pbmm2_main = executable('pbmm2', files(['main.cpp']) + pbmm2_cpp_sources,
-  install : pbmm2_install,
+pbmm2_main = executable('pbmm2', files(['main.cpp']) + pbmm2_cpp_sources,
+  install : not meson.is_subproject(),
   dependencies : pbmm2_lib_deps,
   include_directories : [pbmm2_include_directories, pbmm2_src_include_directories],
   link_with : pbmm2_lib,
   cpp_args : pbmm2_flags)
-endif

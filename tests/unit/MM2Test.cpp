@@ -18,13 +18,7 @@ namespace MM2Tests {
 
 using namespace PacBio::minimap2;
 
-static void SetGlobalLogger(const Logging::LogLevel logLevel = Logging::LogLevel::FATAL)
-{
-    PacBio::Logging::InstallSignalHandlers(
-        PacBio::Logging::Logger::Default(new PacBio::Logging::Logger(std::cerr, logLevel)));
-}
-
-static std::vector<BAM::BamRecord> SimpleAlign()
+static std::vector<BAM::BamRecord> SimpleAlignBAM()
 {
     const auto refFile = tests::DataDir + '/' + "ecoliK12_pbi_March2013.fasta";
     MM2Settings settings;
@@ -40,16 +34,57 @@ static std::vector<BAM::BamRecord> SimpleAlign()
     return alignedBam;
 }
 
-TEST(MM2Test, SimpleAlign)
+static std::vector<CompatMappedRead> SimpleAlignRead()
 {
-    SetGlobalLogger();
-    std::vector<BAM::BamRecord> alignedBam = SimpleAlign();
+    const auto refFile = tests::DataDir + '/' + "ecoliK12_pbi_March2013.fasta";
+    MM2Settings settings;
+    MM2Helper mm2helper(refFile, settings);
+    const auto alnFile = tests::DataDir + '/' + "median.bam";
+    BAM::EntireFileQuery reader(alnFile);
+    std::vector<CompatMappedRead> results;
+    for (const auto& record : reader) {
+        const auto inputRead = record.ToRead();
+        const std::vector<AlignedRead> alignments = mm2helper.Align(inputRead);
+        for (const auto& aln : alignments)
+            if (aln.IsAligned) results.emplace_back(std::move(aln.Record));
+    }
+    return results;
+}
+
+TEST(MM2Test, SimpleAlignBAM)
+{
+    std::vector<BAM::BamRecord> alignedBam = SimpleAlignBAM();
     EXPECT_EQ(96ul, alignedBam.size());
 }
 
-TEST(MM2Test, Filter)
+TEST(MM2Test, SimpleAlignRead)
 {
-    SetGlobalLogger();
+    std::vector<CompatMappedRead> alignedReads = SimpleAlignRead();
+    EXPECT_EQ(96ul, alignedReads.size());
+}
+
+TEST(MM2Test, VectorAlignRead)
+{
+    const auto refFile = tests::DataDir + '/' + "ecoliK12_pbi_March2013.fasta";
+    MM2Settings settings;
+    MM2Helper mm2helper(refFile, settings);
+    const auto alnFile = tests::DataDir + '/' + "median.bam";
+    BAM::EntireFileQuery reader(alnFile);
+    auto rawReads = std::make_unique<std::vector<Data::Read>>();
+    int32_t numReadsBam = 0;
+    for (const auto& record : reader) {
+        ++numReadsBam;
+        rawReads->emplace_back(record.ToRead());
+    }
+
+    int32_t alignedReads{};
+    const auto myFilter = [](const AlignedRead&) { return true; };
+    const auto alns = mm2helper.Align(rawReads, myFilter, &alignedReads);
+    EXPECT_EQ(numReadsBam, alignedReads);
+}
+
+TEST(MM2Test, FilterBAM)
+{
     const auto refFile = tests::DataDir + '/' + "ecoliK12_pbi_March2013.fasta";
     MM2Settings settings;
     MM2Helper mm2helper(refFile, settings);
@@ -69,9 +104,30 @@ TEST(MM2Test, Filter)
     EXPECT_EQ(85ul, alignedBam.size());
 }
 
+TEST(MM2Test, FilterRead)
+{
+    const auto refFile = tests::DataDir + '/' + "ecoliK12_pbi_March2013.fasta";
+    MM2Settings settings;
+    MM2Helper mm2helper(refFile, settings);
+    const auto alnFile = tests::DataDir + '/' + "median.bam";
+    BAM::EntireFileQuery reader(alnFile);
+    std::vector<CompatMappedRead> alignedReads;
+
+    const auto myFilter = [](const AlignedRead& r) { return r.Concordance > 90; };
+
+    for (const auto& record : reader) {
+        const auto inputRead = record.ToRead();
+        const std::vector<AlignedRead> alignments = mm2helper.Align(inputRead, myFilter);
+        for (const auto& aln : alignments) {
+            EXPECT_TRUE(aln.Concordance > 90.0);
+            if (aln.IsAligned) alignedReads.emplace_back(std::move(aln.Record));
+        }
+    }
+    EXPECT_EQ(85ul, alignedReads.size());
+}
+
 TEST(MM2Test, UseCommonThreadBuffer)
 {
-    SetGlobalLogger();
     const auto refFile = tests::DataDir + '/' + "ecoliK12_pbi_March2013.fasta";
     MM2Settings settings;
     MM2Helper mm2helper(refFile, settings);
@@ -92,7 +148,6 @@ TEST(MM2Test, UseCommonThreadBuffer)
 
 TEST(MM2Test, FilterAndBuffer)
 {
-    SetGlobalLogger();
     const auto refFile = tests::DataDir + '/' + "ecoliK12_pbi_March2013.fasta";
     MM2Settings settings;
     MM2Helper mm2helper(refFile, settings);
@@ -115,7 +170,6 @@ TEST(MM2Test, FilterAndBuffer)
 
 TEST(MM2Test, AlignCCS)
 {
-    SetGlobalLogger();
     const auto refFile = tests::DataDir + '/' + "ecoliK12_pbi_March2013.fasta";
     MM2Settings settings;
     settings.AlignMode = AlignmentMode::CCS;
@@ -138,7 +192,6 @@ TEST(MM2Test, AlignCCS)
 
 TEST(MM2Test, AlignCCSWithOverrides)
 {
-    SetGlobalLogger(Logging::LogLevel::DEBUG);
     const auto refFile = tests::DataDir + '/' + "ecoliK12_pbi_March2013.fasta";
     MM2Settings settings;
     settings.AlignMode = AlignmentMode::CCS;
@@ -163,9 +216,8 @@ TEST(MM2Test, AlignCCSWithOverrides)
 }
 
 // For a proper test of idempotence, see tests/cram/idempotence.t
-TEST(MM2Test, ReAlign)
+TEST(MM2Test, ReAlignBAM)
 {
-    SetGlobalLogger();
     const auto refFile = tests::DataDir + '/' + "ecoliK12_pbi_March2013.fasta";
     MM2Settings settings;
     MM2Helper mm2helper(refFile, settings);
@@ -189,12 +241,44 @@ TEST(MM2Test, ReAlign)
     EXPECT_EQ(96ul, idempotent.size());
 }
 
+TEST(MM2Test, ReAlignRead)
+{
+    // Data::Read and friends never flip the Sequence or PulseWidths
+
+    const auto refFile = tests::DataDir + '/' + "ecoliK12_pbi_March2013.fasta";
+    MM2Settings settings;
+    MM2Helper mm2helper(refFile, settings);
+    const auto alnFile = tests::DataDir + '/' + "median.bam";
+    BAM::EntireFileQuery reader(alnFile);
+    std::vector<CompatMappedRead> alignedReads;
+    for (const auto& record : reader) {
+        const auto inputRead = record.ToRead();
+        const std::vector<AlignedRead> alignments = mm2helper.Align(inputRead);
+        for (const auto& aln : alignments)
+            if (aln.IsAligned) alignedReads.emplace_back(std::move(aln.Record));
+    }
+
+    std::vector<CompatMappedRead> idempotent;
+    for (const auto& record : alignedReads) {
+        // need to skip aligned supplementary alignments
+        if (record.IsSupplementaryAlignment()) continue;
+
+        const std::vector<AlignedRead> alignments = mm2helper.Align(record);
+        for (const auto& aln : alignments)
+            idempotent.emplace_back(std::move(aln.Record));
+    }
+
+    EXPECT_EQ(96ul, alignedReads.size());
+    EXPECT_EQ(96ul, idempotent.size());
+}
+
 static std::vector<BAM::BamRecord> FastaRefAlign()
 {
     const auto refFile = tests::DataDir + '/' + "ecoliK12_pbi_March2013.fasta";
 
     MM2Settings settings;
-    MM2Helper mm2helper(BAM::FastaReader::ReadAll(refFile), settings);
+    const std::vector<BAM::FastaSequence> refs = BAM::FastaReader::ReadAll(refFile);
+    MM2Helper mm2helper(refs, settings);
     const auto alnFile = tests::DataDir + '/' + "median.bam";
     BAM::EntireFileQuery reader(alnFile);
     std::vector<BAM::BamRecord> alignedBam;
@@ -208,16 +292,109 @@ static std::vector<BAM::BamRecord> FastaRefAlign()
 
 TEST(MM2Test, FastaRefAlign)
 {
-    SetGlobalLogger();
 
     std::vector<BAM::BamRecord> alignedFastaRefBam = FastaRefAlign();
     EXPECT_EQ(96ul, alignedFastaRefBam.size());
 
-    std::vector<BAM::BamRecord> alignedRefFileBam = SimpleAlign();
+    std::vector<BAM::BamRecord> alignedRefFileBam = SimpleAlignBAM();
     EXPECT_EQ(96ul, alignedRefFileBam.size());
 
     for (size_t i = 0; i < alignedFastaRefBam.size(); ++i) {
         const auto& fromFasta = alignedFastaRefBam[i];
+        const auto& fromFile = alignedRefFileBam[i];
+        EXPECT_EQ(fromFasta.FullName(), fromFile.FullName());
+        EXPECT_EQ(fromFasta.Sequence(), fromFile.Sequence());
+        EXPECT_EQ(fromFasta.ReferenceId(), fromFile.ReferenceId());
+        EXPECT_EQ(fromFasta.ReferenceStart(), fromFile.ReferenceStart());
+        EXPECT_EQ(fromFasta.ReferenceEnd(), fromFile.ReferenceEnd());
+        EXPECT_EQ(fromFasta.QueryStart(), fromFile.QueryStart());
+        EXPECT_EQ(fromFasta.QueryEnd(), fromFile.QueryEnd());
+        EXPECT_EQ(fromFasta.AlignedStart(), fromFile.AlignedStart());
+        EXPECT_EQ(fromFasta.AlignedEnd(), fromFile.AlignedEnd());
+        EXPECT_EQ(fromFasta.AlignedStrand(), fromFile.AlignedStrand());
+        EXPECT_EQ(fromFasta.CigarData().ToStdString(), fromFile.CigarData().ToStdString());
+        EXPECT_EQ(fromFasta.Impl().IsSupplementaryAlignment(),
+                  fromFile.Impl().IsSupplementaryAlignment());
+    }
+}
+
+static std::vector<BAM::BamRecord> FastaRefAlignMoveBAM()
+{
+    const auto refFile = tests::DataDir + '/' + "ecoliK12_pbi_March2013.fasta";
+
+    MM2Settings settings;
+    const std::vector<BAM::FastaSequence> refs = BAM::FastaReader::ReadAll(refFile);
+    MM2Helper mm2helper(std::move(refs), settings);
+    const auto alnFile = tests::DataDir + '/' + "median.bam";
+    BAM::EntireFileQuery reader(alnFile);
+    std::vector<BAM::BamRecord> alignedBam;
+    for (const auto& record : reader) {
+        const std::vector<AlignedRecord> alignments = mm2helper.Align(record);
+        for (const auto& aln : alignments)
+            if (aln.IsAligned) alignedBam.emplace_back(std::move(aln.Record));
+    }
+    return alignedBam;
+}
+
+TEST(MM2Test, FastaRefAlignMoveBAM)
+{
+
+    std::vector<BAM::BamRecord> alignedFastaRefBam = FastaRefAlignMoveBAM();
+    EXPECT_EQ(96ul, alignedFastaRefBam.size());
+
+    std::vector<BAM::BamRecord> alignedRefFileBam = SimpleAlignBAM();
+    EXPECT_EQ(96ul, alignedRefFileBam.size());
+
+    for (size_t i = 0; i < alignedFastaRefBam.size(); ++i) {
+        const auto& fromFasta = alignedFastaRefBam[i];
+        const auto& fromFile = alignedRefFileBam[i];
+        EXPECT_EQ(fromFasta.FullName(), fromFile.FullName());
+        EXPECT_EQ(fromFasta.Sequence(), fromFile.Sequence());
+        EXPECT_EQ(fromFasta.ReferenceId(), fromFile.ReferenceId());
+        EXPECT_EQ(fromFasta.ReferenceStart(), fromFile.ReferenceStart());
+        EXPECT_EQ(fromFasta.ReferenceEnd(), fromFile.ReferenceEnd());
+        EXPECT_EQ(fromFasta.QueryStart(), fromFile.QueryStart());
+        EXPECT_EQ(fromFasta.QueryEnd(), fromFile.QueryEnd());
+        EXPECT_EQ(fromFasta.AlignedStart(), fromFile.AlignedStart());
+        EXPECT_EQ(fromFasta.AlignedEnd(), fromFile.AlignedEnd());
+        EXPECT_EQ(fromFasta.AlignedStrand(), fromFile.AlignedStrand());
+        EXPECT_EQ(fromFasta.CigarData().ToStdString(), fromFile.CigarData().ToStdString());
+        EXPECT_EQ(fromFasta.Impl().IsSupplementaryAlignment(),
+                  fromFile.Impl().IsSupplementaryAlignment());
+    }
+}
+
+static std::vector<CompatMappedRead> FastaRefAlignMoveRead()
+{
+    const auto refFile = tests::DataDir + '/' + "ecoliK12_pbi_March2013.fasta";
+
+    MM2Settings settings;
+    const std::vector<BAM::FastaSequence> refs = BAM::FastaReader::ReadAll(refFile);
+    MM2Helper mm2helper(std::move(refs), settings);
+    const auto alnFile = tests::DataDir + '/' + "median.bam";
+    BAM::EntireFileQuery reader(alnFile);
+    std::vector<CompatMappedRead> alignedBam;
+    for (const auto& record : reader) {
+        const auto inputRead = record.ToRead();
+        const std::vector<AlignedRead> alignments = mm2helper.Align(inputRead);
+        for (const auto& aln : alignments)
+            if (aln.IsAligned) alignedBam.emplace_back(std::move(aln.Record));
+    }
+    return alignedBam;
+}
+
+TEST(MM2Test, FastaRefAlignMoveRead)
+{
+
+    auto alignedFastaRefRead = FastaRefAlignMoveRead();
+    EXPECT_EQ(96ul, alignedFastaRefRead.size());
+
+    // text mixture of Data::Read and BAM
+    auto alignedRefFileBam = SimpleAlignBAM();
+    EXPECT_EQ(96ul, alignedRefFileBam.size());
+
+    for (size_t i = 0; i < alignedFastaRefRead.size(); ++i) {
+        const auto& fromFasta = alignedFastaRefRead[i];
         const auto& fromFile = alignedRefFileBam[i];
         EXPECT_EQ(fromFasta.FullName(), fromFile.FullName());
         EXPECT_EQ(fromFasta.Sequence(), fromFile.Sequence());

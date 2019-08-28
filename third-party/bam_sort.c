@@ -2226,21 +2226,6 @@ err:
     return ret;
 }
 
-static void sort_usage(FILE *fp)
-{
-    fprintf(fp,
-            "Usage: samtools sort [options...] [in.bam]\n"
-            "Options:\n"
-            "  -l INT     Set compression level, from 0 (uncompressed) to 9 (best)\n"
-            "  -m INT     Set maximum memory per thread; suffix K/M/G recognized [768M]\n"
-            "  -n         Sort by read name\n"
-            "  -t TAG     Sort by value of TAG. Uses position as secondary index (or read name if "
-            "-n is set)\n"
-            "  -o FILE    Write final output to FILE rather than standard output\n"
-            "  -T PREFIX  Write temporary files to PREFIX.nnnn.bam\n");
-    sam_global_opt_help(fp, "-.O..@");
-}
-
 static void complain_about_memory_setting(size_t max_mem)
 {
     char *suffix = "";
@@ -2288,8 +2273,8 @@ void sam_global_args_free(sam_global_args *ga)
     if (ga->reference) free(ga->reference);
 }
 
-int bam_sort(const char *inputName, const char *outputName, int numThreads, int merge_threads,
-             size_t memory, int *numFiles, int *numBlocks)
+int bam_sort(const char *inputName, const char *outputName, const char *tmpDir, bool useTmpDir,
+             int numThreads, int merge_threads, size_t memory, int *numFiles, int *numBlocks)
 {
     size_t max_mem = memory;
     int is_by_qname = 0;
@@ -2312,17 +2297,14 @@ int bam_sort(const char *inputName, const char *outputName, int numThreads, int 
     sam_open_mode(modeout + 1, outputName, NULL);
     if (level >= 0) sprintf(strchr(modeout, '\0'), "%d", level < 9 ? level : 9);
 
-    if (tmpprefix.l == 0) {
-        if (strcmp(outputName, "-") != 0)
-            ksprintf(&tmpprefix, "%s.tmp", outputName);
-        else
-            kputc('.', &tmpprefix);
-    }
     if (stat(tmpprefix.s, &st) == 0 && S_ISDIR(st.st_mode)) {
-        unsigned t = ((unsigned)time(NULL)) ^ ((unsigned)clock());
         if (tmpprefix.s[tmpprefix.l - 1] != '/') kputc('/', &tmpprefix);
-        ksprintf(&tmpprefix, "samtools.%d.%u.tmp", (int)getpid(), t % 10000);
     }
+    unsigned t = ((unsigned)time(NULL)) ^ ((unsigned)clock());
+    if (useTmpDir)
+        ksprintf(&tmpprefix, "%ssamtools.%d.%u.tmp", tmpDir, (int)getpid(), t % 10000);
+    else
+        ksprintf(&tmpprefix, "samtools.%d.%u.tmp", (int)getpid(), t % 10000);
 
     ret =
         bam_sort_core_ext(is_by_qname, sort_tag, inputName, tmpprefix.s, outputName, modeout,

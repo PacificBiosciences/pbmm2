@@ -17,11 +17,7 @@ pbmm2_test = executable(
   'pbmm2_test',
   pbmm2_test_cpp_sources,
   dependencies : [
-    pbmm2_boost_dep,
-    pbmm2_zlib_dep,
-    pbmm2_pbbam_dep,
-    pbmm2_pbcopper_dep,
-    pbmm2_minimap2_dep,
+    pbmm2_lib_deps,
     pbmm2_gmock_main_dep],
   include_directories : pbmm2_include_directories,
   link_with : pbmm2_lib,

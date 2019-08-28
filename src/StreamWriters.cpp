@@ -1,5 +1,8 @@
 // Author: Armin Töpfer
 
+#include <limits.h>
+#include <unistd.h>
+#include <cstdlib>
 #include <memory>
 #include <thread>
 
@@ -7,14 +10,13 @@
 #include <pbbam/BamRecord.h>
 #include <pbbam/BamWriter.h>
 #include <pbbam/PbiFile.h>
-#include <pbcopper/PbcopperMakeUnique.h>
 #include <pbcopper/logging/Logging.h>
 #include <pbcopper/utility/FileUtils.h>
 #include <pbcopper/utility/Stopwatch.h>
+#include <boost/algorithm/string.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
-#include "InputOutputUX.h"
 #include "Timer.h"
 #include "bam_sort.h"
 
@@ -135,8 +137,30 @@ StreamWriter::StreamWriter(BAM::BamHeader header, const std::string& outPrefix, 
         sortThread_ = std::make_unique<std::thread>([&]() {
             int numFiles = 0;
             int numBlocks = 0;
-            int ret = bam_sort(pipeName_.c_str(), finalOutputName_.c_str(), sortThreads_,
-                               sortThreads_ + numThreads_, sortMemory_, &numFiles, &numBlocks);
+            std::string tmpdir;
+            if (const char* env_p = std::getenv("TMPDIR")) {
+                tmpdir = env_p;
+                if (!boost::ends_with(tmpdir, "/")) tmpdir += '/';
+            }
+            const bool useTmpDir = Utility::FileExists(tmpdir);
+            if (useTmpDir) {
+                PBLOG_DEBUG << "[TMPDIR] Using directory for sorting: " << tmpdir;
+            } else if (tmpdir.empty()) {
+                char cwd[PATH_MAX];
+                if (getcwd(cwd, sizeof(cwd)) != NULL) {
+                    PBLOG_DEBUG
+                        << "[TMPDIR] Could not find environment variable, using working directory: "
+                        << cwd;
+                } else {
+                    PBLOG_DEBUG
+                        << "[TMPDIR] Could not find environment variable, using working directory";
+                }
+            } else {
+                PBLOG_DEBUG << "[TMPDIR] Specified directory does not exist: " << tmpdir;
+            }
+            int ret = bam_sort(pipeName_.c_str(), finalOutputName_.c_str(), tmpdir.c_str(),
+                               useTmpDir, sortThreads_, sortThreads_ + numThreads_, sortMemory_,
+                               &numFiles, &numBlocks);
             if (ret == EXIT_FAILURE) {
                 PBLOG_FATAL << "Fatal error in bam sort. Aborting.";
                 std::exit(EXIT_FAILURE);
@@ -245,12 +269,19 @@ StreamWriter& StreamWriters::at(const std::string& infix, const std::string& sam
     }
 }
 
-std::string StreamWriters::WriteDatasetsJson(const BAM::DataSet& inFile,
-                                             const std::string& origOutFile,
-                                             const std::string& refFile, const bool isFromXML,
-                                             const bool outputIsJson, const Summary& s,
-                                             const std::string& outPrefix, const bool splitSample)
+std::string StreamWriters::WriteDatasetsJson(const UserIO& uio, const Summary& s,
+                                             const bool splitSample)
 {
+    BAM::DataSet ds;
+    try {
+        if (uio.isFromJson)
+            ds = BAM::DataSet{uio.unpackedFromJson};
+        else if (!uio.isFastaInput && !uio.isFastqInput)
+            ds = BAM::DataSet{uio.inFile};
+    } catch (std::runtime_error& e) {
+        PBLOG_FATAL << e.what();
+        std::exit(EXIT_FAILURE);
+    }
     std::string pbiTiming;
     Timer pbiTimer;
     std::vector<std::string> xmlNames;
@@ -260,30 +291,31 @@ std::string StreamWriters::WriteDatasetsJson(const BAM::DataSet& inFile,
         BAM::PbiFile::CreateFrom(validationBam);
 
         std::string id;
-        const auto xmlName = InputOutputUX::CreateDataSet(inFile, refFile, isFromXML,
+        const auto xmlName = InputOutputUX::CreateDataSet(ds, uio.refFile, uio.isFromXML,
                                                           sample_sw.second->FinalOutputPrefix(),
-                                                          origOutFile, &id, s.NumAlns, s.Bases);
+                                                          uio.outFile, &id, s.NumAlns, s.Bases);
         xmlNames.emplace_back(xmlName);
         ids.emplace_back(id);
     }
     pbiTiming = pbiTimer.ElapsedTime();
 
-    if (outputIsJson || splitSample) {
+    if (uio.isToJson || splitSample) {
         JSON::Json datastore;
-        datastore["createdAt"] = BAM::ToIso8601(std::chrono::system_clock::now());
-        datastore["updatedAt"] = BAM::ToIso8601(std::chrono::system_clock::now());
+        const auto now = BAM::ToIso8601(std::chrono::system_clock::now());
+        datastore["createdAt"] = now;
+        datastore["updatedAt"] = now;
         datastore["version"] = "0.2.2";
         std::vector<JSON::Json> files;
         int i = 0;
         for (auto& sample_sw : sampleNameToStreamWriter) {
             JSON::Json datastoreFile;
-            datastoreFile["createdAt"] = BAM::ToIso8601(std::chrono::system_clock::now());
+            datastoreFile["createdAt"] = now;
             datastoreFile["description"] = "Aligned and sorted reads as BAM";
             std::ifstream file(sample_sw.second->FinalOutputName(),
                                std::ios::binary | std::ios::ate);
             datastoreFile["fileSize"] = static_cast<int>(file.tellg());
 
-            switch (inFile.Type()) {
+            switch (ds.Type()) {
                 case BAM::DataSet::TypeEnum::SUBREAD:
                     datastoreFile["fileTypeId"] = "PacBio.DataSet.AlignmentSet";
                     break;
@@ -298,7 +330,7 @@ std::string StreamWriters::WriteDatasetsJson(const BAM::DataSet& inFile,
             }
 
             datastoreFile["isChunked"] = false;
-            datastoreFile["modifiedAt"] = BAM::ToIso8601(std::chrono::system_clock::now());
+            datastoreFile["modifiedAt"] = now;
             datastoreFile["name"] = "Aligned reads";
             datastoreFile["path"] = xmlNames[i];
             datastoreFile["sourceId"] = "mapping.tasks.pbmm2_align-out-1";
@@ -308,7 +340,7 @@ std::string StreamWriters::WriteDatasetsJson(const BAM::DataSet& inFile,
             files.emplace_back(datastoreFile);
         }
         datastore["files"] = files;
-        std::ofstream datastoreStream(outPrefix + ".json");
+        std::ofstream datastoreStream(uio.outPrefix + ".json");
         datastoreStream << datastore.dump(2);
     }
     return pbiTiming;

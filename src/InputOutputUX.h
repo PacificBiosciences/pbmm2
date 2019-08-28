@@ -22,11 +22,17 @@ struct AlignSettings;
 enum class InputType : int
 {
     BAM = 0,
+    XML,
+    XML_BAM,
+    XML_FASTA,
     FASTX,
     MMI,
     FASTA,
     FASTQ,
     DATASET,
+    FOFN_BAM,
+    FOFN_FASTA,
+    FOFN_FASTQ,
     UNKNOWN
 };
 
@@ -36,6 +42,8 @@ struct UserIO
     std::string refFile;
     std::string outFile;
     std::string outPrefix;
+    std::string unpackedFromJson;
+    bool isFromFofn = false;
     bool isFromJson = false;
     bool isFromXML = false;
     bool isToXML = false;
@@ -46,7 +54,9 @@ struct UserIO
     bool isFromSubreadset = false;
     bool isFromConsensuReadSet = false;
     bool isFromTranscriptSet = false;
+    bool isFromMmi = false;
     BAM::DataSet::TypeEnum inputType;
+    std::vector<std::string> inputFiles;
 };
 
 class InputOutputUX
@@ -63,7 +73,7 @@ public:
 
     // Based on input file, guess file type on file suffix or
     // dataset type.
-    static InputType DetermineInputTypeApprox(std::string inputFile);
+    static InputType DetermineInputTypeApprox(std::string inputFile, UserIO& uio);
 
     static UserIO CheckPositionalArgs(const std::vector<std::string>& args,
                                       AlignSettings& settings);

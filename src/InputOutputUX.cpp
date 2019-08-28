@@ -12,6 +12,90 @@
 
 namespace PacBio {
 namespace minimap2 {
+namespace {
+bool InputTypeEquality(const InputType& t0, const InputType& t1)
+{
+    if (t0 == t1) return true;
+    if (t0 == InputType::BAM && t1 == InputType::XML_BAM) return true;
+    if (t1 == InputType::BAM && t0 == InputType::XML_BAM) return true;
+    return false;
+}
+InputType DetermineInputFileSuffix(const std::string& inputFile)
+{
+    using TypeEnum = BAM::DataSet::TypeEnum;
+    if (boost::iends_with(inputFile, "fq") || boost::iends_with(inputFile, "fastq") ||
+        boost::iends_with(inputFile, "fq.gz") || boost::iends_with(inputFile, "fastq.gz"))
+        return InputType::FASTQ;
+
+    if (boost::iends_with(inputFile, "fa") || boost::iends_with(inputFile, "fasta") ||
+        boost::iends_with(inputFile, "fa.gz") || boost::iends_with(inputFile, "fasta.gz"))
+        return InputType::FASTA;
+
+    if (boost::iends_with(inputFile, "bam")) return InputType::BAM;
+
+    if (boost::iends_with(inputFile, "xml")) {
+        BAM::DataSet dsInput;
+        try {
+            dsInput = BAM::DataSet{inputFile};
+        } catch (...) {
+            PBLOG_FATAL << UNKNOWN_FILE_TYPES;
+            std::exit(EXIT_FAILURE);
+        }
+        switch (dsInput.Type()) {
+            case TypeEnum::ALIGNMENT:
+            case TypeEnum::SUBREAD:
+            case TypeEnum::CONSENSUS_ALIGNMENT:
+            case TypeEnum::CONSENSUS_READ:
+            case TypeEnum::TRANSCRIPT_ALIGNMENT:
+            case TypeEnum::TRANSCRIPT:
+                return InputType::XML_BAM;
+                break;
+            case TypeEnum::BARCODE:
+            case TypeEnum::REFERENCE:
+                return InputType::XML_FASTA;
+                break;
+            default:
+                PBLOG_FATAL << "Unsupported input data file " << inputFile << " of type "
+                            << BAM::DataSet::TypeToName(dsInput.Type());
+                std::exit(EXIT_FAILURE);
+        }
+    }
+
+    if (boost::iends_with(inputFile, "mmi")) return InputType::MMI;
+
+    PBLOG_FATAL << "Unknown file suffix of " << inputFile;
+    std::exit(EXIT_FAILURE);
+}
+InputType DetermineFofnContent(const std::string& fofnInputFile, UserIO& uio)
+{
+    std::ifstream infile(fofnInputFile);
+    std::unique_ptr<InputType> type;
+    std::string line;
+    while (std::getline(infile, line)) {
+        boost::trim(line);
+        const InputType t = DetermineInputFileSuffix(line);
+        if (!type) {
+            type = std::make_unique<InputType>(t);
+        } else if (!InputTypeEquality(*type, t)) {
+            PBLOG_FATAL << "Input fofn contains different file types. This is not supported.";
+            std::exit(EXIT_FAILURE);
+        }
+        uio.inputFiles.emplace_back(line);
+    }
+    switch (*type) {
+        case InputType::BAM:
+        case InputType::XML_BAM:
+            return InputType::FOFN_BAM;
+        case InputType::FASTA:
+            return InputType::FOFN_FASTA;
+        case InputType::FASTQ:
+            return InputType::FOFN_FASTQ;
+        default:
+            PBLOG_FATAL << "Unsupported file types in file " << fofnInputFile;
+            std::exit(EXIT_FAILURE);
+    }
+}
+}  // namespace
 JSON::Json InputOutputUX::ReadJson(const std::string& jsonInputFile)
 {
     std::ifstream ifs(jsonInputFile);
@@ -19,7 +103,6 @@ JSON::Json InputOutputUX::ReadJson(const std::string& jsonInputFile)
     ifs >> j;
     return j;
 }
-
 std::string InputOutputUX::UnpackJson(const std::string& jsonInputFile)
 {
     JSON::Json j = ReadJson(jsonInputFile);
@@ -40,65 +123,16 @@ std::string InputOutputUX::UnpackJson(const std::string& jsonInputFile)
     return inputFile;
 }
 
-InputType InputOutputUX::DetermineInputTypeFastx(const std::string& in)
-{
-    char firstChar = ' ';
-    std::ifstream f(in);
-    f.read(&firstChar, 1);
-    if (firstChar == '>')
-        return InputType::FASTA;
-    else if (firstChar == '@')
-        return InputType::FASTQ;
-    else if (firstChar == 'M')
-        return InputType::MMI;
-    else if (firstChar == '<')
-        return InputType::DATASET;
-    else {
-        PBLOG_FATAL << "Unkown file type for file " << in << " starting with character "
-                    << firstChar;
-        std::exit(EXIT_FAILURE);
-    }
-}
-
-InputType InputOutputUX::DetermineInputTypeApprox(std::string inputFile)
+InputType InputOutputUX::DetermineInputTypeApprox(std::string inputFile, UserIO& uio)
 {
     if (!Utility::FileExists(inputFile)) {
         PBLOG_FATAL << "Input data file does not exist: " << inputFile;
         std::exit(EXIT_FAILURE);
     }
-    auto fileExt = Utility::FileExtension(inputFile);
-    if (fileExt == "json") {
-        inputFile = UnpackJson(inputFile);
-        fileExt = Utility::FileExtension(inputFile);
-    }
-    if (fileExt == "mmi") return InputType::MMI;
-    if (fileExt == "fq") return InputType::FASTX;
-    if (fileExt == "fastq") return InputType::FASTX;
-    if (fileExt == "fa") return InputType::FASTX;
-    if (fileExt == "fasta") return InputType::FASTX;
-    BAM::DataSet dsInput;
-    try {
-        dsInput = BAM::DataSet(inputFile);
-    } catch (...) {
-        PBLOG_FATAL << UNKNOWN_FILE_TYPES;
-        std::exit(EXIT_FAILURE);
-    }
-    switch (dsInput.Type()) {
-        case BAM::DataSet::TypeEnum::ALIGNMENT:
-        case BAM::DataSet::TypeEnum::SUBREAD:
-        case BAM::DataSet::TypeEnum::CONSENSUS_ALIGNMENT:
-        case BAM::DataSet::TypeEnum::CONSENSUS_READ:
-        case BAM::DataSet::TypeEnum::TRANSCRIPT_ALIGNMENT:
-        case BAM::DataSet::TypeEnum::TRANSCRIPT:
-            return InputType::BAM;
-        case BAM::DataSet::TypeEnum::BARCODE:
-        case BAM::DataSet::TypeEnum::REFERENCE:
-            return InputType::FASTX;
-        default:
-            PBLOG_FATAL << "Unsupported input data file " << inputFile << " of type "
-                        << BAM::DataSet::TypeToName(dsInput.Type());
-            std::exit(EXIT_FAILURE);
-    }
+    if (boost::iends_with(inputFile, "json")) inputFile = UnpackJson(inputFile);
+    if (boost::iends_with(inputFile, "fofn")) return DetermineFofnContent(inputFile, uio);
+
+    return DetermineInputFileSuffix(inputFile);
 }
 
 UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
@@ -113,174 +147,135 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
 
     std::string inputFile;
     std::string referenceFile;
-    const auto file0Type = InputOutputUX::DetermineInputTypeApprox(args[0]);
-    const auto file1Type = InputOutputUX::DetermineInputTypeApprox(args[1]);
-    const bool firstRefFastx = file0Type == InputType::FASTX || file0Type == InputType::MMI;
-    const bool secondRefFastx = file1Type == InputType::FASTX || file1Type == InputType::MMI;
+    const auto file0Type = InputOutputUX::DetermineInputTypeApprox(args[0], uio);
+    const auto file1Type = InputOutputUX::DetermineInputTypeApprox(args[1], uio);
 
-    if (file0Type == InputType::BAM && file1Type == InputType::BAM) {  // BAM BAM
+    const auto IsExactCombination = [&](const InputType& type0, const InputType& type1) {
+        return (file0Type == type0 && file1Type == type1);
+    };
+
+    if (file0Type == InputType::MMI || file1Type == InputType::MMI) uio.isFromMmi = true;
+
+    const std::string noGC = " Output BAM file cannot be used for polishing with GenomicConsensus!";
+    if (IsExactCombination(InputType::BAM, InputType::BAM)) {
         PBLOG_FATAL << "Both input files are of type BAM. Please check your inputs.";
         std::exit(EXIT_FAILURE);
-    } else if (file0Type == InputType::BAM && secondRefFastx) {  // BAM <FASTX|MMI>
-        inputFile = args[0];
-        referenceFile = args[1];
-    } else if (firstRefFastx && file1Type == InputType::BAM) {  // <FASTX|MMI> BAM
+    } else if (IsExactCombination(InputType::FASTQ, InputType::FASTQ)) {
+        PBLOG_FATAL << "Both input files are of type FASTQ. Please check your inputs.";
+        std::exit(EXIT_FAILURE);
+    } else if (IsExactCombination(InputType::MMI, InputType::MMI)) {
+        PBLOG_FATAL << "Both input files are of type MMI. Please check your inputs.";
+        std::exit(EXIT_FAILURE);
+    } else if (IsExactCombination(InputType::XML_BAM, InputType::XML_BAM)) {
+        PBLOG_FATAL << "Both input files are of type BAM from XML. Please check your inputs.";
+        std::exit(EXIT_FAILURE);
+    } else if (IsExactCombination(InputType::XML_FASTA, InputType::XML_FASTA)) {
+        PBLOG_FATAL << "Both input files are of type FASTA from XML. Please check your inputs.";
+        std::exit(EXIT_FAILURE);
+    } else if (IsExactCombination(InputType::FOFN_BAM, InputType::FOFN_BAM)) {
+        PBLOG_FATAL << "Both input files are of type BAM from FOFN. Please check your inputs.";
+        std::exit(EXIT_FAILURE);
+    } else if (IsExactCombination(InputType::FOFN_FASTA, InputType::FOFN_FASTA)) {
+        PBLOG_FATAL << "Both input files are of type FASTA from FOFN. Please check your inputs.";
+        std::exit(EXIT_FAILURE);
+    } else if (IsExactCombination(InputType::FOFN_FASTQ, InputType::FOFN_FASTQ)) {
+        PBLOG_FATAL << "Both input files are of type FASTQ from FOFN. Please check your inputs.";
+        std::exit(EXIT_FAILURE);
+    } else if (IsExactCombination(InputType::FASTA, InputType::FASTA) ||
+               IsExactCombination(InputType::XML_FASTA, InputType::FASTA) ||
+               IsExactCombination(InputType::MMI, InputType::FASTA)) {
+        PBLOG_WARN << "Input is FASTA." << noGC;
+        uio.isFastaInput = true;
         referenceFile = args[0];
         inputFile = args[1];
-    } else {  // <FASTX|MMI> <FASTX|MMI>
-        const std::string noGC =
-            "Output BAM file cannot be used for polishing with GenomicConsensus!";
-
-        InputType firstFileType = DetermineInputTypeFastx(args[0]);
-        InputType secondFileType = DetermineInputTypeFastx(args[1]);
-        switch (firstFileType) {
-            case InputType::FASTA: {
-                switch (secondFileType) {
-                    case InputType::FASTA: {
-                        referenceFile = args[0];
-                        inputFile = args[1];
-                        uio.isFastaInput = true;
-                        PBLOG_WARN << "Input is FASTA." << noGC;
-                        break;
-                    }
-                    case InputType::FASTQ: {
-                        referenceFile = args[0];
-                        inputFile = args[1];
-                        uio.isFastqInput = true;
-                        PBLOG_WARN << "Input is FASTQ." << noGC;
-                        break;
-                    }
-                    case InputType::DATASET: {
-                        inputFile = args[0];
-                        referenceFile = args[1];
-                        uio.isFastaInput = true;
-                        break;
-                    }
-                    case InputType::MMI: {
-                        inputFile = args[0];
-                        referenceFile = args[1];
-                        uio.isFastaInput = true;
-                        PBLOG_WARN << "Input is FASTA." << noGC;
-                        break;
-                    }
-                    default: {
-                        PBLOG_FATAL << "Unknown input file type for " << args[1];
-                        std::exit(EXIT_FAILURE);
-                    }
-                }
-                break;
-            }
-            case InputType::FASTQ: {
-                switch (secondFileType) {
-                    case InputType::FASTA: {
-                        referenceFile = args[1];
-                        inputFile = args[0];
-                        uio.isFastqInput = true;
-                        PBLOG_WARN << "Input is FASTQ." << noGC;
-                        break;
-                    }
-                    case InputType::FASTQ: {
-                        PBLOG_FATAL
-                            << "Both input files are of type FASTQ. Please check your inputs.";
-                        std::exit(EXIT_FAILURE);
-                        break;
-                    }
-                    case InputType::DATASET: {
-                        referenceFile = args[1];
-                        inputFile = args[0];
-                        uio.isFastqInput = true;
-                        PBLOG_WARN << "Input is FASTQ." << noGC;
-                        break;
-                    }
-                    case InputType::MMI: {
-                        referenceFile = args[1];
-                        inputFile = args[0];
-                        uio.isFastqInput = true;
-                        PBLOG_WARN << "Input is FASTQ." << noGC;
-                        break;
-                    }
-                    default: {
-                        PBLOG_FATAL << "Unknown input file type for " << args[1];
-                        std::exit(EXIT_FAILURE);
-                    }
-                }
-                break;
-            }
-            case InputType::DATASET: {
-                switch (secondFileType) {
-                    case InputType::FASTA: {
-                        referenceFile = args[0];
-                        inputFile = args[1];
-                        uio.isFastaInput = true;
-                        PBLOG_WARN << "Input is FASTA." << noGC;
-                        break;
-                    }
-                    case InputType::FASTQ: {
-                        referenceFile = args[0];
-                        inputFile = args[1];
-                        uio.isFastqInput = true;
-                        PBLOG_WARN << "Input is FASTQ." << noGC;
-                        break;
-                    }
-                    case InputType::DATASET: {
-                        referenceFile = args[1];
-                        inputFile = args[0];
-                        PBLOG_FATAL << "Should not happen. Please report bug with file types used "
-                                    << args[0] << " and " << args[1];
-                        std::exit(EXIT_FAILURE);
-                        break;
-                    }
-                    case InputType::MMI: {
-                        PBLOG_FATAL << "Do mix referenceset.xml and mmi!";
-                        std::exit(EXIT_FAILURE);
-                        break;
-                    }
-                    default: {
-                        PBLOG_FATAL << "Unknown input file type for " << args[1];
-                        std::exit(EXIT_FAILURE);
-                    }
-                }
-                break;
-            }
-            case InputType::MMI: {
-                switch (secondFileType) {
-                    case InputType::FASTA: {
-                        referenceFile = args[0];
-                        inputFile = args[1];
-                        uio.isFastaInput = true;
-                        PBLOG_WARN << "Input is FASTA." << noGC;
-                        break;
-                    }
-                    case InputType::FASTQ: {
-                        referenceFile = args[0];
-                        inputFile = args[1];
-                        uio.isFastqInput = true;
-                        PBLOG_WARN << "Input is FASTQ." << noGC;
-                        break;
-                    }
-                    case InputType::DATASET: {
-                        referenceFile = args[0];
-                        inputFile = args[1];
-                        break;
-                    }
-                    case InputType::MMI: {
-                        PBLOG_FATAL
-                            << "Both input files are of type MMI. Please check your inputs.";
-                        std::exit(EXIT_FAILURE);
-                    }
-                    default: {
-                        PBLOG_FATAL << "Unknown input file type for " << args[1];
-                        std::exit(EXIT_FAILURE);
-                    }
-                }
-                break;
-            }
-            default: {
-                PBLOG_FATAL << "Unknown input file type for " << args[0];
-                std::exit(EXIT_FAILURE);
-            }
-        }
+    } else if (IsExactCombination(InputType::FASTA, InputType::FOFN_FASTA) ||
+               IsExactCombination(InputType::XML_FASTA, InputType::FOFN_FASTA) ||
+               IsExactCombination(InputType::MMI, InputType::FOFN_FASTA)) {
+        PBLOG_WARN << "Input is FASTA FOFN." << noGC;
+        uio.isFromFofn = true;
+        uio.isFastaInput = true;
+        referenceFile = args[0];
+        inputFile = args[1];
+    } else if (IsExactCombination(InputType::MMI, InputType::XML_BAM) ||
+               IsExactCombination(InputType::MMI, InputType::BAM) ||
+               IsExactCombination(InputType::FASTA, InputType::XML_BAM) ||
+               IsExactCombination(InputType::FASTA, InputType::BAM) ||
+               IsExactCombination(InputType::XML_FASTA, InputType::XML_BAM) ||
+               IsExactCombination(InputType::XML_FASTA, InputType::BAM)) {
+        referenceFile = args[0];
+        inputFile = args[1];
+    } else if (IsExactCombination(InputType::MMI, InputType::FOFN_BAM) ||
+               IsExactCombination(InputType::FASTA, InputType::FOFN_BAM) ||
+               IsExactCombination(InputType::XML_FASTA, InputType::FOFN_BAM)) {
+        uio.isFromFofn = true;
+        referenceFile = args[0];
+        inputFile = args[1];
+    } else if (IsExactCombination(InputType::MMI, InputType::FASTQ) ||
+               IsExactCombination(InputType::FASTA, InputType::FASTQ) ||
+               IsExactCombination(InputType::XML_FASTA, InputType::FASTQ)) {
+        PBLOG_WARN << "Input is FASTQ." << noGC;
+        uio.isFastqInput = true;
+        referenceFile = args[0];
+        inputFile = args[1];
+    } else if (IsExactCombination(InputType::MMI, InputType::FOFN_FASTQ) ||
+               IsExactCombination(InputType::FASTA, InputType::FOFN_FASTQ) ||
+               IsExactCombination(InputType::XML_FASTA, InputType::FOFN_FASTQ)) {
+        PBLOG_WARN << "Input is FASTQ FOFN." << noGC;
+        uio.isFromFofn = true;
+        uio.isFastqInput = true;
+        referenceFile = args[0];
+        inputFile = args[1];
+    } else if (IsExactCombination(InputType::XML_BAM, InputType::MMI) ||
+               IsExactCombination(InputType::BAM, InputType::MMI) ||
+               IsExactCombination(InputType::XML_BAM, InputType::FASTA) ||
+               IsExactCombination(InputType::BAM, InputType::FASTA) ||
+               IsExactCombination(InputType::XML_BAM, InputType::XML_FASTA) ||
+               IsExactCombination(InputType::BAM, InputType::XML_FASTA)) {
+        inputFile = args[0];
+        referenceFile = args[1];
+    } else if (IsExactCombination(InputType::FOFN_BAM, InputType::MMI) ||
+               IsExactCombination(InputType::FOFN_BAM, InputType::FASTA) ||
+               IsExactCombination(InputType::FOFN_BAM, InputType::XML_FASTA)) {
+        uio.isFromFofn = true;
+        inputFile = args[0];
+        referenceFile = args[1];
+    } else if (IsExactCombination(InputType::FASTQ, InputType::MMI) ||
+               IsExactCombination(InputType::FASTQ, InputType::XML_FASTA) ||
+               IsExactCombination(InputType::FASTQ, InputType::FASTA)) {
+        PBLOG_WARN << "Input is FASTQ." << noGC;
+        uio.isFastqInput = true;
+        inputFile = args[0];
+        referenceFile = args[1];
+    } else if (IsExactCombination(InputType::FOFN_FASTQ, InputType::MMI) ||
+               IsExactCombination(InputType::FOFN_FASTQ, InputType::XML_FASTA) ||
+               IsExactCombination(InputType::FOFN_FASTQ, InputType::FASTA)) {
+        PBLOG_WARN << "Input is FASTQ FOFN." << noGC;
+        uio.isFastqInput = true;
+        uio.isFromFofn = true;
+        inputFile = args[0];
+        referenceFile = args[1];
+    } else if (IsExactCombination(InputType::FASTA, InputType::MMI) ||
+               IsExactCombination(InputType::FASTA, InputType::XML_FASTA)) {
+        PBLOG_WARN << "Input is FASTA." << noGC;
+        uio.isFastaInput = true;
+        inputFile = args[0];
+        referenceFile = args[1];
+    } else if (IsExactCombination(InputType::FOFN_FASTA, InputType::MMI) ||
+               IsExactCombination(InputType::FOFN_FASTA, InputType::XML_FASTA)) {
+        PBLOG_WARN << "Input is FASTA FOFN." << noGC;
+        uio.isFastaInput = true;
+        uio.isFromFofn = true;
+        inputFile = args[0];
+        referenceFile = args[1];
+    } else {
+        PBLOG_FATAL << "Unknown combination";
+        std::exit(EXIT_FAILURE);
     }
+
+    if (uio.inputFiles.empty()) {
+        uio.inputFiles.emplace_back(inputFile);
+    }
+
     PBLOG_INFO << "READ input file: " << inputFile;
     PBLOG_INFO << "REF  input file: " << referenceFile;
 
@@ -288,12 +283,19 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
     if (inputFileExt == "json") {
         uio.isFromJson = true;
         inputFile = UnpackJson(inputFile);
+        uio.unpackedFromJson = inputFile;
         inputFileExt = Utility::FileExtension(inputFile);
     }
     uio.isFromXML = inputFileExt == "xml";
 
     if (!uio.isFastaInput && !uio.isFastqInput) {
-        BAM::DataSet dsInput = BAM::DataSet(inputFile);
+        BAM::DataSet dsInput;
+        try {
+            dsInput = BAM::DataSet{inputFile};
+        } catch (...) {
+            PBLOG_FATAL << UNKNOWN_FILE_TYPES;
+            std::exit(EXIT_FAILURE);
+        }
         uio.inputType = dsInput.Type();
 
         const auto IsUnrolled = [&]() {
@@ -343,12 +345,13 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
             case BAM::DataSet::TypeEnum::BARCODE:
             case BAM::DataSet::TypeEnum::REFERENCE:
             default: {
-                const auto inType = DetermineInputTypeFastx(inputFile);
-                if (inType != InputType::FASTA && inType != InputType::FASTQ) {
-                    PBLOG_FATAL << "Unsupported input data file " << inputFile << " of type "
-                                << BAM::DataSet::TypeToName(dsInput.Type());
-                    std::exit(EXIT_FAILURE);
-                }
+                PBLOG_FATAL << "BLA!";
+                // const auto inType = DetermineInputTypeFastx(inputFile);
+                // if (inType != InputType::FASTA && inType != InputType::FASTQ) {
+                PBLOG_FATAL << "Unsupported input data file " << inputFile << " of type "
+                            << BAM::DataSet::TypeToName(dsInput.Type());
+                std::exit(EXIT_FAILURE);
+                // }
             }
         }
     }
@@ -359,19 +362,17 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
         PBLOG_INFO << "Reference input is an index file. Index parameter override options are "
                       "disabled!";
     } else {
-        BAM::DataSet dsRef(referenceFile);
-        switch (dsRef.Type()) {
-            case BAM::DataSet::TypeEnum::REFERENCE:
-                break;
-            case BAM::DataSet::TypeEnum::BARCODE:
-            case BAM::DataSet::TypeEnum::SUBREAD:
-            case BAM::DataSet::TypeEnum::ALIGNMENT:
-            case BAM::DataSet::TypeEnum::CONSENSUS_ALIGNMENT:
-            case BAM::DataSet::TypeEnum::CONSENSUS_READ:
-            default:
-                PBLOG_FATAL << "ERROR: Unsupported reference input file " << referenceFile
-                            << " of type " << BAM::DataSet::TypeToName(dsRef.Type());
-                std::exit(EXIT_FAILURE);
+        BAM::DataSet dsRef;
+        try {
+            dsRef = BAM::DataSet(referenceFile);
+        } catch (...) {
+            PBLOG_FATAL << UNKNOWN_FILE_TYPES;
+            std::exit(EXIT_FAILURE);
+        }
+        if (dsRef.Type() != BAM::DataSet::TypeEnum::REFERENCE) {
+            PBLOG_FATAL << "ERROR: Unsupported reference input file " << referenceFile
+                        << " of type " << BAM::DataSet::TypeToName(dsRef.Type());
+            std::exit(EXIT_FAILURE);
         }
         const auto fastaFiles = dsRef.FastaFiles();
         if (fastaFiles.size() != 1) {
@@ -381,7 +382,7 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
         reference = fastaFiles.front();
     }
 
-    if (InputOutputUX::DetermineInputTypeFastx(reference) == InputType::FASTQ) {
+    if (DetermineInputFileSuffix(reference) == InputType::FASTQ) {
         PBLOG_FATAL << "Cannot use FASTQ input as reference. Please use FASTA!";
         std::exit(EXIT_FAILURE);
     }
@@ -411,6 +412,11 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
         uio.isToXML = outExt == "xml";
         uio.isToJson = outExt == "json";
 
+        // if ((uio.isFastaInput || uio.isFastqInput) && uio.isToXML) {
+        //     PBLOG_FATAL << "Cannot create dataset output from fastx input. Please use a XML input "
+        //                    "file containing BAM files for XML output.";
+        //     std::exit(EXIT_FAILURE);
+        // }
         if (uio.isToXML && (boost::algorithm::ends_with(outlc, ".subreadset.xml") ||
                             boost::algorithm::ends_with(outlc, ".consensusreadset.xml") ||
                             boost::algorithm::ends_with(outlc, ".transcriptset.xml"))) {
@@ -474,8 +480,11 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
             PBLOG_WARN << "Warning: Overwriting existing output file: " << alnFile;
         if (alnFile != uio.outFile && Utility::FileExists(uio.outFile))
             PBLOG_WARN << "Warning: Overwriting existing output file: " << uio.outFile;
-    } else {
+    } else if (args.size() == 2) {
         uio.outPrefix = '-';
+    } else if (args.size() == 1 || args.size() > 3) {
+        PBLOG_FATAL << "Incorrect number of arguments. Accepted are at most three!";
+        std::exit(EXIT_FAILURE);
     }
 
     uio.inFile = inputFile;
@@ -489,6 +498,7 @@ std::string InputOutputUX::CreateDataSet(const BAM::DataSet& dsIn, const std::st
                                          size_t numAlignments, size_t numBases)
 {
     using BAM::DataSet;
+    using TypeEnum = BAM::DataSet::TypeEnum;
     using DataSetElement = PacBio::BAM::internal::DataSetElement;
     // Input dataset
     const auto GetCollection = [&dsIn](std::string* const name,
@@ -511,35 +521,35 @@ std::string InputOutputUX::CreateDataSet(const BAM::DataSet& dsIn, const std::st
 
     std::string metatype = "PacBio.AlignmentFile.AlignmentBamFile";
     std::string outputType = "alignmentset";
-    BAM::DataSet::TypeEnum outputEnum = BAM::DataSet::TypeEnum::ALIGNMENT;
+    TypeEnum outputEnum = TypeEnum::ALIGNMENT;
 
     const auto SetOutputAlignment = [&]() {
         metatype = "PacBio.AlignmentFile.AlignmentBamFile";
         outputType = "alignmentset";
-        outputEnum = BAM::DataSet::TypeEnum::ALIGNMENT;
+        outputEnum = TypeEnum::ALIGNMENT;
     };
 
     const auto SetOutputConsensus = [&]() {
         metatype = "PacBio.AlignmentFile.ConsensusAlignmentBamFile";
         outputType = "consensusalignmentset";
-        outputEnum = BAM::DataSet::TypeEnum::CONSENSUS_ALIGNMENT;
+        outputEnum = TypeEnum::CONSENSUS_ALIGNMENT;
     };
 
     const auto SetOutputTranscript = [&]() {
         metatype = "PacBio.AlignmentFile.TranscriptAlignmentBamFile";
         outputType = "transcriptalignmentset";
-        outputEnum = BAM::DataSet::TypeEnum::TRANSCRIPT_ALIGNMENT;
+        outputEnum = TypeEnum::TRANSCRIPT_ALIGNMENT;
     };
 
     const auto SetFromDatasetInput = [&]() {
         switch (dsIn.Type()) {
-            case BAM::DataSet::TypeEnum::SUBREAD:
+            case TypeEnum::SUBREAD:
                 SetOutputAlignment();
                 break;
-            case BAM::DataSet::TypeEnum::CONSENSUS_READ:
+            case TypeEnum::CONSENSUS_READ:
                 SetOutputConsensus();
                 break;
-            case BAM::DataSet::TypeEnum::TRANSCRIPT:
+            case TypeEnum::TRANSCRIPT:
                 SetOutputTranscript();
                 break;
             default:
@@ -578,8 +588,8 @@ std::string InputOutputUX::CreateDataSet(const BAM::DataSet& dsIn, const std::st
         boost::split(splits, fileName, boost::is_any_of("/"));
         fileName = splits.back();
     }
-    BAM::ExternalResource resource(metatype, fileName + ".bam");
-    BAM::FileIndex pbi("PacBio.Index.PacBioIndex", fileName + ".bam.pbi");
+    BAM::ExternalResource resource(metatype, outputFile + ".bam");
+    BAM::FileIndex pbi("PacBio.Index.PacBioIndex", outputFile + ".bam.pbi");
     resource.FileIndices().Add(pbi);
     BAM::ExternalResource refResource("PacBio.ReferenceFile.ReferenceFastaFile", refFile);
     resource.ExternalResources().Add(refResource);
