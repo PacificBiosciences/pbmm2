@@ -412,6 +412,8 @@ Minimal accepted version:
 ```json
 {"files":[{"path":"/path/to/m54075_180905_233034.subreadset.xml"}]}
 ```
+### What SAM flags are output by pbmm2?
+Armin to fill in
 
 ## Full Changelog
 
