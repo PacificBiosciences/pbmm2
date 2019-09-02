@@ -359,60 +359,6 @@ written to disk with the same prefix as your output alignment and appended
 with suffix `.ref.collapsed.fasta`. In addition, each read is collapsed
 before alignment. This mode cannot be combined with `.mmi` input.
 
-### How does _pbmm2_ get invoked in pbsmrtpipe?
-The goal was to simplify the interface of _pbmm2_ with pbsmrtpipe.
-The input is polymorphic and the input dataset has to be wrapped into a JSON datastore.
-In addition, sorting is always on per default, 4GB memory is used per sort thread, 25% of the
-provided number of threads are used for sorting (but no more than 8 threads), and
-the parameter preset is chosen implicitly by the input dataset. That means, if you
-have a ConsensusReadSet as input wrapped in a datastore, `CCS` preset is automatically used.
-
-Following options are available:
-
-| ID | Description | Default |
-| - | - | - |
-| `pbmm2_align.task_options.biosample_name` | Override Sample Name | `""` |
-| `pbmm2_align.task_options.hq_mode` | Process HQ Region Reads | `false` |
-| `pbmm2_align.task_options.median_filter` | Pick One Read per ZMW of Median Length | `false` |
-| `pbmm2_align.task_options.min_perc_concordance` | Minimum Concordance (%) | `70` |
-| `pbmm2_align.task_options.minalnlength` | Minimum Length | `50` |
-| `pbmm2_align.task_options.sort_memory_tc` | Memory per thread for sorting | `4G` |
-| `pbmm2_align.task_options.split_by_sample` | Split by Sample | `false` |
-| `pbmm2_align.task_options.strip` | Remove all kinetic and extra QV tags | `false` |
-| `pbmm2_align.task_options.tc_overrides` | Override Alignment Options | `""` |
-| `pbmm2_align.task_options.zmw_mode` | Process ZMW Reads | `false` |
-
-Following an example for an input datastore that wraps a `subreadset.xml`.
-Exactly *one* entry in `files` is allowed and only `path` is parsed by _pbmm2_.
-Always use absolute file paths to avoid failures:
-
-```json
-{
-    "createdAt": "2018-09-11T08:00:37.27Z",
-    "files": [
-        {
-            "createdAt": "2018-09-11T08:00:37.27Z",
-            "description": "Input for pbmm2",
-            "fileSize": 629317,
-            "fileTypeId": "PacBio.DataSet.SubreadSet",
-            "isChunked": false,
-            "modifiedAt": "2018-09-11T08:00:37.27Z",
-            "name": "Input",
-            "path": "/path/to/m54075_180905_233034.subreadset.xml",
-            "sourceId": "bla",
-            "uniqueId": "c11812a8-b5c4-489c-9dc6-059166d09c28"
-        }
-    ],
-    "updatedAt": "2018-09-11T08:00:37.27Z",
-    "version": "0.2.2"
-}
-```
-
-Minimal accepted version:
-```json
-{"files":[{"path":"/path/to/m54075_180905_233034.subreadset.xml"}]}
-```
-
 ## Full Changelog
 
  * **1.1.0**:
