@@ -250,6 +250,12 @@ that _pbmm2_ rewrites the cigar and the reference coordinates on-the-fly.
 This allows us to increase number of mapped bases, slightly reduce mapped
 concordance, but boost SV recall rate.
 
+### What SAM tags are added by pbmm2?
+_pbmm2_ adds following tags to each aligned record:
+
+ - `mc`, stores [mapped concordance percentage](#how-do-you-define-mapped-concordance) between 0.0 and 100.0
+ - `rm`, is set to `1` if alignment has been manipulated by [repeated matches trimming](#what-is-repeated-matches-trimming)
+
 ### Why is the output different from BLASR?
 As for any two alignments of the same data with different mappers, alignments
 will differ. This is because of many reasons, but mainly a combination of
