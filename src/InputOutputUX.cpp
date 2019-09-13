@@ -140,8 +140,8 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
 {
     UserIO uio;
     if (args.size() < 2) {
-        PBLOG_FATAL << "Please provide at least the input arguments: reference input output!";
-        PBLOG_FATAL << "EXAMPLE: pbmm2 reference.fasta input.subreads.bam output.bam";
+        PBLOG_FATAL << "Please provide at least the input arguments: reference input output!\n"
+                    << "EXAMPLE: pbmm2 reference.fasta input.subreads.bam output.bam";
         std::exit(EXIT_FAILURE);
     }
 
