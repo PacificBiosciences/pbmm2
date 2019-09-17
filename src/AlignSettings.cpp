@@ -307,6 +307,14 @@ R"({
     "description" : "Collapse homopolymers in reads and reference."
 })"};
 
+const CLI_v2::Option MaxGap{
+R"({
+    "names" : ["g"],
+    "description" : "Stop chain enlongation if there are no minimizers in N bp.",
+    "type" : "int",
+    "default" : -1
+})"};
+
 const CLI_v2::PositionalArgument Reference {
 R"({
     "name" : "ref.fa|xml|mmi",
@@ -366,33 +374,7 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
     MM2Settings::LongJoinFlankRatio = options[OptionNames::LongJoinFlankRatio];
     MM2Settings::NoTrimming = options[OptionNames::NoTrimming];
     MM2Settings::MaxNumAlns = options[OptionNames::MaxNumAlns];
-    // TcOverrides = options[OptionNames::TCOverrides].get<std::string>();
-
-    // if (!TcOverrides.empty()) {
-    //     std::string tcOverrides = "recursion " + TcOverrides;
-    //     std::vector<std::string> strs;
-    //     boost::split(strs, tcOverrides, boost::is_any_of(" "));
-    //     CLI::Parser parser(AlignSettings::CreateCLI());
-    //     const auto results = parser.Parse(strs);
-    //     AlignSettings os(results);
-
-    //     if (os.Kmer >= 0) MM2Settings::Kmer = os.Kmer;
-    //     if (os.MinimizerWindowSize >= 0) MM2Settings::MinimizerWindowSize = os.MinimizerWindowSize;
-    //     if (os.GapOpen1 >= 0) MM2Settings::GapOpen1 = os.GapOpen1;
-    //     if (os.GapOpen2 >= 0) MM2Settings::GapOpen2 = os.GapOpen2;
-    //     if (os.GapExtension1 >= 0) MM2Settings::GapExtension1 = os.GapExtension1;
-    //     if (os.GapExtension2 >= 0) MM2Settings::GapExtension2 = os.GapExtension2;
-    //     if (os.MatchScore >= 0) MM2Settings::MatchScore = os.MatchScore;
-    //     if (os.MismatchPenalty >= 0) MM2Settings::MismatchPenalty = os.MismatchPenalty;
-    //     if (os.Zdrop >= 0) MM2Settings::Zdrop = os.Zdrop;
-    //     if (os.ZdropInv >= 0) MM2Settings::ZdropInv = os.ZdropInv;
-    //     if (os.Bandwidth >= 0) MM2Settings::Bandwidth = os.Bandwidth;
-    //     if (os.DisableHPC) MM2Settings::DisableHPC = os.DisableHPC;
-    //     if (os.LongJoinFlankRatio >= 0) MM2Settings::LongJoinFlankRatio = os.LongJoinFlankRatio;
-    //     if (os.NoTrimming) MM2Settings::NoTrimming = os.NoTrimming;
-    // }
-
-    // if (boost::starts_with(CLI, "recursion")) return;
+    MM2Settings::MaxGap = options[OptionNames::MaxGap];
 
     int numAvailableCores = std::thread::hardware_concurrency();
     const unsigned int rawRequestedNThreads = options[PacBio::CLI_v2::Builtin::NumThreads];
@@ -609,6 +591,7 @@ PacBio::CLI_v2::Interface AlignSettings::CreateCLI()
         OptionNames::Zdrop,
         OptionNames::ZdropInv,
         OptionNames::Bandwidth,
+        OptionNames::MaxGap,
     });
 
     i.AddOptionGroup("Gap Parameter Override Options (a k-long gap costs min{o+k*e,O+k*E})", {
@@ -651,10 +634,10 @@ PacBio::CLI_v2::Interface AlignSettings::CreateCLI()
     });
 
     i.HelpFooter(R"(Alignment modes of --preset:
-    SUBREAD  : -k 19 -w 10 -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000 -L 0.5
-    CCS      : -k 19 -w 10 -u -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000 -L 0.5
-    ISOSEQ   : -k 15 -w 5 -u -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000 -L 0.5
-    UNROLLED : -k 15 -w 15 -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 2000 -L 0.5
+    SUBREAD  : -k 19 -w 10 -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000 -L 0.5 -g 5000
+    CCS      : -k 19 -w 10 -u -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000 -L 0.5 -g 5000
+    ISOSEQ   : -k 15 -w 5 -u -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000 -L 0.5 -g 2000
+    UNROLLED : -k 15 -w 15 -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 2000 -L 0.5 -g 10000
     )");
 
     // clang-format on

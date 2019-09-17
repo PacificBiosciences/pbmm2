@@ -192,6 +192,7 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             MapOpts.zdrop = 400;
             MapOpts.zdrop_inv = 50;
             MapOpts.bw = 2000;
+            MapOpts.max_gap = 5000;
             break;
         case AlignmentMode::CCS:
             *preset = "CCS";
@@ -204,6 +205,7 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             MapOpts.zdrop = 400;
             MapOpts.zdrop_inv = 50;
             MapOpts.bw = 2000;
+            MapOpts.max_gap = 5000;
             break;
         case AlignmentMode::ISOSEQ:
             *preset = "ISOSEQ";
@@ -253,6 +255,7 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
     if (settings.ZdropInv >= 0) MapOpts.zdrop_inv = settings.ZdropInv;
     if (settings.NonCanon >= 0) MapOpts.noncan = settings.NonCanon;
     if (settings.MaxIntronLength >= 0) mm_mapopt_max_intron_len(&MapOpts, settings.MaxIntronLength);
+    if (settings.MaxGap >= 0) MapOpts.max_gap = settings.MaxGap;
     if (settings.Bandwidth >= 0) MapOpts.bw = settings.Bandwidth;
     if (settings.NoSpliceFlank) MapOpts.flag &= ~MM_F_SPLICE_FLANK;
     if (settings.LongJoinFlankRatio >= 0)
@@ -300,6 +303,7 @@ void MM2Helper::PostInit(const MM2Settings& settings, const std::string& preset,
         PBLOG_DEBUG << "Z-drop                 : " << MapOpts.zdrop;
         PBLOG_DEBUG << "Z-drop inv             : " << MapOpts.zdrop_inv;
         PBLOG_DEBUG << "Bandwidth              : " << MapOpts.bw;
+        PBLOG_DEBUG << "Max gap                : " << MapOpts.max_gap;
         PBLOG_DEBUG << "Long join flank ratio  : " << MapOpts.min_join_flank_ratio;
         if (settings.AlignMode == AlignmentMode::ISOSEQ) {
             PBLOG_DEBUG << "Max ref intron length  : " << MapOpts.max_gap_ref;
