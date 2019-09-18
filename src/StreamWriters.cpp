@@ -97,10 +97,10 @@ void PrintErrorAndAbort(int error)
 }  // namespace
 
 StreamWriter::StreamWriter(BAM::BamHeader header, const std::string& outPrefix, bool sort,
-                           bool generateBai, int sortThreads, int numThreads, int64_t sortMemory,
-                           const std::string& sample, const std::string& infix)
+                           const BamIndex bamIdx, int sortThreads, int numThreads,
+                           int64_t sortMemory, const std::string& sample, const std::string& infix)
     : sort_(sort)
-    , generateBai_(generateBai)
+    , bamIdx_(bamIdx)
     , sample_(sample)
     , outPrefix_(outPrefix)
     , sortThreads_(sortThreads)
@@ -190,43 +190,58 @@ std::pair<int64_t, int64_t> StreamWriter::Close()
 {
     bamWriter_.reset();
     if (sort_) {
-        int baiMs = 0;
+        int idxMs = 0;
         Utility::Stopwatch sortTime;
         unlink(pipeName_.c_str());
         if (sortThread_) {
             sortThread_->join();
-            if (generateBai_ && finalOutputName_ != "-") {
-                Utility::Stopwatch baiTime;
-                PBLOG_INFO << "Generating BAI";
-                int ret = sam_index_build3(finalOutputName_.c_str(), NULL, 0,
+            if (bamIdx_ != BamIndex::_from_string("NONE") && finalOutputName_ != "-") {
+                Utility::Stopwatch time;
+                int shift = 0;
+                std::string idxType = bamIdx_._to_string();
+                switch (bamIdx_) {
+                    case BamIndex::BAI:
+                        shift = 0;
+                        break;
+                    case BamIndex::CSI:
+                        shift = 14;
+                        break;
+                    default:
+                        PBLOG_FATAL << "Unexpected index type. Falling back to generate BAI";
+                        break;
+                }
+                PBLOG_INFO << "Generating " << idxType;
+                int ret = sam_index_build3(finalOutputName_.c_str(), NULL, shift,
                                            std::min(sortThreads_ + numThreads_, 8));
 
                 switch (ret) {
                     case 0:
                         break;
                     case -2:
-                        PBLOG_FATAL << "BAI Index Generation: Failed to open file "
+                        PBLOG_FATAL << idxType << " Index Generation: Failed to open file "
                                     << finalOutputName_;
                         std::exit(EXIT_FAILURE);
                     case -3:
-                        PBLOG_FATAL << "BAI Index Generation: File is in a format that cannot be "
+                        PBLOG_FATAL << idxType
+                                    << " Index Generation: File is in a format that cannot be "
                                        "usefully indexed "
                                     << finalOutputName_;
                         std::exit(EXIT_FAILURE);
                     case -4:
-                        PBLOG_FATAL << "BAI Index Generation: Failed to create or write index "
-                                    << finalOutputName_ + ".bai";
+                        PBLOG_FATAL << idxType
+                                    << " Index Generation: Failed to create or write index "
+                                    << finalOutputName_ + '.' << boost::to_lower_copy(idxType);
                         std::exit(EXIT_FAILURE);
                     default:
-                        PBLOG_FATAL << "BAI Index Generation: Failed to create index for "
+                        PBLOG_FATAL << idxType << " Index Generation: Failed to create index for "
                                     << finalOutputName_;
                         std::exit(EXIT_FAILURE);
                         break;
                 }
-                baiMs = baiTime.ElapsedMilliseconds();
+                idxMs = time.ElapsedMilliseconds();
             }
         }
-        return {sortTime.ElapsedMilliseconds(), baiMs};
+        return {sortTime.ElapsedMilliseconds(), idxMs};
     } else {
         return {0, 0};
     }
@@ -236,13 +251,13 @@ std::string StreamWriter::FinalOutputName() { return finalOutputName_; }
 std::string StreamWriter::FinalOutputPrefix() { return finalOutputPrefix_; }
 
 StreamWriters::StreamWriters(BAM::BamHeader& header, const std::string& outPrefix,
-                             bool splitBySample, bool sort, bool generateBai, int sortThreads,
+                             bool splitBySample, bool sort, const BamIndex bamIdx, int sortThreads,
                              int numThreads, int64_t sortMemory)
     : header_(header.DeepCopy())
     , outPrefix_(outPrefix)
     , splitBySample_(splitBySample)
     , sort_(sort)
-    , generateBai_(generateBai)
+    , bamIdx_(bamIdx)
     , sortThreads_(sortThreads)
     , numThreads_(numThreads)
     , sortMemory_(sortMemory)
@@ -255,7 +270,7 @@ StreamWriter& StreamWriters::at(const std::string& infix, const std::string& sam
         if (sampleNameToStreamWriter.find(unsplit) == sampleNameToStreamWriter.cend())
             sampleNameToStreamWriter.emplace(
                 unsplit,
-                std::make_unique<StreamWriter>(header_.DeepCopy(), outPrefix_, sort_, generateBai_,
+                std::make_unique<StreamWriter>(header_.DeepCopy(), outPrefix_, sort_, bamIdx_,
                                                sortThreads_, numThreads_, sortMemory_));
 
         return *sampleNameToStreamWriter.at(unsplit);
@@ -263,7 +278,7 @@ StreamWriter& StreamWriters::at(const std::string& infix, const std::string& sam
         if (sampleNameToStreamWriter.find(sample) == sampleNameToStreamWriter.cend())
             sampleNameToStreamWriter.emplace(
                 sample, std::make_unique<StreamWriter>(header_.DeepCopy(), outPrefix_, sort_,
-                                                       generateBai_, sortThreads_, numThreads_,
+                                                       bamIdx_, sortThreads_, numThreads_,
                                                        sortMemory_, sample, infix));
         return *sampleNameToStreamWriter.at(sample);
     }
@@ -360,20 +375,20 @@ std::pair<std::string, std::string> StreamWriters::Close()
 {
     CreateEmptyIfNoOutput();
     int64_t sortMs = 0;
-    int64_t baiMs = 0;
+    int64_t idxMs = 0;
     for (auto& sample_sw : sampleNameToStreamWriter) {
         const auto sort_bai = sample_sw.second->Close();
         sortMs += sort_bai.first - sort_bai.second;
-        baiMs += sort_bai.second;
+        idxMs += sort_bai.second;
     }
     constexpr int64_t i641 = 1;
     sortMs = std::max(sortMs, i641);
-    baiMs = std::max(baiMs, i641);
+    idxMs = std::max(idxMs, i641);
     if (!sort_)
         return {"", ""};
     else
         return {Timer::ElapsedTimeFromSeconds(sortMs * 1e6),
-                Timer::ElapsedTimeFromSeconds(baiMs * 1e6)};
+                Timer::ElapsedTimeFromSeconds(idxMs * 1e6)};
 }
 
 void StreamWriters::CreateEmptyIfNoOutput()

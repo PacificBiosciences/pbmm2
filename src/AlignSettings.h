@@ -7,7 +7,7 @@
 
 #include <pbcopper/cli2/CLI.h>
 
-#include "PlainOption.h"
+#include "BamIndex.h"
 
 #include <pbmm2/MM2Settings.h>
 
@@ -41,7 +41,7 @@ struct AlignSettings : MM2Settings
     std::string Rg;
 
     bool CreatePbi;
-    bool NoBAI;
+    BamIndex BamIdx = BamIndex::_from_index(0);
     bool OutputUnmapped;
 
     bool CompressSequenceHomopolymers;

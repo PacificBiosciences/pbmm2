@@ -35,6 +35,7 @@
 #include <mmpriv.h>
 
 #include "AlignSettings.h"
+#include "BamIndex.h"
 #include "InputOutputUX.h"
 #include "SampleNames.h"
 #include "StreamWriters.h"
@@ -168,7 +169,7 @@ int AlignWorkflow::Runner(const CLI_v2::Results& options)
         PacBio::Parallel::FireAndForget faf(settings.NumThreads, 3);
 
         writers = std::make_unique<StreamWriters>(
-            hdr, uio.outPrefix, settings.SplitBySample, settings.Sort, !settings.NoBAI,
+            hdr, uio.outPrefix, settings.SplitBySample, settings.Sort, settings.BamIdx,
             settings.SortThreads, settings.NumThreads, settings.SortMemory);
 
         int32_t i = 0;
@@ -518,8 +519,10 @@ int AlignWorkflow::Runner(const CLI_v2::Results& options)
     PBLOG_INFO << "Index Build/Read Time: " << indexTime.ElapsedTime();
     PBLOG_INFO << "Alignment Time: " << alignmentTime.ElapsedTime();
     if (!sort_baiTimings.first.empty()) PBLOG_INFO << "Sort Merge Time: " << sort_baiTimings.first;
-    if (!sort_baiTimings.second.empty() && !settings.NoBAI)
-        PBLOG_INFO << "BAI Generation Time: " << sort_baiTimings.second;
+    if (!sort_baiTimings.second.empty() && settings.BamIdx != BamIndex::_from_string("NONE")) {
+        PBLOG_INFO << settings.BamIdx._to_string()
+                   << " Generation Time: " << sort_baiTimings.second;
+    }
     if (!pbiTiming.empty()) PBLOG_INFO << "PBI Generation Time: " << pbiTiming;
     PBLOG_INFO << "Run Time: " << startTime.ElapsedTime();
     PBLOG_INFO << "CPU Time: "
