@@ -40,7 +40,7 @@ test(
   'pbmm2_cram test',
   pbmm2_cram_script,
   args : [
-    '--xunit-file=cram.xml',
+    '--xunit-file=' + join_paths(meson.build_root(), 'pbmm2-cram-tests.xml'),
     '--verbose'] +
     pbmm2_cram_test_data,
   env : [
