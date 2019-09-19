@@ -67,7 +67,11 @@ pbmm2_pbbam_dep = dependency('pbbam', fallback : ['pbbam', 'pbbam_dep'])
 pbmm2_pbcopper_dep = dependency('pbcopper', fallback : ['pbcopper', 'pbcopper_dep'])
 
 ## minimap2
-pbmm2_minimap2_dep = dependency('minimap2', fallback : ['minimap2', 'mm2_dep'])
+pbmm2_minimap2_dep = dependency('minimap2', required : false)
+if not pbmm2_minimap2_dep.found()
+  pbmm2_minimap2_subproject = subproject('minimap2')
+  pbmm2_minimap2_dep = pbmm2_minimap2_subproject.get_variable('mm2_dep')
+endif
 
 # htslib
 pbmm2_htslib_dep = dependency('htslib', required : true, version : '>=1.4', fallback : ['htslib', 'htslib_dep'])
