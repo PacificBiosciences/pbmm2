@@ -482,9 +482,6 @@
   *CPU Time: * (glob)
   *Peak RSS: * (glob)
 
-  $ $__PBTEST_PBMM2_EXE align $IN $REF --sort --no-bai > $CRAMTMP/warn_bai_pipe.bam
-  *Option --no-bai has no effect when using an output pipe!* (glob)
-
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/warn_bai.bam --no-bai
   *Option --no-bai has no effect without option --sort!* (glob)
 

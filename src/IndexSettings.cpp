@@ -4,6 +4,8 @@
 
 #include <Pbmm2Version.h>
 
+#include "AbortException.h"
+
 #include "IndexSettings.h"
 
 namespace PacBio {
@@ -74,7 +76,7 @@ IndexSettings::IndexSettings(const PacBio::CLI_v2::Results& options)
     if (MM2Settings::Kmer < -1 || MM2Settings::Kmer == 0 || MM2Settings::MinimizerWindowSize < -1 ||
         MM2Settings::MinimizerWindowSize == 0) {
         PBLOG_FATAL << "Index parameter -k and -w must be positive.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException();
     }
 }
 

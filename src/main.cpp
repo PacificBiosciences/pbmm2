@@ -7,6 +7,7 @@
 
 #include <Pbmm2Version.h>
 
+#include "AbortException.h"
 #include "AlignSettings.h"
 #include "AlignWorkflow.h"
 #include "IndexSettings.h"
@@ -54,6 +55,8 @@ int main(int argc, char* argv[])
 {
     try {
         return PacBio::CLI_v2::Run(argc, argv, CreateMultiInterface());
+    } catch (const PacBio::minimap2::AbortException& e) {
+        return EXIT_FAILURE;
     } catch (const std::exception& e) {
         std::cerr << "pbmm2 ERROR: " << e.what() << '\n';
         return EXIT_FAILURE;

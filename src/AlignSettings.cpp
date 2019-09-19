@@ -13,10 +13,37 @@
 #include <pbcopper/cli2/internal/BuiltinOptions.h>
 #include <boost/algorithm/string.hpp>
 
+#include "AbortException.h"
+
 #include <Pbmm2Version.h>
 
 namespace PacBio {
 namespace minimap2 {
+namespace {
+static int64_t SizeStringToIntMG(const std::string& s)
+{
+    if (isalpha(s[s.size() - 1])) {
+        int64_t size = std::stoll(s.substr(0, s.size() - 1));
+        switch (s[s.size() - 1]) {
+            case 'm':
+            case 'M':
+                size <<= 20;
+                break;
+            case 'g':
+            case 'G':
+                size <<= 30;
+                break;
+            default:
+                PBLOG_FATAL << "Unknown size multiplier " << s[s.size() - 1];
+                throw AbortException();
+        }
+        return size;
+    } else {
+        return std::stoll(s);
+    }
+}
+
+};  // namespace
 namespace OptionNames {
 // clang-format off
 
@@ -277,7 +304,8 @@ R"({
 const CLI_v2::Option NoBAI{
 R"({
     "names" : ["no-bai"],
-    "description" : "Omit BAI generation for sorted output."
+    "description" : "Omit BAI generation for sorted output.",
+    "hidden" : true
 })"};
 
 const CLI_v2::Option NoTrimming{
@@ -313,6 +341,15 @@ R"({
     "description" : "Stop chain enlongation if there are no minimizers in N bp.",
     "type" : "int",
     "default" : -1
+})"};
+
+const CLI_v2::Option BamIndexInput{
+R"({
+    "names" : ["bam-index"],
+    "description" : "Generate index for sorted BAM output.",
+    "type" : "string",
+    "choices" : ["NONE", "BAI", "CSI"],
+    "default" : "BAI"
 })"};
 
 const CLI_v2::PositionalArgument Reference {
@@ -352,7 +389,6 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
     , SplitBySample(options[OptionNames::SplitBySample])
     , Rg(options[OptionNames::Rg])
     , CreatePbi(options[OptionNames::CreatePbi])
-    , NoBAI(options[OptionNames::NoBAI])
     , OutputUnmapped(options[OptionNames::OutputUnmapped])
     , CompressSequenceHomopolymers(options[OptionNames::CompressSequenceHomopolymers])
 {
@@ -375,6 +411,9 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
     MM2Settings::NoTrimming = options[OptionNames::NoTrimming];
     MM2Settings::MaxNumAlns = options[OptionNames::MaxNumAlns];
     MM2Settings::MaxGap = options[OptionNames::MaxGap];
+
+    const bool noBai = options[OptionNames::NoBAI];
+    const std::string bamIdx = options[OptionNames::BamIndexInput];
 
     int numAvailableCores = std::thread::hardware_concurrency();
     const unsigned int rawRequestedNThreads = options[PacBio::CLI_v2::Builtin::NumThreads];
@@ -427,7 +466,7 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
     } else {
         MM2Settings::NumThreads = availableThreads;
     }
-    SortMemory = PlainOption::SizeStringToInt(requestedMemory);
+    SortMemory = SizeStringToIntMG(requestedMemory);
 
     if (!Sort) {
         if (SortThreads != 0)
@@ -478,7 +517,14 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
             PBLOG_FATAL << "Trying to allocate more memory for sorting (" << maxMemSortFloat
                         << maxMemSortSuffix << ") than system-wide available (" << availFloat
                         << availSuffix << ")";
-            std::exit(EXIT_FAILURE);
+            throw AbortException();
+        }
+
+        BamIdx = BamIndex::_from_string(bamIdx.c_str());
+
+        if (noBai) {
+            PBLOG_WARN << "Overriding --bam-index with --no-bai!";
+            BamIdx = BamIndex::NONE;
         }
     } else {
         PBLOG_INFO << "Using " << MM2Settings::NumThreads << " threads for alignments.";
@@ -493,7 +539,7 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
     int inputFilterCounts = ZMW + MedianFilter + HQRegion;
     if (inputFilterCounts > 1) {
         PBLOG_FATAL << "Options --zmw, --hqregion and --median-filter are mutually exclusive.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException();
     }
     if (ZMW || HQRegion) {
         if (ChunkSize != 100)
@@ -506,31 +552,31 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
     if (!Rg.empty() && !boost::contains(Rg, "ID") && !boost::starts_with(Rg, "@RG\t")) {
         PBLOG_FATAL << "Invalid @RG line. Missing ID field. Please provide following "
                        "format: '@RG\\tID:xyz\\tSM:abc'";
-        std::exit(EXIT_FAILURE);
+        throw AbortException();
     }
     if (MM2Settings::LongJoinFlankRatio > 1) {
         PBLOG_FATAL << "Option -L,--lj-min-ratio has to be between a ratio betweem 0 and 1.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException();
     }
 
-    if (!Sort && NoBAI) {
+    if (!Sort && noBai) {
         PBLOG_WARN << "Option --no-bai has no effect without option --sort!";
     }
 
     if (MM2Settings::GapOpen1 < -1 || MM2Settings::GapOpen2 < -1 ||
         MM2Settings::GapExtension1 < -1 || MM2Settings::GapExtension2 < -1) {
         PBLOG_FATAL << "Gap options have to be strictly positive.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException();
     }
     if (MM2Settings::Kmer < -1 || MM2Settings::Kmer == 0 || MM2Settings::MinimizerWindowSize < -1 ||
         MM2Settings::MinimizerWindowSize == 0) {
         PBLOG_FATAL << "Index parameter -k and -w must be positive.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException();
     }
 
     if (MM2Settings::MaxNumAlns < 0) {
         PBLOG_FATAL << "Parameter --best-n, -N must be positive.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException();
     }
 
     // Override Sample Name for all Read Groups, disable SplitBySample.
@@ -619,8 +665,9 @@ PacBio::CLI_v2::Interface AlignSettings::CreateCLI()
         OptionNames::MaxNumAlns,
         OptionNames::Strip,
         OptionNames::SplitBySample,
-        OptionNames::NoBAI,
         OptionNames::OutputUnmapped,
+        OptionNames::BamIndexInput,
+        OptionNames::NoBAI,
     });
 
     i.AddOptionGroup("Input Manipulation Options (mutually exclusive)", {

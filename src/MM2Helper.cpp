@@ -12,6 +12,8 @@
 #include <pbcopper/data/Position.h>
 #include <pbcopper/data/Strand.h>
 
+#include "AbortException.h"
+
 namespace PacBio {
 namespace minimap2 {
 namespace {
@@ -87,10 +89,10 @@ Data::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const int opt_
                 case 'S':
                 case 'H':
                     PBLOG_FATAL << "Cigar should not occur " << cigarChar;
-                    std::exit(EXIT_FAILURE);
+                    throw AbortException();
                 default:
                     PBLOG_FATAL << "Unknown cigar " << cigarChar;
-                    std::exit(EXIT_FAILURE);
+                    throw AbortException();
                     break;
             }
         }
@@ -161,7 +163,7 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             break;
         default:
             PBLOG_FATAL << "No AlignmentMode --preset selected!";
-            std::exit(EXIT_FAILURE);
+            throw AbortException();
     }
     if (settings.DisableHPC && IdxOpts.flag & MM_I_HPC) IdxOpts.flag &= ~MM_I_HPC;
     if (settings.Kmer >= 0) IdxOpts.k = settings.Kmer;
@@ -243,7 +245,7 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             break;
         default:
             PBLOG_FATAL << "No AlignmentMode --preset selected!";
-            std::exit(EXIT_FAILURE);
+            throw AbortException();
     }
     if (settings.GapOpen1 >= 0) MapOpts.q = settings.GapOpen1;
     if (settings.GapOpen2 >= 0) MapOpts.q2 = settings.GapOpen2;
@@ -264,17 +266,17 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
     if ((MapOpts.q != MapOpts.q2 || MapOpts.e != MapOpts.e2) &&
         !(MapOpts.e > MapOpts.e2 && MapOpts.q + MapOpts.e < MapOpts.q2 + MapOpts.e2)) {
         PBLOG_FATAL << "Violation of dual gap penalties, E1>E2 and O1+E1<O2+E2";
-        std::exit(EXIT_FAILURE);
+        throw AbortException();
     }
 
     if ((MapOpts.q + MapOpts.e) + (MapOpts.q2 + MapOpts.e2) > 127) {
         PBLOG_FATAL << "Violation of scoring system ({-O}+{-E})+({-O2}+{-E2}) <= 127";
-        std::exit(EXIT_FAILURE);
+        throw AbortException();
     }
 
     if (MapOpts.zdrop < MapOpts.zdrop_inv) {
         PBLOG_FATAL << "Z-drop should not be less than inversion-Z-drop";
-        std::exit(EXIT_FAILURE);
+        throw AbortException();
     }
 }
 
@@ -285,7 +287,7 @@ void MM2Helper::PostInit(const MM2Settings& settings, const std::string& preset,
 
     if (Idx->idx_->k <= 0 || Idx->idx_->w <= 0) {
         PBLOG_FATAL << "Index parameter -k and -w must be positive.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException();
     }
 
     PBLOG_DEBUG << "Minimap2 parameters based on preset: " << preset;
@@ -813,7 +815,7 @@ void AlignedRecordImpl<T>::ComputeAccuracyBases()
             case Data::CigarOperationType::UNKNOWN_OP:
             default:
                 PBLOG_FATAL << "UNKNOWN OP";
-                std::exit(EXIT_FAILURE);
+                throw AbortException();
                 break;
         }
     }

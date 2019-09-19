@@ -7,6 +7,7 @@
 #include <boost/algorithm/string.hpp>
 #include <fstream>
 
+#include <AbortException.h>
 #include <AlignSettings.h>
 #include <InputOutputUX.h>
 #include <Pbmm2Version.h>
@@ -54,7 +55,7 @@ MovieToSampleToInfix SampleNames::DetermineMovieToSampleToInfix(const UserIO& ui
             ds = BAM::DataSet{f};
         } catch (...) {
             PBLOG_FATAL << UNKNOWN_FILE_TYPES;
-            std::exit(EXIT_FAILURE);
+            throw AbortException();
         }
         const auto& md = ds.Metadata();
         const auto& biosamples = md.BioSamples();
@@ -122,7 +123,7 @@ BAM::BamHeader SampleNames::GenerateBamHeader(const AlignSettings& settings, con
     if ((settings.HQRegion || settings.ZMW) && !uio.isAlignedInput) {
         if (uio.isFromFofn) {
             PBLOG_FATAL << "Cannot combine --hqregion or --zmw with fofn input!";
-            std::exit(EXIT_FAILURE);
+            throw AbortException();
         }
         BAM::ZmwReadStitcher reader(uio.inFile);
         if (reader.HasNext()) {

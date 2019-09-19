@@ -20,6 +20,8 @@
   0
   $ ls -alh $CRAMTMP/fasta_unsorted.bam.bai 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/fasta_unsorted.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fasta_unsorted.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fasta_unsorted.json 2> /dev/null | wc -l | tr -d ' '
@@ -33,9 +35,26 @@
   0
   $ ls -alh $CRAMTMP/fasta_sorted.bam.bai 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/fasta_sorted.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fasta_sorted.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fasta_sorted.json 2> /dev/null | wc -l | tr -d ' '
+  0
+
+  $ $__PBTEST_PBMM2_EXE align $REF $FASTA $CRAMTMP/fasta_sorted_csi.bam --sort --bam-index CSI
+  *Input is FASTA.* (glob)
+  $ samtools view -H $CRAMTMP/fasta_sorted_csi.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/fasta_sorted_csi.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fasta_sorted_csi.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fasta_sorted_csi.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/fasta_sorted_csi.*.xml 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fasta_sorted_csi.json 2> /dev/null | wc -l | tr -d ' '
   0
 
   $ $__PBTEST_PBMM2_EXE align $REF $FASTA $CRAMTMP/fasta_unsortedds.alignmentset.xml 2> $CRAMTMP/fasta_unsortedds.err || echo $?
@@ -47,6 +66,8 @@
   $ ls -alh $CRAMTMP/fasta_unsortedds.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fasta_unsortedds.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fasta_unsortedds.bam.csi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fasta_unsortedds.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
@@ -63,6 +84,8 @@
   1
   $ ls -alh $CRAMTMP/fasta_sortedds.bam.bai 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/fasta_sortedds.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fasta_sortedds.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fasta_sortedds.json 2> /dev/null | wc -l | tr -d ' '
@@ -86,6 +109,8 @@
   0
   $ ls -alh $CRAMTMP/fasta_unsortedoutstream.bam.bai 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/fasta_unsortedoutstream.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fasta_unsortedoutstream.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fasta_unsortedoutstream.json 2> /dev/null | wc -l | tr -d ' '
@@ -99,6 +124,8 @@
   0
   $ ls -alh $CRAMTMP/fasta_compressed_unsortedoutstream.bam.bai 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/fasta_compressed_unsortedoutstream.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fasta_compressed_unsortedoutstream.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fasta_compressed_unsortedoutstream.json 2> /dev/null | wc -l | tr -d ' '
@@ -111,6 +138,8 @@
   $ ls -alh $CRAMTMP/fasta_sortedoutstream.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fasta_sortedoutstream.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fasta_sortedoutstream.bam.csi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fasta_sortedoutstream.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
@@ -127,6 +156,8 @@
   1
   $ ls -alh $CRAMTMP/fasta_unsortedccs.bam.bai 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/fasta_unsortedccs.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fasta_unsortedccs.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fasta_unsortedccs.json 2> /dev/null | wc -l | tr -d ' '
@@ -141,6 +172,8 @@
   $ ls -alh $CRAMTMP/fasta_unsortedts.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fasta_unsortedts.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fasta_unsortedts.bam.csi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fasta_unsortedts.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
@@ -178,6 +211,8 @@
   0
   $ ls -alh $CRAMTMP/fastq_unsorted.bam.bai 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/fastq_unsorted.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fastq_unsorted.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_unsorted.json 2> /dev/null | wc -l | tr -d ' '
@@ -190,6 +225,8 @@
   $ ls -alh $CRAMTMP/fastq_compressed_unsorted.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_compressed_unsorted.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fastq_compressed_unsorted.bam.csi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_compressed_unsorted.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
@@ -204,6 +241,8 @@
   0
   $ ls -alh $CRAMTMP/fastq_sorted.bam.bai 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/fastq_sorted.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fastq_sorted.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_sorted.json 2> /dev/null | wc -l | tr -d ' '
@@ -218,6 +257,8 @@
   $ ls -alh $CRAMTMP/fastq_unsortedds.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fastq_unsortedds.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fastq_unsortedds.bam.csi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_unsortedds.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
@@ -234,6 +275,8 @@
   1
   $ ls -alh $CRAMTMP/fastq_sortedds.bam.bai 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/fastq_sortedds.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fastq_sortedds.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fastq_sortedds.json 2> /dev/null | wc -l | tr -d ' '
@@ -257,6 +300,8 @@
   0
   $ ls -alh $CRAMTMP/fastq_unsortedoutstream.bam.bai 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/fastq_unsortedoutstream.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fastq_unsortedoutstream.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_unsortedoutstream.json 2> /dev/null | wc -l | tr -d ' '
@@ -269,6 +314,8 @@
   $ ls -alh $CRAMTMP/fastq_sortedoutstream.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_sortedoutstream.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fastq_sortedoutstream.bam.csi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_sortedoutstream.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
@@ -285,6 +332,8 @@
   1
   $ ls -alh $CRAMTMP/fastq_unsortedccs.bam.bai 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/fastq_unsortedccs.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fastq_unsortedccs.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fastq_unsortedccs.json 2> /dev/null | wc -l | tr -d ' '
@@ -299,6 +348,8 @@
   $ ls -alh $CRAMTMP/fastq_unsortedts.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fastq_unsortedts.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fastq_unsortedts.bam.csi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_unsortedts.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
@@ -346,6 +397,8 @@
   0
   $ ls -alh $CRAMTMP/fasta_unsorted.bam.bai 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/fasta_unsorted.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fasta_unsorted.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fasta_unsorted.json 2> /dev/null | wc -l | tr -d ' '
@@ -359,6 +412,8 @@
   0
   $ ls -alh $CRAMTMP/fasta_sorted.bam.bai 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/fasta_sorted.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fasta_sorted.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fasta_sorted.json 2> /dev/null | wc -l | tr -d ' '
@@ -373,6 +428,8 @@
   $ ls -alh $CRAMTMP/fasta_unsortedds.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fasta_unsortedds.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fasta_unsortedds.bam.csi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fasta_unsortedds.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
@@ -389,6 +446,8 @@
   1
   $ ls -alh $CRAMTMP/fasta_sortedds.bam.bai 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/fasta_sortedds.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fasta_sortedds.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fasta_sortedds.json 2> /dev/null | wc -l | tr -d ' '
@@ -412,6 +471,8 @@
   0
   $ ls -alh $CRAMTMP/fasta_unsortedoutstream.bam.bai 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/fasta_unsortedoutstream.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fasta_unsortedoutstream.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fasta_unsortedoutstream.json 2> /dev/null | wc -l | tr -d ' '
@@ -424,6 +485,8 @@
   $ ls -alh $CRAMTMP/fasta_sortedoutstream.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fasta_sortedoutstream.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fasta_sortedoutstream.bam.csi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fasta_sortedoutstream.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
@@ -440,6 +503,8 @@
   1
   $ ls -alh $CRAMTMP/fasta_unsortedccs.bam.bai 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/fasta_unsortedccs.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fasta_unsortedccs.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fasta_unsortedccs.json 2> /dev/null | wc -l | tr -d ' '
@@ -454,6 +519,8 @@
   $ ls -alh $CRAMTMP/fasta_unsortedts.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fasta_unsortedts.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fasta_unsortedts.bam.csi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fasta_unsortedts.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
@@ -491,6 +558,8 @@
   0
   $ ls -alh $CRAMTMP/fastq_unsorted.bam.bai 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/fastq_unsorted.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fastq_unsorted.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_unsorted.json 2> /dev/null | wc -l | tr -d ' '
@@ -504,6 +573,8 @@
   0
   $ ls -alh $CRAMTMP/fastq_sorted.bam.bai 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/fastq_sorted.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fastq_sorted.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_sorted.json 2> /dev/null | wc -l | tr -d ' '
@@ -518,6 +589,8 @@
   $ ls -alh $CRAMTMP/fastq_unsortedds.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fastq_unsortedds.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fastq_unsortedds.bam.csi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_unsortedds.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
@@ -534,6 +607,8 @@
   1
   $ ls -alh $CRAMTMP/fastq_sortedds.bam.bai 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/fastq_sortedds.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fastq_sortedds.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fastq_sortedds.json 2> /dev/null | wc -l | tr -d ' '
@@ -557,6 +632,8 @@
   0
   $ ls -alh $CRAMTMP/fastq_unsortedoutstream.bam.bai 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/fastq_unsortedoutstream.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/fastq_unsortedoutstream.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_unsortedoutstream.json 2> /dev/null | wc -l | tr -d ' '
@@ -569,6 +646,8 @@
   $ ls -alh $CRAMTMP/fastq_sortedoutstream.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_sortedoutstream.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fastq_sortedoutstream.bam.csi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_sortedoutstream.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
@@ -584,6 +663,8 @@
   $ ls -alh $CRAMTMP/fastq_unsortedccs.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/fastq_unsortedccs.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/fastq_unsortedccs.bam.csi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/fastq_unsortedccs.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
