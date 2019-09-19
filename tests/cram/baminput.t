@@ -318,8 +318,8 @@
   *Trying to allocate more memory for sorting* (glob)
   [1]
 
-  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sort_percentage_4.bam -j 8 --sort --log-level INFO 2>&1 | grep "threads for alignments"
-  *Using 6 threads for alignments, 2 threads for sorting, and 1.5G bytes RAM for sorting.* (glob)
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sort_percentage_4.bam -j 4 --sort --log-level INFO 2>&1 | grep "threads for alignments"
+  *Using 3 threads for alignments, 1 threads for sorting, and 768M bytes RAM for sorting.* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/default_parameters.bam --log-level DEBUG 2>&1| grep DEBUG
   *Minimap2 parameters* (glob)
