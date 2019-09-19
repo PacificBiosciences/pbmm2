@@ -20,7 +20,8 @@
 namespace PacBio {
 namespace minimap2 {
 namespace {
-static int64_t SizeStringToIntMG(const std::string& s)
+
+int64_t SizeStringToIntMG(const std::string& s)
 {
     if (isalpha(s[s.size() - 1])) {
         int64_t size = std::stoll(s.substr(0, s.size() - 1));
@@ -43,7 +44,8 @@ static int64_t SizeStringToIntMG(const std::string& s)
     }
 }
 
-};  // namespace
+}  // namespace
+
 namespace OptionNames {
 // clang-format off
 

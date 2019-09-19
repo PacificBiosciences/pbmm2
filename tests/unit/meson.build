@@ -3,7 +3,6 @@ pbmm2_test_cpp_sources = files([
 
 pbmm2_TestData_h_config = configuration_data()
 pbmm2_TestData_h_config.set('PBMM2_TestsDir', meson.current_source_dir())
-# pbmm2_TestData_h_config.set('CMAKE_BINARY_DIR', meson.current_build_dir())
 pbmm2_TestData_h = configure_file(
   input : files('TestData.h.in'),
   output : 'TestData.h',
@@ -28,7 +27,7 @@ test(
   'pbmm2 gtest unittests',
   pbmm2_test,
   args : [
-    '--gtest_output=xml:' + join_paths(meson.build_root(), 'unit.xml')],
+    '--gtest_output=xml:' + join_paths(meson.build_root(), 'pbmm2-gtest-unittests.xml')],
   env : [
     'ARGS=-V',
     'VERBOSE=1'],
