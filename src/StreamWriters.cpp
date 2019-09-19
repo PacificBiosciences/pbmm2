@@ -17,6 +17,7 @@
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
+#include "AbortException.h"
 #include "Timer.h"
 #include "bam_sort.h"
 
@@ -92,7 +93,7 @@ void PrintErrorAndAbort(int error)
                        "path argument, the length of the substituted pathname string "
                        "exceeded {PATH_MAX}";
     }
-    std::exit(EXIT_FAILURE);
+    throw AbortException();
 }
 }  // namespace
 
@@ -163,7 +164,7 @@ StreamWriter::StreamWriter(BAM::BamHeader header, const std::string& outPrefix, 
                                &numFiles, &numBlocks);
             if (ret == EXIT_FAILURE) {
                 PBLOG_FATAL << "Fatal error in bam sort. Aborting.";
-                std::exit(EXIT_FAILURE);
+                throw AbortException();
             }
             PBLOG_INFO << "Merged sorted output from " << numFiles << " files and " << numBlocks
                        << " in-memory blocks";
@@ -181,7 +182,7 @@ void StreamWriter::Write(const BAM::BamRecord& r) const
 {
     if (!bamWriter_) {
         PBLOG_FATAL << "Nullpointer BamWriter";
-        std::exit(EXIT_FAILURE);
+        throw AbortException();
     }
     bamWriter_->Write(r);
 }
@@ -220,22 +221,22 @@ std::pair<int64_t, int64_t> StreamWriter::Close()
                     case -2:
                         PBLOG_FATAL << idxType << " Index Generation: Failed to open file "
                                     << finalOutputName_;
-                        std::exit(EXIT_FAILURE);
+                        throw AbortException();
                     case -3:
                         PBLOG_FATAL << idxType
                                     << " Index Generation: File is in a format that cannot be "
                                        "usefully indexed "
                                     << finalOutputName_;
-                        std::exit(EXIT_FAILURE);
+                        throw AbortException();
                     case -4:
                         PBLOG_FATAL << idxType
                                     << " Index Generation: Failed to create or write index "
                                     << finalOutputName_ + '.' << boost::to_lower_copy(idxType);
-                        std::exit(EXIT_FAILURE);
+                        throw AbortException();
                     default:
                         PBLOG_FATAL << idxType << " Index Generation: Failed to create index for "
                                     << finalOutputName_;
-                        std::exit(EXIT_FAILURE);
+                        throw AbortException();
                         break;
                 }
                 idxMs = time.ElapsedMilliseconds();
@@ -295,7 +296,7 @@ std::string StreamWriters::WriteDatasetsJson(const UserIO& uio, const Summary& s
             ds = BAM::DataSet{uio.inFile};
     } catch (std::runtime_error& e) {
         PBLOG_FATAL << e.what();
-        std::exit(EXIT_FAILURE);
+        throw AbortException();
     }
     std::string pbiTiming;
     Timer pbiTimer;

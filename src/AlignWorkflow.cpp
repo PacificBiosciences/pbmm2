@@ -34,6 +34,7 @@
 
 #include <mmpriv.h>
 
+#include "AbortException.h"
 #include "AlignSettings.h"
 #include "BamIndex.h"
 #include "InputOutputUX.h"
@@ -129,7 +130,7 @@ int AlignWorkflow::Runner(const CLI_v2::Results& options)
             return query;
         } catch (...) {
             PBLOG_FATAL << UNKNOWN_FILE_TYPES;
-            std::exit(EXIT_FAILURE);
+            throw AbortException();
         }
     };
 

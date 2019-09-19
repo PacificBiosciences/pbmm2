@@ -13,6 +13,8 @@
 #include <pbcopper/cli2/internal/BuiltinOptions.h>
 #include <boost/algorithm/string.hpp>
 
+#include "AbortException.h"
+
 #include <Pbmm2Version.h>
 
 namespace PacBio {
@@ -33,7 +35,7 @@ static int64_t SizeStringToIntMG(const std::string& s)
                 break;
             default:
                 PBLOG_FATAL << "Unknown size multiplier " << s[s.size() - 1];
-                std::exit(EXIT_FAILURE);
+                throw AbortException();
         }
         return size;
     } else {
@@ -515,7 +517,7 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
             PBLOG_FATAL << "Trying to allocate more memory for sorting (" << maxMemSortFloat
                         << maxMemSortSuffix << ") than system-wide available (" << availFloat
                         << availSuffix << ")";
-            std::exit(EXIT_FAILURE);
+            throw AbortException();
         }
 
         BamIdx = BamIndex::_from_string(bamIdx.c_str());
@@ -537,7 +539,7 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
     int inputFilterCounts = ZMW + MedianFilter + HQRegion;
     if (inputFilterCounts > 1) {
         PBLOG_FATAL << "Options --zmw, --hqregion and --median-filter are mutually exclusive.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException();
     }
     if (ZMW || HQRegion) {
         if (ChunkSize != 100)
@@ -550,11 +552,11 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
     if (!Rg.empty() && !boost::contains(Rg, "ID") && !boost::starts_with(Rg, "@RG\t")) {
         PBLOG_FATAL << "Invalid @RG line. Missing ID field. Please provide following "
                        "format: '@RG\\tID:xyz\\tSM:abc'";
-        std::exit(EXIT_FAILURE);
+        throw AbortException();
     }
     if (MM2Settings::LongJoinFlankRatio > 1) {
         PBLOG_FATAL << "Option -L,--lj-min-ratio has to be between a ratio betweem 0 and 1.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException();
     }
 
     if (!Sort && noBai) {
@@ -564,17 +566,17 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
     if (MM2Settings::GapOpen1 < -1 || MM2Settings::GapOpen2 < -1 ||
         MM2Settings::GapExtension1 < -1 || MM2Settings::GapExtension2 < -1) {
         PBLOG_FATAL << "Gap options have to be strictly positive.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException();
     }
     if (MM2Settings::Kmer < -1 || MM2Settings::Kmer == 0 || MM2Settings::MinimizerWindowSize < -1 ||
         MM2Settings::MinimizerWindowSize == 0) {
         PBLOG_FATAL << "Index parameter -k and -w must be positive.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException();
     }
 
     if (MM2Settings::MaxNumAlns < 0) {
         PBLOG_FATAL << "Parameter --best-n, -N must be positive.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException();
     }
 
     // Override Sample Name for all Read Groups, disable SplitBySample.
