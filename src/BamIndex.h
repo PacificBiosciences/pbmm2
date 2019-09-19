@@ -6,6 +6,6 @@
 
 namespace PacBio {
 namespace minimap2 {
-BETTER_ENUM(BamIndex, int, NONE, BAI, CSI);
+BETTER_ENUM(BamIndex, int, NONE, BAI, CSI)
 }
 }  // namespace PacBio
