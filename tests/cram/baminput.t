@@ -119,6 +119,52 @@
   1
   $ ls -alh $CRAMTMP/sortedds.json 2> /dev/null | wc -l | tr -d ' '
   0
+  $ grep PacBio.Index.PacBioIndex $CRAMTMP/sortedds.*.xml
+  *MetaType="PacBio.Index.PacBioIndex" ResourceId="*.bam.pbi"* (glob)
+  $ grep PacBio.Index.BamIndex $CRAMTMP/sortedds.*.xml
+  *MetaType="PacBio.Index.BamIndex" ResourceId="*.bam.bai"* (glob)
+  $ grep PacBio.Index.CsiIndex $CRAMTMP/sortedds.*.xml | wc -l | tr -d ' '
+  0
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sorteddscsi.alignmentset.xml --sort --bam-index CSI 2> $CRAMTMP/sorteddscsi.err || echo $?
+  $ cut -f 8 -d '|' < $CRAMTMP/sorteddscsi.err
+  - Input is not a dataset, but output is. Please use dataset input for full SMRT Link compatibility!
+  $ samtools view -H $CRAMTMP/sorteddscsi.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/sorteddscsi.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/sorteddscsi.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/sorteddscsi.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/sorteddscsi.*.xml 2> /dev/null | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/sorteddscsi.json 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ grep PacBio.Index.BamIndex $CRAMTMP/sorteddscsi.*.xml | wc -l | tr -d ' '
+  0
+  $ grep PacBio.Index.CsiIndex $CRAMTMP/sorteddscsi.*.xml
+  *MetaType="PacBio.Index.CsiIndex" ResourceId="*.bam.csi"* (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sorteddsnoidx.alignmentset.xml --sort --bam-index NONE 2> $CRAMTMP/sorteddsnoidx.err || echo $?
+  $ cut -f 8 -d '|' < $CRAMTMP/sorteddsnoidx.err
+  - Input is not a dataset, but output is. Please use dataset input for full SMRT Link compatibility!
+  $ samtools view -H $CRAMTMP/sorteddsnoidx.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/sorteddsnoidx.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/sorteddsnoidx.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/sorteddsnoidx.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/sorteddsnoidx.*.xml 2> /dev/null | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/sorteddsnoidx.json 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ grep PacBio.Index.BamIndex $CRAMTMP/sorteddsnoidx.*.xml | wc -l | tr -d ' '
+  0
+  $ grep PacBio.Index.CsiIndex $CRAMTMP/sorteddsnoidx.*.xml | wc -l | tr -d ' '
+  0
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/unsortedjs.json
   $ samtools view -H $CRAMTMP/unsortedjs.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '

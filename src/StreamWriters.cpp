@@ -307,9 +307,9 @@ std::string StreamWriters::WriteDatasetsJson(const UserIO& uio, const Summary& s
         BAM::PbiFile::CreateFrom(validationBam);
 
         std::string id;
-        const auto xmlName = InputOutputUX::CreateDataSet(ds, uio.refFile, uio.isFromXML,
-                                                          sample_sw.second->FinalOutputPrefix(),
-                                                          uio.outFile, &id, s.NumAlns, s.Bases);
+        const auto xmlName = InputOutputUX::CreateDataSet(
+            ds, uio.refFile, uio.isFromXML, sample_sw.second->FinalOutputPrefix(), uio.outFile, &id,
+            s.NumAlns, s.Bases, uio.bamIndex);
         xmlNames.emplace_back(xmlName);
         ids.emplace_back(id);
     }
