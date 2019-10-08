@@ -41,7 +41,7 @@ struct AlignSettings : MM2Settings
     std::string Rg;
 
     bool CreatePbi;
-    BamIndex BamIdx = BamIndex::_from_index(0);
+    BamIndex BamIdx = BamIndex::NONE;
     bool OutputUnmapped;
 
     bool CompressSequenceHomopolymers;

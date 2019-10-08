@@ -5,9 +5,10 @@
 #include <string>
 #include <vector>
 
-#include <pbcopper/json/JSON.h>
+#include <BamIndex.h>
 
 #include <pbbam/DataSet.h>
+#include <pbcopper/json/JSON.h>
 
 namespace PacBio {
 namespace minimap2 {
@@ -57,6 +58,7 @@ struct UserIO
     bool isFromMmi = false;
     BAM::DataSet::TypeEnum inputType;
     std::vector<std::string> inputFiles;
+    BamIndex bamIndex = BamIndex::NONE;
 };
 
 class InputOutputUX
@@ -81,7 +83,8 @@ public:
     static std::string CreateDataSet(const BAM::DataSet& dsIn, const std::string& refFile,
                                      const bool isFromXML, const std::string& outputFile,
                                      const std::string& origOutputFile, std::string* id,
-                                     size_t numAlignments, size_t numBases);
+                                     size_t numAlignments, size_t numBases,
+                                     const BamIndex& bamIndex = BamIndex::NONE);
 
     static std::string OutPrefix(const std::string& outputFile);
 };

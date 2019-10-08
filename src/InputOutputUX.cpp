@@ -477,13 +477,18 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
 
     uio.inFile = inputFile;
     uio.refFile = reference;
+
+    if (settings.Sort && settings.BamIdx != BamIndex::_from_index(0)) {
+        uio.bamIndex = settings.BamIdx;
+    }
     return uio;
 }
 
 std::string InputOutputUX::CreateDataSet(const BAM::DataSet& dsIn, const std::string& refFile,
                                          const bool isFromXML, const std::string& outputFile,
                                          const std::string& origOutputFile, std::string* id,
-                                         size_t numAlignments, size_t numBases)
+                                         size_t numAlignments, size_t numBases,
+                                         const BamIndex& bamIndex)
 {
     using BAM::DataSet;
     using TypeEnum = BAM::DataSet::TypeEnum;
@@ -579,6 +584,22 @@ std::string InputOutputUX::CreateDataSet(const BAM::DataSet& dsIn, const std::st
     BAM::ExternalResource resource(metatype, outputFile + ".bam");
     BAM::FileIndex pbi("PacBio.Index.PacBioIndex", outputFile + ".bam.pbi");
     resource.FileIndices().Add(pbi);
+
+    switch (bamIndex) {
+        case BamIndex::BAI: {
+            BAM::FileIndex index("PacBio.Index.BamIndex", outputFile + ".bam.bai");
+            resource.FileIndices().Add(index);
+            break;
+        }
+        case BamIndex::CSI: {
+            BAM::FileIndex index("PacBio.Index.CsiIndex", outputFile + ".bam.csi");
+            resource.FileIndices().Add(index);
+            break;
+        }
+        default:
+            break;
+    }
+
     BAM::ExternalResource refResource("PacBio.ReferenceFile.ReferenceFastaFile", refFile);
     resource.ExternalResources().Add(refResource);
     ds.ExternalResources().Add(resource);

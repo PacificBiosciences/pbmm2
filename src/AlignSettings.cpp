@@ -52,7 +52,7 @@ namespace OptionNames {
 const CLI_v2::Option MinPercConcordance{
 R"({
     "names" : ["c", "min-concordance-perc"],
-    "description" : "Minimum alignment concordance in percent.",
+    "description" : "Minimum alignment concordance in percent; 0 means no filtering.",
     "type" : "float",
     "default" : 70
 })"};
