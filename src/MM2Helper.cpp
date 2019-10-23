@@ -368,7 +368,7 @@ std::unique_ptr<BAM::BamRecord> createUnalignedCopy(const BAM::BamRecord& record
             seq, record.Qualities(BAM::Orientation::NATIVE).Fastq());
         unalignedCopy->Impl().SetReverseStrand(false);
         unalignedCopy->Impl().SetMapped(false);
-        unalignedCopy->Impl().CigarData("");
+        unalignedCopy->Impl().CigarData(Data::Cigar{});
         for (const auto& tag : record.Impl().Tags())
             if (tag.first != "RG") unalignedCopy->Impl().AddTag(tag.first, tag.second);
         unalignedCopy->ReadGroupId(record.ReadGroupId());
