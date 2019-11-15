@@ -147,9 +147,10 @@ Minimap2 version 2.15 is used, to be specific, SHA1 [c404f49](https://github.com
 ### When are `pbi` files created?
 Whenever the output is of type `xml`, a `pbi` file is being generated.
 
-### When are `bai` files created?
-For sorted output via `--sort`, a `bai` file is being generated.
-You can skip BAI generation with `--no-bai`.
+### When are BAM index files created?
+For sorted output via `--sort`, a `bai` file is being generated per default.
+You can switch to `csi` for larger genomes with `--bam-index CSI` or skip
+index generation completely with `--bam-index NONE`.
 
 ### What are parameter sets and how can I override them?
 Per default, _pbmm2_ uses recommended parameter sets to simplify the plethora
@@ -157,10 +158,10 @@ of possible combinations. For this, we currently offer:
 
 ```
   --preset  Set alignment mode:
-             - "SUBREAD" -k 19 -w 10 -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000 -L 0.5
-             - "CCS" -k 19 -w 10 -u -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000 -L 0.5
-             - "ISOSEQ" -k 15 -w 5 -u -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000 -L 0.5
-             - "UNROLLED" -k 15 -w 15 -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 2000 -L 0.5
+             - "SUBREAD"  -k 19 -w 10    -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50  -r 2000   -L 0.5 -g 5000
+             - "CCS"      -k 19 -w 10 -u -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50  -r 2000   -L 0.5 -g 5000
+             - "ISOSEQ"   -k 15 -w 5  -u -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 200000 -L 0.5 -g 2000 -C 5 -G 200000
+             - "UNROLLED" -k 15 -w 15    -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 2000   -L 0.5 -g 10000
             Default ["SUBREAD"]
 ```
 
@@ -176,6 +177,7 @@ please use the respective options:
   -z   Z-drop score. [-1]
   -Z   Z-drop inversion score. [-1]
   -r   Bandwidth used in chaining and DP-based alignment. [-1]
+  -g   Stop chain enlongation if there are no minimizers in N bp. [-1]
 ```
 
 For the piece-wise linear gap penalties, use the following overrides, whereas
@@ -367,13 +369,17 @@ before alignment. This mode cannot be combined with `.mmi` input.
 
 ## Full Changelog
 
- * **1.1.0**:
+ * **1.2.0**:
+   * Updated CLI UX
+   * Add `-g` to control minimap2's `max_gap`
+   * Add `--bam-index`
+
+ * 1.1.0:
    * Add support for gzipped FASTA and FASTQ
    * Allow multiple input files via `.fofn`
    * Add `--collapse-homopolymers`
    * Use `TMPDIR` env variable to set path for temporary files
    * Minor memory leak fix, if you used the API directly
-   * Updated CLI UX
 
  * 1.0.0:
    * First stable release, included in SMRT Link v7.0
