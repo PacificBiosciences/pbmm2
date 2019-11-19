@@ -140,6 +140,8 @@ public:
     int32_t NumAlignedBases = 0;
     int32_t Span = 0;
     double Concordance = 0;
+    double Identity = 0;
+    double IdentityGapComp = 0;
     bool IsAligned;
 
 private:

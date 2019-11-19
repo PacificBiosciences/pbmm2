@@ -22,6 +22,8 @@ struct Summary
     int32_t NumAlns = 0;
     int64_t Bases = 0;
     double Concordance = 0;
+    double Identity = 0;
+    double IdentityGapComp = 0;
     std::vector<int32_t> Lengths;
 };
 

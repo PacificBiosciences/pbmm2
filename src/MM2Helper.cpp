@@ -5,6 +5,7 @@
 #include <iostream>
 #include <memory>
 
+#include <boost/algorithm/clamp.hpp>
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
 
@@ -401,7 +402,7 @@ void postprocess(std::vector<AlignedRecord>& localResults,
     if (localResults.empty()) {
         if (record.IsMapped()) {
             const auto RemovePbmm2MappedTags = [](BAM::BamRecord& r) {
-                for (const auto& t : {"SA", "rm", "mc"})
+                for (const auto& t : {"SA", "rm", "mc", "mi", "mg"})
                     r.Impl().RemoveTag(t);
             };
             if (unalignedCopy) {
@@ -788,6 +789,8 @@ void AlignedRecordImpl<T>::ComputeAccuracyBases()
 {
     int32_t ins = 0;
     int32_t del = 0;
+    int32_t insEvents = 0;
+    int32_t delEvents = 0;
     int32_t mismatch = 0;
     int32_t match = 0;
     for (const auto& cigar : Record.CigarData()) {
@@ -795,9 +798,11 @@ void AlignedRecordImpl<T>::ComputeAccuracyBases()
         switch (cigar.Type()) {
             case Data::CigarOperationType::INSERTION:
                 ins += len;
+                ++insEvents;
                 break;
             case Data::CigarOperationType::DELETION:
                 del += len;
+                ++delEvents;
                 break;
             case Data::CigarOperationType::SEQUENCE_MISMATCH:
                 mismatch += len;
@@ -820,13 +825,20 @@ void AlignedRecordImpl<T>::ComputeAccuracyBases()
         }
     }
     Span = Record.AlignedEnd() - Record.AlignedStart();
-    const int32_t nErr = ins + del + mismatch;
     NumAlignedBases = match + ins + mismatch;
-    Concordance = std::max(0.0, 100 * (1.0 - 1.0 * nErr / Span));
-    if (Record.Impl().HasTag("mc"))
-        Record.Impl().EditTag("mc", static_cast<float>(Concordance));
-    else
-        Record.Impl().AddTag("mc", static_cast<float>(Concordance));
+    Concordance =
+        boost::algorithm::clamp(100 * (1.0 - 1.0 * (ins + del + mismatch) / Span), 0.0, 100.0);
+    Identity = 100.0 * match / (match + mismatch + del + ins);
+    IdentityGapComp = 100.0 * match / (match + mismatch + delEvents + insEvents);
+    const auto SetTag = [&](const char* tag, float value) {
+        if (Record.Impl().HasTag(tag))
+            Record.Impl().EditTag(tag, value);
+        else
+            Record.Impl().AddTag(tag, value);
+    };
+    SetTag("mc", Concordance);
+    SetTag("mg", IdentityGapComp);
+    SetTag("mi", Identity);
 }
 
 AlignedRecord::AlignedRecord(BAM::BamRecord record) : AlignedRecordImpl{std::move(record)} {}
