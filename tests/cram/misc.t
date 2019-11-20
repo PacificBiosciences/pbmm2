@@ -544,3 +544,5 @@
   $ FOFN=$CRAMTMP/fa_not_exist.fofn
   $ echo "FastaNotExist.fasta" > $FOFN
   $ $__PBTEST_PBMM2_EXE align $REF $FOFN  $CRAMTMP/fa_not_exist.bam --preset CCS --rg '@RG\tID:myid\tSM:mysample'
+  *Input fofn contains non-existing file: FastaNotExist.fasta (glob)
+  [1]

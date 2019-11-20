@@ -75,6 +75,10 @@ InputType DetermineFofnContent(const std::string& fofnInputFile, UserIO& uio)
     while (std::getline(infile, line)) {
         boost::trim(line);
         const InputType t = DetermineInputFileSuffix(line);
+        if (!Utility::FileExists(line)) {
+            PBLOG_FATAL << "Input fofn contains non-existing file: " << line;
+            throw AbortException();
+        }
         if (!type) {
             type = std::make_unique<InputType>(t);
         } else if (!InputTypeEquality(*type, t)) {

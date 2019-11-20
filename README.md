@@ -415,6 +415,7 @@ before alignment. This mode cannot be combined with `.mmi` input.
 ## Full Changelog
 
  * **1.2.0**:
+   * Abort if input fofn contains non-existing files
    * Add new filters `--min-id-perc` and `--min-gap-comp-id-perc`
    * Updated CLI UX
    * Add `-g` to control minimap2's `max_gap`
