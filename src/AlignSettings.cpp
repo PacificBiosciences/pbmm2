@@ -52,9 +52,25 @@ namespace OptionNames {
 const CLI_v2::Option MinPercConcordance{
 R"({
     "names" : ["c", "min-concordance-perc"],
-    "description" : "Minimum alignment concordance in percent; 0 means no filtering.",
+    "description" : "Minimum alignment concordance in percent.",
     "type" : "float",
     "default" : 70
+})"};
+
+const CLI_v2::Option MinPercIdentity{
+R"({
+    "names" : ["x", "min-id-perc"],
+    "description" : "Minimum sequence identity in percent.",
+    "type" : "float",
+    "default" : 0
+})"};
+
+const CLI_v2::Option MinPercIdentityGapComp{
+R"({
+    "names" : ["y", "min-gap-comp-id-perc"],
+    "description" : "Minimum gap compressed sequence identity in percent.",
+    "type" : "float",
+    "default" : 0
 })"};
 
 const CLI_v2::Option MinAlignmentLength{
@@ -380,6 +396,8 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
     : CLI(options.InputCommandLine())
     , InputFiles(options.PositionalArguments())
     , MinPercConcordance(options[OptionNames::MinPercConcordance])
+    , MinPercIdentity(options[OptionNames::MinPercIdentity])
+    , MinPercIdentityGapComp(options[OptionNames::MinPercIdentityGapComp])
     , MinAlignmentLength(options[OptionNames::MinAlignmentLength])
     , SampleName(options[OptionNames::SampleName])
     , ChunkSize(options[OptionNames::ChunkSize])
@@ -661,8 +679,13 @@ PacBio::CLI_v2::Interface AlignSettings::CreateCLI()
         OptionNames::Rg,
     });
 
-    i.AddOptionGroup("Output Options", {
+    i.AddOptionGroup("Identity Filter Options (combined with AND)", {
         OptionNames::MinPercConcordance,
+        OptionNames::MinPercIdentity,
+        OptionNames::MinPercIdentityGapComp,
+    });
+
+    i.AddOptionGroup("Output Options", {
         OptionNames::MinAlignmentLength,
         OptionNames::MaxNumAlns,
         OptionNames::Strip,

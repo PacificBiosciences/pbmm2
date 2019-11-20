@@ -85,9 +85,12 @@ int AlignWorkflow::Runner(const CLI_v2::Results& options)
 
     const FilterFunc filter = [&settings](const AlignedRecord& aln) {
         if (aln.Span <= 0 || aln.Span < settings.MinAlignmentLength) return false;
-        if (settings.MinPercConcordance <= 0) return true;
-        if (aln.Concordance < settings.MinPercConcordance) return false;
-        return true;
+        if (settings.MinPercIdentity <= 0 && settings.MinPercIdentityGapComp <= 0 &&
+            settings.MinPercConcordance <= 0)
+            return true;
+        return (aln.Identity >= settings.MinPercIdentity &&
+                aln.IdentityGapComp >= settings.MinPercIdentityGapComp &&
+                aln.Concordance >= settings.MinPercConcordance);
     };
 
     const auto CompressHomopolymers = [&](const std::string& bases) -> std::string {
@@ -213,13 +216,19 @@ int AlignWorkflow::Runner(const CLI_v2::Results& options)
                 if (output) {
                     std::lock_guard<std::mutex> lock(outputMutex);
                     alignedReads += aligned;
-                    for (const auto& aln : *output) {
+                    for (auto& aln : *output) {
                         if (!settings.OutputUnmapped && !aln.IsAligned) continue;
                         if (aln.IsAligned) {
                             s.Lengths.emplace_back(aln.NumAlignedBases);
                             s.Bases += aln.NumAlignedBases;
                             s.Concordance += aln.Concordance;
+                            s.Identity += aln.Identity;
+                            s.IdentityGapComp += aln.IdentityGapComp;
                             ++s.NumAlns;
+                            if (settings.MinPercConcordance <= 0) aln.Record.Impl().RemoveTag("mc");
+                            if (settings.MinPercIdentityGapComp <= 0)
+                                aln.Record.Impl().RemoveTag("mg");
+                            if (settings.MinPercIdentity <= 0) aln.Record.Impl().RemoveTag("mi");
                         }
                         const std::string movieName = aln.Record.MovieName();
                         const auto& sampleInfix = mtsti[movieName];
@@ -503,6 +512,8 @@ int AlignWorkflow::Runner(const CLI_v2::Results& options)
         maxMappedLength = std::max(maxMappedLength, l);
     }
     double meanMappedConcordance = 1.0 * s.Concordance / s.NumAlns;
+    double meanIdentity = 1.0 * s.Identity / s.NumAlns;
+    double meanIdentityGapComp = 1.0 * s.IdentityGapComp / s.NumAlns;
 
     std::string pbiTiming;
     if (uio.isToXML || uio.isToJson)
@@ -513,7 +524,12 @@ int AlignWorkflow::Runner(const CLI_v2::Results& options)
     PBLOG_INFO << "Mapped Reads: " << alignedReads;
     PBLOG_INFO << "Alignments: " << s.NumAlns;
     PBLOG_INFO << "Mapped Bases: " << s.Bases;
-    PBLOG_INFO << "Mean Mapped Concordance: " << meanMappedConcordance << "%";
+    if (settings.MinPercConcordance > 0)
+        PBLOG_INFO << "Mean Mapped Concordance: " << meanMappedConcordance << "%";
+    if (settings.MinPercIdentity > 0)
+        PBLOG_INFO << "Mean Sequence Identity: " << meanIdentity << "%";
+    if (settings.MinPercIdentityGapComp > 0)
+        PBLOG_INFO << "Mean Gap Compressed Sequence Identity: " << meanIdentityGapComp << "%";
     PBLOG_INFO << "Max Mapped Read Length: " << maxMappedLength;
     PBLOG_INFO << "Mean Mapped Read Length: " << (1.0 * s.Bases / s.NumAlns);
 

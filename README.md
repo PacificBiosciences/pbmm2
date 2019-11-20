@@ -10,7 +10,7 @@ Its purpose is to support native PacBio in- and output, provide sets of
 recommended parameters, generate sorted output on-the-fly, and postprocess alignments.
 Sorted output can be used directly for polishing using GenomicConsensus,
 if BAM has been used as input to _pbmm2_.
-Benchmarks show that _pbmm2_ outperforms BLASR in mapped concordance,
+Benchmarks show that _pbmm2_ outperforms BLASR in sequence identity,
 number of mapped bases, and especially runtime. _pbmm2_ is the official
 replacement for BLASR.
 
@@ -147,9 +147,10 @@ Minimap2 version 2.15 is used, to be specific, SHA1 [c404f49](https://github.com
 ### When are `pbi` files created?
 Whenever the output is of type `xml`, a `pbi` file is being generated.
 
-### When are `bai` files created?
-For sorted output via `--sort`, a `bai` file is being generated.
-You can skip BAI generation with `--no-bai`.
+### When are BAM index files created?
+For sorted output via `--sort`, a `bai` file is being generated per default.
+You can switch to `csi` for larger genomes with `--bam-index CSI` or skip
+index generation completely with `--bam-index NONE`.
 
 ### What are parameter sets and how can I override them?
 Per default, _pbmm2_ uses recommended parameter sets to simplify the plethora
@@ -157,10 +158,10 @@ of possible combinations. For this, we currently offer:
 
 ```
   --preset  Set alignment mode:
-             - "SUBREAD" -k 19 -w 10 -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000 -L 0.5
-             - "CCS" -k 19 -w 10 -u -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000 -L 0.5
-             - "ISOSEQ" -k 15 -w 5 -u -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000 -L 0.5
-             - "UNROLLED" -k 15 -w 15 -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 2000 -L 0.5
+             - "SUBREAD"  -k 19 -w 10    -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50  -r 2000   -L 0.5 -g 5000
+             - "CCS"      -k 19 -w 10 -u -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50  -r 2000   -L 0.5 -g 5000
+             - "ISOSEQ"   -k 15 -w 5  -u -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 200000 -L 0.5 -g 2000 -C 5 -G 200000
+             - "UNROLLED" -k 15 -w 15    -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 2000   -L 0.5 -g 10000
             Default ["SUBREAD"]
 ```
 
@@ -176,6 +177,7 @@ please use the respective options:
   -z   Z-drop score. [-1]
   -Z   Z-drop inversion score. [-1]
   -r   Bandwidth used in chaining and DP-based alignment. [-1]
+  -g   Stop chain enlongation if there are no minimizers in N bp. [-1]
 ```
 
 For the piece-wise linear gap penalties, use the following overrides, whereas
@@ -210,6 +212,28 @@ minimap2 parameters:
  - no overlapping query intervals with [repeated matches trimming](README.md#what-is-repeated-matches-trimming)
  - no secondary alignments are produced with `--secondary=no`
 
+### What sequence identity filters does _pbmm2_ offer?
+The idea of removing spurious or low-quality alignments is straightforward,
+but the exact definition of a threshold is tricky and
+varies between tools and applications. More [on sequence identity](https://lh3.github.io/2018/11/25/on-the-definition-of-sequence-identity)
+from Heng Li.\
+_pbmm2_ offers following filters:
+  1. `--min-concordance-perc`, legacy [mapped concordance](#how-do-you-define-identity) filter, inherited from its predecessor BLASR
+  1. `--min-id-perc`, a [sequence identity percentage](#how-do-you-define-identity) filter defined as the BLAST identity
+  2. `--min-gap-comp-id-perc`, a [gap compressed sequence identity](#how-do-you-define-gap-compressed-identity) filter accounting insertions and deletions as single events only
+
+By default, (1) is set to 70%, (2) and (3) are deactivated.
+The problem with (1) the mapped concordance filter is that it also removes
+biological structural variations, such as true insertions and deletions
+w.r.t. used reference; it is only appropriate if applied to resequencing
+data of haploid organisms.
+The (2) sequence identity is the BLAST identity, a very natural metric for filtering.
+The (3) gap compressed sequence identity filter is very similar to (2),
+but accounts insertions and deletions as single events only and
+is the fairest metric when it comes to assess the actual error rate.\
+All three filters are combined with `AND`, meaning an alignment has to pass all
+three thresholds.
+
 ### How do you define mapped concordance?
 The `--min-concordance-perc` option, whereas concordance is defined as
 
@@ -217,8 +241,29 @@ The `--min-concordance-perc` option, whereas concordance is defined as
     100 - 100 * (#Deletions + #Insertions + #Mismatches) / (AlignEndInRead - AlignStartInRead)
 ```
 
-will remove alignments that do not pass the provided threshold in percent.
+will remove alignments that do not pass the provided threshold in percent.\
 You can deactivate this filter with `--min-concordance-perc 0`.
+
+
+### How do you define identity?
+The `--min-id-perc` option, whereas sequence identity is defined as the BLAST identity
+
+```
+    100 * #Matches / (#Matches + #Mismatches + #Deletions + #Insertions)
+```
+
+will remove alignments that do not pass the provided threshold in percent.\
+You can deactivate this filter with `--min-id-perc 0`.
+
+### How do you define gap compressed identity?
+The `--min-gap-comp-id-perc, -y` option, whereas gap compressed identity is defined as
+
+```
+    100 * #Matches / (#Matches + #Mismatches + #DeletionEvents + #InsertionEvents)
+```
+
+will remove alignments that do not pass the provided threshold in percent.\
+You can deactivate this filter with `--min-gap-comp-id-perc 0`.
 
 ### What is repeated matches trimming?
 A repeated match is, when the same query interval is shared between a primary
@@ -247,13 +292,15 @@ per base alignment scores available, thus our approach will be much simpler.
 We align the read, find overlapping query intervals, determine one alignment to
 be maximal reference spanning, and all others get trimmed; by trimming, I mean
 that _pbmm2_ rewrites the cigar and the reference coordinates on-the-fly.
-This allows us to increase number of mapped bases, slightly reduce mapped
-concordance, but boost SV recall rate.
+This allows us to increase number of mapped bases, slightly reduce identity,
+but boost SV recall rate.
 
 ### What SAM tags are added by pbmm2?
 _pbmm2_ adds following tags to each aligned record:
 
- - `mc`, stores [mapped concordance percentage](#how-do-you-define-mapped-concordance) between 0.0 and 100.0
+ - `mc`, stores [mapped concordance percentage](#how-do-you-define-identity) between 0.0 and 100.0, if the filter was used
+ - `mg`, stores [gap compressed sequence identity percentage](#how-do-you-define-gap-compressed-identity) between 0.0 and 100.0, if the filter was used
+ - `mi`, stores [sequence identity percentage](#how-do-you-define-identity) between 0.0 and 100.0, if the filter was used
  - `rm`, is set to `1` if alignment has been manipulated by [repeated matches trimming](#what-is-repeated-matches-trimming)
 
 ### Why is the output different from BLASR?
@@ -286,7 +333,7 @@ alignment metrics:
 Mapped Reads: 1529671
 Alignments: 3087717
 Mapped Bases: 28020786811
-Mean Mapped Concordance: 88.4%
+Mean Sequence Identity: 88.4%
 Max Mapped Read Length : 122989
 Mean Mapped Read Length : 35597.9
 ```
@@ -367,13 +414,18 @@ before alignment. This mode cannot be combined with `.mmi` input.
 
 ## Full Changelog
 
- * **1.1.0**:
+ * **1.2.0**:
+   * Add new filters `--min-id-perc` and `--min-gap-comp-id-perc`
+   * Updated CLI UX
+   * Add `-g` to control minimap2's `max_gap`
+   * Add `--bam-index`
+
+ * 1.1.0:
    * Add support for gzipped FASTA and FASTQ
    * Allow multiple input files via `.fofn`
    * Add `--collapse-homopolymers`
    * Use `TMPDIR` env variable to set path for temporary files
    * Minor memory leak fix, if you used the API directly
-   * Updated CLI UX
 
  * 1.0.0:
    * First stable release, included in SMRT Link v7.0

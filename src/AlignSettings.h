@@ -21,6 +21,8 @@ struct AlignSettings : MM2Settings
 
     // alignment output filters
     float MinPercConcordance;
+    float MinPercIdentity;
+    float MinPercIdentityGapComp;
     int32_t MinAlignmentLength;
 
     const std::string SampleName;
