@@ -198,7 +198,7 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             MapOpts.max_gap = 5000;
             break;
         case AlignmentMode::CCS:
-            *preset = "CCS";
+            *preset = "CCS / HiFi";
             MapOpts.a = 2;
             MapOpts.q = 5;
             MapOpts.q2 = 56;
