@@ -556,7 +556,13 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
                                                             {"HIFI", AlignmentMode::CCS},
                                                             {"UNROLLED", AlignmentMode::UNROLLED}};
 
-    MM2Settings::AlignMode = alignModeMap.at(options[OptionNames::AlignModeOpt]);
+    const std::string alignModeUsr = options[OptionNames::AlignModeOpt];
+    const std::string alingModeUpr = boost::to_upper_copy(alignModeUsr);
+    if (alignModeMap.find(alingModeUpr) == alignModeMap.cend()) {
+        PBLOG_FATAL << "Could not find --preset " << alignModeUsr;
+        throw AbortException();
+    }
+    MM2Settings::AlignMode = alignModeMap.at(alingModeUpr);
     int inputFilterCounts = ZMW + MedianFilter + HQRegion;
     if (inputFilterCounts > 1) {
         PBLOG_FATAL << "Options --zmw, --hqregion and --median-filter are mutually exclusive.";
