@@ -225,7 +225,7 @@
   $ $__PBTEST_PBMM2_EXE align $TESTDIR/data/median.subreadset.xml $REF $CRAMTMP/out_sub.subreadset.xml 2> $CRAMTMP/out_sub.err || echo $?
   1
   $ cut -f 8 -d '|' < $CRAMTMP/out_sub.err
-  - Output has to be an alignment dataset! Please use alignmentset.xml, consensusalignmentset.xml, or transcriptalignmentset.xml!
+  *Output has to be an alignment dataset! Please use alignmentset.xml, consensusalignmentset.xml, or transcriptalignmentset.xml!* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $TESTDIR/data/median.subreadset.xml $REF $CRAMTMP/out_sub.alignmentset.xml
   $ ls -alh $CRAMTMP/out_sub.bam 2> /dev/null | wc -l | tr -d ' '
@@ -286,17 +286,17 @@
   $ $__PBTEST_PBMM2_EXE align $TESTDIR/data/median.subreadset.xml $REF $CRAMTMP/out_cons_fail.consensusalignmentset.xml 2> $CRAMTMP/out_cons_fail.err || echo $?
   1
   $ cut -f 8 -d '|' < $CRAMTMP/out_cons_fail.err
-  - Unsupported dataset combination! Input SubreadSet with output ConsensusReadSet! Please use AlignmentSet as output XML type!
+  *Unsupported dataset combination! Input SubreadSet with output ConsensusReadSet! Please use AlignmentSet as output XML type!* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $TESTDIR/data/median.consensusreadset.xml $REF $CRAMTMP/out_trans_fail.transcriptalignmentset.xml 2> $CRAMTMP/out_trans_fail.err || echo $?
   1
   $ cut -f 8 -d '|' < $CRAMTMP/out_trans_fail.err
-  - Unsupported dataset combination! Input ConsensusReadSet with output TranscriptSet! Please use ConsensusAlignmentSet as output XML type!
+  *Unsupported dataset combination! Input ConsensusReadSet with output TranscriptSet! Please use ConsensusAlignmentSet as output XML type!* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $TESTDIR/data/median.transcriptset.xml $REF $CRAMTMP/out_align_fail.alignmentset.xml 2> $CRAMTMP/out_align_fail.err || echo $?
   1
   $ cut -f 8 -d '|' < $CRAMTMP/out_align_fail.err
-  - Unsupported dataset combination! Input TranscriptSet with output AlignmentSet! Please use TranscriptAlignmentSet as output XML type!
+  *Unsupported dataset combination! Input TranscriptSet with output AlignmentSet! Please use TranscriptAlignmentSet as output XML type!* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $TESTDIR/data/median.subreadset.xml $REF $CRAMTMP/out_json_sub.json
   $ grep fileTypeId $CRAMTMP/out_json_sub.json | tr -d ' '
@@ -321,7 +321,7 @@
   $ $__PBTEST_PBMM2_EXE align $TESTDIR/data/median.transcriptset.xml $REF $CRAMTMP/out_xml_upper.XML 2> $CRAMTMP/out_xml_upper.err  || echo $?
   1
   $ cut -f 8 -d '|' < $CRAMTMP/out_xml_upper.err
-  - Output is XML, but of unknown type! Please use alignmentset.xml, consensusalignmentset.xml, or transcriptalignmentset.xml
+  *Output is XML, but of unknown type! Please use alignmentset.xml, consensusalignmentset.xml, or transcriptalignmentset.xml* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sorted.bam --sort -j 2 -J 2 -m 100M --log-level INFO 2>&1| grep INFO
   *Using 2 threads for alignments, 2 threads for sorting, and 200M bytes RAM for sorting. (glob)
@@ -436,7 +436,7 @@
   *Long join flank ratio  : 0.5 (glob)
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/ccs_parameters.bam --preset foo 2>&1
-  *Could not find --preset foo (glob)
+  *Could not find --preset foo* (glob)
   [1]
 
 Test bam_sort

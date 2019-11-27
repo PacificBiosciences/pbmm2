@@ -51,14 +51,4 @@ R"(Typical workflows:
     return mi;
 }
 
-int main(int argc, char* argv[])
-{
-    try {
-        return PacBio::CLI_v2::Run(argc, argv, CreateMultiInterface());
-    } catch (const PacBio::minimap2::AbortException& e) {
-        return EXIT_FAILURE;
-    } catch (const std::exception& e) {
-        std::cerr << "pbmm2 ERROR: " << e.what() << '\n';
-        return EXIT_FAILURE;
-    }
-}
+int main(int argc, char* argv[]) { return PacBio::CLI_v2::Run(argc, argv, CreateMultiInterface()); }

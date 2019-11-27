@@ -6,6 +6,7 @@
 
 #include <iterator>
 #include <map>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -35,8 +36,9 @@ int64_t SizeStringToIntMG(const std::string& s)
                 size <<= 30;
                 break;
             default:
-                PBLOG_FATAL << "Unknown size multiplier " << s[s.size() - 1];
-                throw AbortException();
+                std::ostringstream os;
+                os << "Unknown size multiplier " << s[s.size() - 1];
+                throw AbortException(os.str());
         }
         return size;
     } else {
@@ -534,10 +536,11 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
         MemoryToHumanReadable(availableMemory, &availFloat, &availSuffix);
 
         if (maxMem > availableMemory) {
-            PBLOG_FATAL << "Trying to allocate more memory for sorting (" << maxMemSortFloat
-                        << maxMemSortSuffix << ") than system-wide available (" << availFloat
-                        << availSuffix << ")";
-            throw AbortException();
+            std::ostringstream os;
+            os << "Trying to allocate more memory for sorting (" << maxMemSortFloat
+               << maxMemSortSuffix << ") than system-wide available (" << availFloat << availSuffix
+               << ")";
+            throw AbortException(os.str());
         }
 
         BamIdx = BamIndex::_from_string(bamIdx.c_str());
@@ -559,14 +562,13 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
     const std::string alignModeUsr = options[OptionNames::AlignModeOpt];
     const std::string alingModeUpr = boost::to_upper_copy(alignModeUsr);
     if (alignModeMap.find(alingModeUpr) == alignModeMap.cend()) {
-        PBLOG_FATAL << "Could not find --preset " << alignModeUsr;
-        throw AbortException();
+        throw AbortException("Could not find --preset " + alignModeUsr);
     }
     MM2Settings::AlignMode = alignModeMap.at(alingModeUpr);
     int inputFilterCounts = ZMW + MedianFilter + HQRegion;
     if (inputFilterCounts > 1) {
-        PBLOG_FATAL << "Options --zmw, --hqregion and --median-filter are mutually exclusive.";
-        throw AbortException();
+        throw AbortException(
+            "Options --zmw, --hqregion and --median-filter are mutually exclusive.");
     }
     if (ZMW || HQRegion) {
         if (ChunkSize != 100)
@@ -577,13 +579,12 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
     }
 
     if (!Rg.empty() && !boost::contains(Rg, "ID") && !boost::starts_with(Rg, "@RG\t")) {
-        PBLOG_FATAL << "Invalid @RG line. Missing ID field. Please provide following "
-                       "format: '@RG\\tID:xyz\\tSM:abc'";
-        throw AbortException();
+        throw AbortException(
+            "Invalid @RG line. Missing ID field. Please provide following format: "
+            "'@RG\\tID:xyz\\tSM:abc'");
     }
     if (MM2Settings::LongJoinFlankRatio > 1) {
-        PBLOG_FATAL << "Option -L,--lj-min-ratio has to be between a ratio betweem 0 and 1.";
-        throw AbortException();
+        throw AbortException("Option -L,--lj-min-ratio has to be between a ratio betweem 0 and 1.");
     }
 
     if (!Sort && noBai) {
@@ -592,18 +593,15 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
 
     if (MM2Settings::GapOpen1 < -1 || MM2Settings::GapOpen2 < -1 ||
         MM2Settings::GapExtension1 < -1 || MM2Settings::GapExtension2 < -1) {
-        PBLOG_FATAL << "Gap options have to be strictly positive.";
-        throw AbortException();
+        throw AbortException("Gap options have to be strictly positive.");
     }
     if (MM2Settings::Kmer < -1 || MM2Settings::Kmer == 0 || MM2Settings::MinimizerWindowSize < -1 ||
         MM2Settings::MinimizerWindowSize == 0) {
-        PBLOG_FATAL << "Index parameter -k and -w must be positive.";
-        throw AbortException();
+        throw AbortException("Index parameter -k and -w must be positive.");
     }
 
     if (MM2Settings::MaxNumAlns < 0) {
-        PBLOG_FATAL << "Parameter --best-n, -N must be positive.";
-        throw AbortException();
+        throw AbortException("Parameter --best-n, -N must be positive.");
     }
 
     // Override Sample Name for all Read Groups, disable SplitBySample.

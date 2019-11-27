@@ -93,12 +93,12 @@
 
   $ $__PBTEST_PBMM2_EXE align $REF $FASTA $CRAMTMP/fasta_unsortedjs.json
   *Input is FASTA.* (glob)
-  pbmm2 ERROR: Unsupported input type
+  *Unsupported input type* (glob)
   [1]
 
   $ $__PBTEST_PBMM2_EXE align $REF $FASTA $CRAMTMP/fasta_sortedjs.json --sort
   *Input is FASTA.* (glob)
-  pbmm2 ERROR: Unsupported input type
+  *Unsupported input type* (glob)
   [1]
 
   $ $__PBTEST_PBMM2_EXE align $REF $FASTA > $CRAMTMP/fasta_unsortedoutstream.bam
@@ -284,12 +284,12 @@
 
   $ $__PBTEST_PBMM2_EXE align $REF $FASTQ $CRAMTMP/fastq_unsortedjs.json
   *Input is FASTQ.* (glob)
-  pbmm2 ERROR: Unsupported input type
+  *Unsupported input type* (glob)
   [1]
 
   $ $__PBTEST_PBMM2_EXE align $REF $FASTQ $CRAMTMP/fastq_sortedjs.json --sort
   *Input is FASTQ.* (glob)
-  pbmm2 ERROR: Unsupported input type
+  *Unsupported input type* (glob)
   [1]
 
   $ $__PBTEST_PBMM2_EXE align $REF $FASTQ > $CRAMTMP/fastq_unsortedoutstream.bam
@@ -455,12 +455,12 @@
 
   $ $__PBTEST_PBMM2_EXE align $REF $FASTA $CRAMTMP/fasta_unsortedjs.json
   *Input is FASTA.* (glob)
-  pbmm2 ERROR: Unsupported input type
+  *Unsupported input type* (glob)
   [1]
 
   $ $__PBTEST_PBMM2_EXE align $REF $FASTA $CRAMTMP/fasta_sortedjs.json --sort
   *Input is FASTA.* (glob)
-  pbmm2 ERROR: Unsupported input type
+  *Unsupported input type* (glob)
   [1]
 
   $ $__PBTEST_PBMM2_EXE align $REF $FASTA > $CRAMTMP/fasta_unsortedoutstream.bam
@@ -616,12 +616,12 @@
 
   $ $__PBTEST_PBMM2_EXE align $REF $FASTQ $CRAMTMP/fastq_unsortedjs.json
   *Input is FASTQ.* (glob)
-  pbmm2 ERROR: Unsupported input type
+  *Unsupported input type* (glob)
   [1]
 
   $ $__PBTEST_PBMM2_EXE align $REF $FASTQ $CRAMTMP/fastq_sortedjs.json --sort
   *Input is FASTQ.* (glob)
-  pbmm2 ERROR: Unsupported input type
+  *Unsupported input type* (glob)
   [1]
 
   $ $__PBTEST_PBMM2_EXE align $REF $FASTQ > $CRAMTMP/fastq_unsortedoutstream.bam

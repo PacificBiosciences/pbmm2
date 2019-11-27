@@ -11,6 +11,7 @@
 #include <functional>
 #include <iostream>
 #include <mutex>
+#include <sstream>
 #include <thread>
 #include <tuple>
 #include <vector>
@@ -55,32 +56,27 @@ int AlignWorkflow::Runner(const CLI_v2::Results& options)
 
     if (!uio.isAlignedInput && (!uio.isFromXML || !uio.isFromSubreadset)) {
         if (settings.ZMW) {
-            PBLOG_FATAL
-                << "Option --zmw can only be used with a subreadset.xml containing subread + "
-                   "scraps BAM files.";
-            return EXIT_FAILURE;
+            throw AbortException(
+                "Option --zmw can only be used with a subreadset.xml containing subread + "
+                "scraps BAM files.");
         }
         if (settings.HQRegion) {
-            PBLOG_FATAL
-                << "Option --hqregion can only be used with a subreadset.xml containing subread + "
-                   "scraps BAM files.";
-            return EXIT_FAILURE;
+            throw AbortException(
+                "Option --hqregion can only be used with a subreadset.xml containing subread + "
+                "scraps BAM files.");
         }
     }
 
     if (uio.isFromMmi && settings.CompressSequenceHomopolymers) {
-        PBLOG_FATAL << "Cannot combine --collapse-homopolymers with MMI input.";
-        return EXIT_FAILURE;
+        throw AbortException("Cannot combine --collapse-homopolymers with MMI input.");
     }
 
     if (uio.isFromFofn && settings.SplitBySample) {
-        PBLOG_FATAL << "Cannot combine --split-by-sample with fofn input.";
-        return EXIT_FAILURE;
+        throw AbortException("Cannot combine --split-by-sample with fofn input.");
     }
 
     if (!uio.isFastaInput && !uio.isFastqInput && !settings.Rg.empty()) {
-        PBLOG_FATAL << "Cannot override read groups with BAM input. Remove option --rg.";
-        return EXIT_FAILURE;
+        throw AbortException("Cannot override read groups with BAM input. Remove option --rg.");
     }
 
     const FilterFunc filter = [&settings](const AlignedRecord& aln) {
@@ -132,8 +128,7 @@ int AlignWorkflow::Runner(const CLI_v2::Results& options)
                 query = std::make_unique<BAM::PbiFilterQuery>(filter, file);
             return query;
         } catch (...) {
-            PBLOG_FATAL << UNKNOWN_FILE_TYPES;
-            throw AbortException();
+            throw AbortException(UNKNOWN_FILE_TYPES);
         }
     };
 
