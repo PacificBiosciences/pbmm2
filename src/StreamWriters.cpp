@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <cstdlib>
 #include <memory>
+#include <sstream>
 #include <thread>
 
 #include <htslib/sam.h>
@@ -44,56 +45,66 @@ std::string CreateTmpFile(const std::string& outFile)
 
 void PrintErrorAndAbort(int error)
 {
+    const char* errMsg = nullptr;
     if (error == EACCES) {
-        PBLOG_FATAL << "Pipe error: "
-                    << "A component of the path prefix denies search permission, or write "
-                       "permission is denied on the parent directory of the FIFO to be "
-                       "created.";
+        errMsg =
+            "Pipe error: A component of the path prefix denies search permission, or write "
+            "permission is denied on the parent directory of the FIFO to be "
+            "created.";
     }
     if (error == EEXIST) {
-        PBLOG_FATAL << "Pipe error: "
-                    << "The named file already exists. Please remove file!";
+        errMsg =
+            "Pipe error: "
+            "The named file already exists. Please remove file!";
     }
     if (error == ELOOP) {
-        PBLOG_FATAL << "Pipe error: "
-                    << "A loop exists in symbolic links encountered during resolution of "
-                       "the path argument.";
+        errMsg =
+            "Pipe error: "
+            "A loop exists in symbolic links encountered during resolution of "
+            "the path argument.";
     }
     if (error == ENAMETOOLONG) {
-        PBLOG_FATAL << "Pipe error: "
-                    << "The length of the path argument exceeds {PATH_MAX} or a pathname "
-                       "component is longer than {NAME_MAX}.";
+        errMsg =
+            "Pipe error: "
+            "The length of the path argument exceeds {PATH_MAX} or a pathname "
+            "component is longer than {NAME_MAX}.";
     }
     if (error == ENOENT) {
-        PBLOG_FATAL << "Pipe error: "
-                    << "A component of the path prefix specified by path does not name an "
-                       "existing directory or path is an empty string.";
+        errMsg =
+            "Pipe error: "
+            "A component of the path prefix specified by path does not name an "
+            "existing directory or path is an empty string.";
     }
     if (error == ENOSPC) {
-        PBLOG_FATAL << "Pipe error: "
-                    << "The directory that would contain the new file cannot be extended "
-                       "or the file system is out of file-allocation resources.";
+        errMsg =
+            "Pipe error: "
+            "The directory that would contain the new file cannot be extended "
+            "or the file system is out of file-allocation resources.";
     }
     if (error == ENOTDIR) {
-        PBLOG_FATAL << "Pipe error: "
-                    << "A component of the path prefix is not a directory.";
+        errMsg =
+            "Pipe error: "
+            "A component of the path prefix is not a directory.";
     }
     if (error == EROFS) {
-        PBLOG_FATAL << "Pipe error: "
-                    << "The named file resides on a read-only file system.";
+        errMsg =
+            "Pipe error: "
+            "The named file resides on a read-only file system.";
     }
     if (error == ELOOP) {
-        PBLOG_FATAL << "Pipe error: "
-                    << "More than {SYMLOOP_MAX} symbolic links were encountered during "
-                       "resolution of the path argument.";
+        errMsg =
+            "Pipe error: "
+            "More than {SYMLOOP_MAX} symbolic links were encountered during "
+            "resolution of the path argument.";
     }
     if (error == ENAMETOOLONG) {
-        PBLOG_FATAL << "Pipe error: "
-                    << "As a result of encountering a symbolic link in resolution of the "
-                       "path argument, the length of the substituted pathname string "
-                       "exceeded {PATH_MAX}";
+        errMsg =
+            "Pipe error: "
+            "As a result of encountering a symbolic link in resolution of the "
+            "path argument, the length of the substituted pathname string "
+            "exceeded {PATH_MAX}";
     }
-    throw AbortException();
+    throw AbortException(errMsg);
 }
 }  // namespace
 
@@ -163,8 +174,7 @@ StreamWriter::StreamWriter(BAM::BamHeader header, const std::string& outPrefix, 
                                useTmpDir, sortThreads_, sortThreads_ + numThreads_, sortMemory_,
                                &numFiles, &numBlocks);
             if (ret == EXIT_FAILURE) {
-                PBLOG_FATAL << "Fatal error in bam sort. Aborting.";
-                throw AbortException();
+                throw AbortException("Fatal error in bam sort. Aborting.");
             }
             PBLOG_INFO << "Merged sorted output from " << numFiles << " files and " << numBlocks
                        << " in-memory blocks";
@@ -181,8 +191,7 @@ StreamWriter::StreamWriter(BAM::BamHeader header, const std::string& outPrefix, 
 void StreamWriter::Write(const BAM::BamRecord& r) const
 {
     if (!bamWriter_) {
-        PBLOG_FATAL << "Nullpointer BamWriter";
-        throw AbortException();
+        throw AbortException("Nullpointer BamWriter");
     }
     bamWriter_->Write(r);
 }
@@ -208,7 +217,7 @@ std::pair<int64_t, int64_t> StreamWriter::Close()
                         shift = 14;
                         break;
                     default:
-                        PBLOG_FATAL << "Unexpected index type. Falling back to generate BAI";
+                        throw AbortException("Unexpected index type. Falling back to generate BAI");
                         break;
                 }
                 PBLOG_INFO << "Generating " << idxType;
@@ -218,26 +227,32 @@ std::pair<int64_t, int64_t> StreamWriter::Close()
                 switch (ret) {
                     case 0:
                         break;
-                    case -2:
-                        PBLOG_FATAL << idxType << " Index Generation: Failed to open file "
-                                    << finalOutputName_;
-                        throw AbortException();
-                    case -3:
-                        PBLOG_FATAL << idxType
-                                    << " Index Generation: File is in a format that cannot be "
-                                       "usefully indexed "
-                                    << finalOutputName_;
-                        throw AbortException();
-                    case -4:
-                        PBLOG_FATAL << idxType
-                                    << " Index Generation: Failed to create or write index "
-                                    << finalOutputName_ + '.' << boost::to_lower_copy(idxType);
-                        throw AbortException();
-                    default:
-                        PBLOG_FATAL << idxType << " Index Generation: Failed to create index for "
-                                    << finalOutputName_;
-                        throw AbortException();
-                        break;
+                    case -2: {
+                        std::ostringstream os;
+                        os << idxType << " Index Generation: Failed to open file "
+                           << finalOutputName_;
+                        throw AbortException(os.str());
+                    }
+                    case -3: {
+                        std::ostringstream os;
+                        os << idxType
+                           << " Index Generation: File is in a format that cannot be "
+                              "usefully indexed "
+                           << finalOutputName_;
+                        throw AbortException(os.str());
+                    }
+                    case -4: {
+                        std::ostringstream os;
+                        os << idxType << " Index Generation: Failed to create or write index "
+                           << finalOutputName_ + '.' << boost::to_lower_copy(idxType);
+                        throw AbortException(os.str());
+                    }
+                    default: {
+                        std::ostringstream os;
+                        os << idxType << " Index Generation: Failed to create index for "
+                           << finalOutputName_;
+                        throw AbortException(os.str());
+                    }
                 }
                 idxMs = time.ElapsedMilliseconds();
             }
@@ -295,8 +310,7 @@ std::string StreamWriters::WriteDatasetsJson(const UserIO& uio, const Summary& s
         else if (!uio.isFastaInput && !uio.isFastqInput)
             ds = BAM::DataSet{uio.inFile};
     } catch (std::runtime_error& e) {
-        PBLOG_FATAL << e.what();
-        throw AbortException();
+        throw AbortException(e.what());
     }
     std::string pbiTiming;
     Timer pbiTimer;

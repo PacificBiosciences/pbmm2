@@ -15,6 +15,7 @@
 #include <Pbmm2Version.h>
 #include <pbmm2/MM2Helper.h>
 
+#include "AbortException.h"
 #include "IndexSettings.h"
 
 namespace PacBio {
@@ -66,8 +67,7 @@ int IndexWorkflow::Runner(const CLI_v2::Results& options)
     BAM::DataSet dsRef(options.PositionalArguments()[0]);
     const auto fastaFiles = dsRef.FastaFiles();
     if (fastaFiles.size() != 1) {
-        PBLOG_FATAL << "Only one reference sequence allowed!";
-        return EXIT_FAILURE;
+        throw AbortException("Only one reference sequence allowed!");
     }
 
     const std::string refFile = fastaFiles.front();

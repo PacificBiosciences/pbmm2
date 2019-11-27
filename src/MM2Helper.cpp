@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <memory>
+#include <sstream>
 
 #include <boost/algorithm/clamp.hpp>
 #include <boost/assert.hpp>
@@ -14,6 +15,8 @@
 #include <pbcopper/data/Strand.h>
 
 #include "AbortException.h"
+
+using namespace std::literals::string_literals;
 
 namespace PacBio {
 namespace minimap2 {
@@ -89,11 +92,9 @@ Data::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const int opt_
                     break;
                 case 'S':
                 case 'H':
-                    PBLOG_FATAL << "Cigar should not occur " << cigarChar;
-                    throw AbortException();
+                    throw AbortException("Cigar should not occur "s + cigarChar);
                 default:
-                    PBLOG_FATAL << "Unknown cigar " << cigarChar;
-                    throw AbortException();
+                    throw AbortException("Unknown cigar "s + cigarChar);
                     break;
             }
         }
@@ -163,8 +164,7 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             IdxOpts.w = 15;
             break;
         default:
-            PBLOG_FATAL << "No AlignmentMode --preset selected!";
-            throw AbortException();
+            throw AbortException("No AlignmentMode --preset selected!");
     }
     if (settings.DisableHPC && IdxOpts.flag & MM_I_HPC) IdxOpts.flag &= ~MM_I_HPC;
     if (settings.Kmer >= 0) IdxOpts.k = settings.Kmer;
@@ -245,8 +245,7 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             MapOpts.noncan = 0;
             break;
         default:
-            PBLOG_FATAL << "No AlignmentMode --preset selected!";
-            throw AbortException();
+            throw AbortException("No AlignmentMode --preset selected!");
     }
     if (settings.GapOpen1 >= 0) MapOpts.q = settings.GapOpen1;
     if (settings.GapOpen2 >= 0) MapOpts.q2 = settings.GapOpen2;
@@ -266,18 +265,15 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
 
     if ((MapOpts.q != MapOpts.q2 || MapOpts.e != MapOpts.e2) &&
         !(MapOpts.e > MapOpts.e2 && MapOpts.q + MapOpts.e < MapOpts.q2 + MapOpts.e2)) {
-        PBLOG_FATAL << "Violation of dual gap penalties, E1>E2 and O1+E1<O2+E2";
-        throw AbortException();
+        throw AbortException("Violation of dual gap penalties, E1>E2 and O1+E1<O2+E2");
     }
 
     if ((MapOpts.q + MapOpts.e) + (MapOpts.q2 + MapOpts.e2) > 127) {
-        PBLOG_FATAL << "Violation of scoring system ({-O}+{-E})+({-O2}+{-E2}) <= 127";
-        throw AbortException();
+        throw AbortException("Violation of scoring system ({-O}+{-E})+({-O2}+{-E2}) <= 127");
     }
 
     if (MapOpts.zdrop < MapOpts.zdrop_inv) {
-        PBLOG_FATAL << "Z-drop should not be less than inversion-Z-drop";
-        throw AbortException();
+        throw AbortException("Z-drop should not be less than inversion-Z-drop");
     }
 }
 
@@ -287,8 +283,7 @@ void MM2Helper::PostInit(const MM2Settings& settings, const std::string& preset,
     mm_mapopt_update(&MapOpts, Idx->idx_);
 
     if (Idx->idx_->k <= 0 || Idx->idx_->w <= 0) {
-        PBLOG_FATAL << "Index parameter -k and -w must be positive.";
-        throw AbortException();
+        throw AbortException("Index parameter -k and -w must be positive.");
     }
 
     PBLOG_DEBUG << "Minimap2 parameters based on preset: " << preset;
@@ -605,9 +600,10 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
                     int32_t curBegin = spans[j].first;
                     int32_t curEnd = spans[j].second;
                     if (fixedEnd > curBegin && fixedBegin < curEnd) {
-                        PBLOG_FATAL << "Overlapping intervals: " << record.FullName() << "\t"
-                                    << fixedBegin << "-" << fixedEnd << "\t" << curBegin << "-"
-                                    << curEnd;
+                        std::ostringstream os;
+                        os << "Overlapping intervals: " << record.FullName() << "\t" << fixedBegin
+                           << "-" << fixedEnd << "\t" << curBegin << "-" << curEnd;
+                        throw AbortException(os.str());
                     }
                 }
             }
@@ -819,8 +815,7 @@ void AlignedRecordImpl<T>::ComputeAccuracyBases()
                 break;
             case Data::CigarOperationType::UNKNOWN_OP:
             default:
-                PBLOG_FATAL << "UNKNOWN OP";
-                throw AbortException();
+                throw AbortException("UNKNOWN OP");
                 break;
         }
     }

@@ -54,8 +54,7 @@ MovieToSampleToInfix SampleNames::DetermineMovieToSampleToInfix(const UserIO& ui
         try {
             ds = BAM::DataSet{f};
         } catch (...) {
-            PBLOG_FATAL << UNKNOWN_FILE_TYPES;
-            throw AbortException();
+            throw AbortException(UNKNOWN_FILE_TYPES);
         }
         const auto& md = ds.Metadata();
         const auto& biosamples = md.BioSamples();
@@ -122,8 +121,7 @@ BAM::BamHeader SampleNames::GenerateBamHeader(const AlignSettings& settings, con
     std::unique_ptr<BAM::BamHeader> hdr;
     if ((settings.HQRegion || settings.ZMW) && !uio.isAlignedInput) {
         if (uio.isFromFofn) {
-            PBLOG_FATAL << "Cannot combine --hqregion or --zmw with fofn input!";
-            throw AbortException();
+            throw AbortException("Cannot combine --hqregion or --zmw with fofn input!");
         }
         BAM::ZmwReadStitcher reader(uio.inFile);
         if (reader.HasNext()) {

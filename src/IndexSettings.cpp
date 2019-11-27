@@ -75,8 +75,7 @@ IndexSettings::IndexSettings(const PacBio::CLI_v2::Results& options)
 
     if (MM2Settings::Kmer < -1 || MM2Settings::Kmer == 0 || MM2Settings::MinimizerWindowSize < -1 ||
         MM2Settings::MinimizerWindowSize == 0) {
-        PBLOG_FATAL << "Index parameter -k and -w must be positive.";
-        throw AbortException();
+        throw AbortException("Index parameter -k and -w must be positive.");
     }
 }
 
