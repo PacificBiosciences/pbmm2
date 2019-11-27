@@ -418,7 +418,7 @@
   *Max gap                : 5000 (glob)
   *Long join flank ratio  : 0.5 (glob)
 
-  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/ccs_parameters.bam --log-level DEBUG --preset HIFI 2>&1| grep DEBUG
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/ccs_parameters.bam --log-level DEBUG --preset HiFi 2>&1| grep DEBUG
   *Minimap2 parameters* (glob)
   *Kmer size              : 19 (glob)
   *Minimizer window size  : 10 (glob)
@@ -434,6 +434,10 @@
   *Bandwidth              : 2000 (glob)
   *Max gap                : 5000 (glob)
   *Long join flank ratio  : 0.5 (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/ccs_parameters.bam --preset foo 2>&1
+  *Could not find --preset foo (glob)
+  [1]
 
 Test bam_sort
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sorted_small.bam --sort -J 1 -m 1M --log-level INFO --log-file $CRAMTMP/sorted_small.txt
