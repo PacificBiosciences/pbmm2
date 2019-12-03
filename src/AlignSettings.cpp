@@ -4,6 +4,7 @@
 
 #include <unistd.h>
 
+#include <cmath>
 #include <iterator>
 #include <map>
 #include <sstream>
