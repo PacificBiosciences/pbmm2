@@ -2,6 +2,7 @@ pbmm2_cram_test_data = files([
   'baminput.t',
   'biosampleConsensus.t',
   'biosampleSubreads.t',
+  'demuxed.t',
   'empty.t',
   'fastxinput.t',
   'idempotence.t',
