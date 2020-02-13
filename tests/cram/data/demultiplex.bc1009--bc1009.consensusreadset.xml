@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pbds:ConsensusReadSet CreatedAt="2020-01-18T08:29:44" MetaType="PacBio.DataSet.ConsensusReadSet" Name="pacbio_dataset_consensusreadset-200118_162944922" Tags="" TimeStampedName="pacbio_dataset_consensusreadset-200118_162944922" UniqueId="35d947ed-f37c-53f4-09f1-4d72252bdee8" Version="3.0.1" xmlns:pbbase="http://pacificbiosciences.com/PacBioBaseDataModel.xsd" xmlns:pbds="http://pacificbiosciences.com/PacBioDatasets.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pacificbiosciences.com/PacBioDataModel.xsd">
+        <pbbase:ExternalResources>
+                <pbbase:ExternalResource MetaType="PacBio.ConsensusReadFile.ConsensusReadBamFile" ResourceId="demultiplex.bc1009--bc1009.bam" TimeStampedName="pacbio_consensusreadfile_consensusreadbamfile-200118_162944920" UniqueId="2836e255-361e-4547-a8e2-c7f515ed9b05">
+                        <pbbase:FileIndices>
+                                <pbbase:FileIndex MetaType="PacBio.Index.PacBioIndex" ResourceId="demultiplex.bc1009--bc1009.bam.pbi" TimeStampedName="pacbio_index_pacbioindex-200118_162944919" UniqueId="ce8cc429-70bb-44cd-943a-5317756ad566"/>
+                                <pbbase:FileIndex MetaType="PacBio.Index.BamIndex" ResourceId="demultiplex.bc1009--bc1009.bam.bai" TimeStampedName="pacbio_index_bamindex-200118_162944919" UniqueId="cb3e77b5-c547-4b17-afc7-a08780a7d88e"/>
+                        </pbbase:FileIndices>
+                </pbbase:ExternalResource>
+        </pbbase:ExternalResources>
+        <pbds:Filters>
+                <pbds:Filter>
+                        <pbbase:Properties>
+                                <pbbase:Property Name="movie" Operator="=" Value="m54006_200116_134114"/>
+                        </pbbase:Properties>
+                </pbds:Filter>
+        </pbds:Filters>
+        <pbds:DataSetMetadata>
+                <pbds:TotalLength>21457684</pbds:TotalLength>
+                <pbds:NumRecords>5081</pbds:NumRecords>
+        </pbds:DataSetMetadata>
+</pbds:ConsensusReadSet>
+

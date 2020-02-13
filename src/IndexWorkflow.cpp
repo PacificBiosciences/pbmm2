@@ -1,32 +1,22 @@
 // Author: Armin Töpfer
 
-#include <functional>
-#include <iostream>
-#include <memory>
-#include <thread>
-#include <tuple>
+#include "IndexWorkflow.h"
+
+#include <string>
 #include <vector>
 
-#include <pbcopper/logging/Logging.h>
-#include <pbcopper/utility/FileUtils.h>
-
-#include <pbbam/BamReader.h>
-#include <pbbam/BamWriter.h>
+#include <boost/algorithm/string/predicate.hpp>
 
 #include <pbbam/DataSet.h>
 #include <pbbam/DataSetTypes.h>
-#include <pbbam/EntireFileQuery.h>
-#include <pbbam/PbiFilter.h>
-#include <pbbam/PbiFilterQuery.h>
-
-#include <pbcopper/parallel/WorkQueue.h>
+#include <pbcopper/logging/Logging.h>
+#include <pbcopper/utility/FileUtils.h>
 
 #include <Pbmm2Version.h>
-
 #include <pbmm2/MM2Helper.h>
-#include "IndexSettings.h"
 
-#include "IndexWorkflow.h"
+#include "AbortException.h"
+#include "IndexSettings.h"
 
 namespace PacBio {
 namespace minimap2 {
@@ -68,35 +58,16 @@ bool CheckPositionalArgs(const std::vector<std::string>& args)
 }
 }  // namespace
 
-int IndexWorkflow::Runner(const CLI::Results& options)
+int IndexWorkflow::Runner(const CLI_v2::Results& options)
 {
-    std::ofstream logStream;
-    {
-        const std::string logFile = options["log_file"];
-        const Logging::LogLevel logLevel(
-            options.IsFromRTC() ? options.LogLevel() : options["log_level"].get<std::string>());
-
-        using Logger = PacBio::Logging::Logger;
-
-        Logger* logger;
-        if (!logFile.empty()) {
-            logStream.open(logFile);
-            logger = &Logger::Default(new Logger(logStream, logLevel));
-        } else {
-            logger = &Logger::Default(new Logger(std::cout, logLevel));
-        }
-        PacBio::Logging::InstallSignalHandlers(*logger);
-    }
-
     IndexSettings settings(options);
 
-    if (!CheckPositionalArgs(options.PositionalArguments())) std::exit(EXIT_FAILURE);
+    if (!CheckPositionalArgs(options.PositionalArguments())) return EXIT_FAILURE;
 
     BAM::DataSet dsRef(options.PositionalArguments()[0]);
     const auto fastaFiles = dsRef.FastaFiles();
     if (fastaFiles.size() != 1) {
-        PBLOG_FATAL << "Only one reference sequence allowed!";
-        std::exit(EXIT_FAILURE);
+        throw AbortException("Only one reference sequence allowed!");
     }
 
     const std::string refFile = fastaFiles.front();

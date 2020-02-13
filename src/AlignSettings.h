@@ -5,9 +5,9 @@
 #include <string>
 #include <vector>
 
-#include <pbcopper/cli/CLI.h>
+#include <pbcopper/cli2/CLI.h>
 
-#include "PlainOption.h"
+#include "BamIndex.h"
 
 #include <pbmm2/MM2Settings.h>
 
@@ -18,14 +18,12 @@ struct AlignSettings : MM2Settings
 {
     const std::string CLI;
     const std::vector<std::string> InputFiles;
-    bool IsFromRTC;
 
     // alignment output filters
-    float MinPercConcordance;
+    double MinPercConcordance;
+    double MinPercIdentity;
+    double MinPercIdentityGapComp;
     int32_t MinAlignmentLength;
-
-    std::string LogFile;
-    Logging::LogLevel LogLevel;
 
     const std::string SampleName;
     int32_t ChunkSize;
@@ -45,21 +43,19 @@ struct AlignSettings : MM2Settings
     std::string Rg;
 
     bool CreatePbi;
-    bool NoBAI;
+    BamIndex BamIdx = BamIndex::NONE;
     bool OutputUnmapped;
 
     bool CompressSequenceHomopolymers;
 
-    std::string TcOverrides;
-
     /// Parses the provided CLI::Results and retrieves a defined set of options.
-    AlignSettings(const PacBio::CLI::Results& options);
+    AlignSettings(const PacBio::CLI_v2::Results& options);
 
     int32_t ThreadCount(int32_t n);
 
     /// Given the description of the tool and its version, create all
     /// necessary CLI::Options for the ccs executable.
-    static PacBio::CLI::Interface CreateCLI();
+    static PacBio::CLI_v2::Interface CreateCLI();
 };
 }  // namespace minimap2
 }  // namespace PacBio

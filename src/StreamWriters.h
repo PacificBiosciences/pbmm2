@@ -7,6 +7,7 @@
 #include <string>
 #include <tuple>
 
+#include "BamIndex.h"
 #include "InputOutputUX.h"
 
 namespace PacBio {
@@ -21,13 +22,15 @@ struct Summary
     int32_t NumAlns = 0;
     int64_t Bases = 0;
     double Concordance = 0;
+    double Identity = 0;
+    double IdentityGapComp = 0;
     std::vector<int32_t> Lengths;
 };
 
 struct StreamWriter
 {
-    StreamWriter(BAM::BamHeader header, const std::string& outPrefix, bool sort, bool generateBai,
-                 int sortThreads, int numThreads, int64_t sortMemory,
+    StreamWriter(BAM::BamHeader header, const std::string& outPrefix, bool sort,
+                 const BamIndex bamIdx, int sortThreads, int numThreads, int64_t sortMemory,
                  const std::string& sample = "", const std::string& infix = "");
 
     void Write(const BAM::BamRecord& r) const;
@@ -39,7 +42,7 @@ struct StreamWriter
 
 private:
     bool sort_;
-    bool generateBai_;
+    BamIndex bamIdx_;
     std::string sample_;
     std::string outPrefix_;
     int sortThreads_;
@@ -56,7 +59,8 @@ private:
 struct StreamWriters
 {
     StreamWriters(BAM::BamHeader& header, const std::string& outPrefix, bool splitBySample,
-                  bool sort, bool generateBai, int sortThreads, int numThreads, int64_t sortMemory);
+                  bool sort, const BamIndex bamIdx, int sortThreads, int numThreads,
+                  int64_t sortMemory);
 
     StreamWriter& at(const std::string& infix, const std::string& sample);
 
@@ -72,7 +76,7 @@ private:
     const std::string& outPrefix_;
     bool splitBySample_;
     bool sort_;
-    bool generateBai_;
+    BamIndex bamIdx_;
     int sortThreads_;
     int numThreads_;
     int64_t sortMemory_;

@@ -1,19 +1,20 @@
 // Author: Armin Töpfer
 
+#include "AlignWorkflow.h"
+
 #include <sys/stat.h>
+
+#include <cstdio>
+
 #include <atomic>
 #include <chrono>
-#include <cstdio>
 #include <functional>
 #include <iostream>
 #include <mutex>
+#include <sstream>
 #include <thread>
 #include <tuple>
 #include <vector>
-
-#include <pbcopper/json/JSON.h>
-#include <pbcopper/logging/Logging.h>
-#include <pbcopper/utility/FileUtils.h>
 
 #include <pbbam/BamWriter.h>
 #include <pbbam/DataSet.h>
@@ -23,90 +24,69 @@
 #include <pbbam/PbiFilter.h>
 #include <pbbam/PbiFilterQuery.h>
 #include <pbbam/virtual/ZmwReadStitcher.h>
-#include <pbcopper/data/LocalContextFlags.h>
 
+#include <pbcopper/data/LocalContextFlags.h>
+#include <pbcopper/json/JSON.h>
+#include <pbcopper/logging/Logging.h>
 #include <pbcopper/parallel/FireAndForget.h>
+#include <pbcopper/utility/FileUtils.h>
+
+#include <pbmm2/MM2Helper.h>
 
 #include <mmpriv.h>
 
-#include <pbmm2/MM2Helper.h>
+#include "AbortException.h"
 #include "AlignSettings.h"
+#include "BamIndex.h"
 #include "InputOutputUX.h"
 #include "SampleNames.h"
 #include "StreamWriters.h"
 #include "Timer.h"
 #include "bam_sort.h"
 
-#include "AlignWorkflow.h"
-
 namespace PacBio {
 namespace minimap2 {
-namespace {
-Logging::LogLevel CreateLogger(const CLI::Results& options, std::ofstream& logStream)
-{
-    const Logging::LogLevel logLevel(options.IsFromRTC() ? options.LogLevel()
-                                                         : options["log_level"].get<std::string>());
-    const std::string logFile = options["log_file"];
 
-    using Logger = PacBio::Logging::Logger;
-
-    Logger* logger;
-    if (!logFile.empty()) {
-        logStream.open(logFile);
-        logger = &Logger::Default(new Logger(logStream, logLevel));
-    } else {
-        logger = &Logger::Default(new Logger(std::cerr, logLevel));
-    }
-    PacBio::Logging::InstallSignalHandlers(*logger);
-    return logLevel;
-}
-}  // namespace
-
-int AlignWorkflow::Runner(const CLI::Results& options)
+int AlignWorkflow::Runner(const CLI_v2::Results& options)
 {
     const Timer startTime;
-    std::ofstream logStream;
-    const Logging::LogLevel logLevel = CreateLogger(options, logStream);
-
     AlignSettings settings(options);
 
     UserIO uio = InputOutputUX::CheckPositionalArgs(options.PositionalArguments(), settings);
 
     if (!uio.isAlignedInput && (!uio.isFromXML || !uio.isFromSubreadset)) {
         if (settings.ZMW) {
-            PBLOG_FATAL
-                << "Option --zmw can only be used with a subreadset.xml containing subread + "
-                   "scraps BAM files.";
-            std::exit(EXIT_FAILURE);
+            throw AbortException(
+                "Option --zmw can only be used with a subreadset.xml containing subread + "
+                "scraps BAM files.");
         }
         if (settings.HQRegion) {
-            PBLOG_FATAL
-                << "Option --hqregion can only be used with a subreadset.xml containing subread + "
-                   "scraps BAM files.";
-            std::exit(EXIT_FAILURE);
+            throw AbortException(
+                "Option --hqregion can only be used with a subreadset.xml containing subread + "
+                "scraps BAM files.");
         }
     }
 
     if (uio.isFromMmi && settings.CompressSequenceHomopolymers) {
-        PBLOG_FATAL << "Cannot combine --collapse-homopolymers with MMI input.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException("Cannot combine --collapse-homopolymers with MMI input.");
     }
 
     if (uio.isFromFofn && settings.SplitBySample) {
-        PBLOG_FATAL << "Cannot combine --split-by-sample with fofn input.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException("Cannot combine --split-by-sample with fofn input.");
     }
 
     if (!uio.isFastaInput && !uio.isFastqInput && !settings.Rg.empty()) {
-        PBLOG_FATAL << "Cannot override read groups with BAM input. Remove option --rg.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException("Cannot override read groups with BAM input. Remove option --rg.");
     }
 
     const FilterFunc filter = [&settings](const AlignedRecord& aln) {
         if (aln.Span <= 0 || aln.Span < settings.MinAlignmentLength) return false;
-        if (settings.MinPercConcordance <= 0) return true;
-        if (aln.Concordance < settings.MinPercConcordance) return false;
-        return true;
+        if (settings.MinPercIdentity <= 0 && settings.MinPercIdentityGapComp <= 0 &&
+            settings.MinPercConcordance <= 0)
+            return true;
+        return (aln.Identity >= settings.MinPercIdentity &&
+                aln.IdentityGapComp >= settings.MinPercIdentityGapComp &&
+                aln.Concordance >= settings.MinPercConcordance);
     };
 
     const auto CompressHomopolymers = [&](const std::string& bases) -> std::string {
@@ -148,8 +128,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                 query = std::make_unique<BAM::PbiFilterQuery>(filter, file);
             return query;
         } catch (...) {
-            PBLOG_FATAL << UNKNOWN_FILE_TYPES;
-            std::exit(EXIT_FAILURE);
+            throw AbortException(UNKNOWN_FILE_TYPES);
         }
     };
 
@@ -189,7 +168,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         PacBio::Parallel::FireAndForget faf(settings.NumThreads, 3);
 
         writers = std::make_unique<StreamWriters>(
-            hdr, uio.outPrefix, settings.SplitBySample, settings.Sort, !settings.NoBAI,
+            hdr, uio.outPrefix, settings.SplitBySample, settings.Sort, settings.BamIdx,
             settings.SortThreads, settings.NumThreads, settings.SortMemory);
 
         int32_t i = 0;
@@ -232,13 +211,19 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                 if (output) {
                     std::lock_guard<std::mutex> lock(outputMutex);
                     alignedReads += aligned;
-                    for (const auto& aln : *output) {
+                    for (auto& aln : *output) {
                         if (!settings.OutputUnmapped && !aln.IsAligned) continue;
                         if (aln.IsAligned) {
                             s.Lengths.emplace_back(aln.NumAlignedBases);
                             s.Bases += aln.NumAlignedBases;
                             s.Concordance += aln.Concordance;
+                            s.Identity += aln.Identity;
+                            s.IdentityGapComp += aln.IdentityGapComp;
                             ++s.NumAlns;
+                            if (settings.MinPercConcordance <= 0) aln.Record.Impl().RemoveTag("mc");
+                            if (settings.MinPercIdentityGapComp <= 0)
+                                aln.Record.Impl().RemoveTag("mg");
+                            if (settings.MinPercIdentity <= 0) aln.Record.Impl().RemoveTag("mi");
                         }
                         const std::string movieName = aln.Record.MovieName();
                         const auto& sampleInfix = mtsti[movieName];
@@ -380,7 +365,7 @@ int AlignWorkflow::Runner(const CLI::Results& options)
                                             std::tie(r.FullLength, r.Length);
                                  });
                 size_t mid = tmp.size() / 2;
-                if (logLevel == Logging::LogLevel::TRACE) {
+                if (options.LogLevel() == Logging::LogLevel::TRACE) {
                     std::ostringstream ss;
                     for (size_t x = 0; x < tmp.size(); ++x) {
                         const auto& ra = tmp[x];
@@ -522,15 +507,8 @@ int AlignWorkflow::Runner(const CLI::Results& options)
         maxMappedLength = std::max(maxMappedLength, l);
     }
     double meanMappedConcordance = 1.0 * s.Concordance / s.NumAlns;
-    if (settings.IsFromRTC) {
-        JSON::Json root;
-        root["mapped_concordance_percentage"] = meanMappedConcordance;
-        root["num_aligned_reads"] = alignedReads;
-        root["num_alignments"] = s.NumAlns;
-        root["num_aligned_bases"] = s.Bases;
-        std::ofstream out(".pbmm2_stats.json");
-        out << root.dump(2);
-    }
+    double meanIdentity = 1.0 * s.Identity / s.NumAlns;
+    double meanIdentityGapComp = 1.0 * s.IdentityGapComp / s.NumAlns;
 
     std::string pbiTiming;
     if (uio.isToXML || uio.isToJson)
@@ -541,15 +519,22 @@ int AlignWorkflow::Runner(const CLI::Results& options)
     PBLOG_INFO << "Mapped Reads: " << alignedReads;
     PBLOG_INFO << "Alignments: " << s.NumAlns;
     PBLOG_INFO << "Mapped Bases: " << s.Bases;
-    PBLOG_INFO << "Mean Mapped Concordance: " << meanMappedConcordance << "%";
+    if (settings.MinPercConcordance > 0)
+        PBLOG_INFO << "Mean Mapped Concordance: " << meanMappedConcordance << "%";
+    if (settings.MinPercIdentity > 0)
+        PBLOG_INFO << "Mean Sequence Identity: " << meanIdentity << "%";
+    if (settings.MinPercIdentityGapComp > 0)
+        PBLOG_INFO << "Mean Gap Compressed Sequence Identity: " << meanIdentityGapComp << "%";
     PBLOG_INFO << "Max Mapped Read Length: " << maxMappedLength;
     PBLOG_INFO << "Mean Mapped Read Length: " << (1.0 * s.Bases / s.NumAlns);
 
     PBLOG_INFO << "Index Build/Read Time: " << indexTime.ElapsedTime();
     PBLOG_INFO << "Alignment Time: " << alignmentTime.ElapsedTime();
     if (!sort_baiTimings.first.empty()) PBLOG_INFO << "Sort Merge Time: " << sort_baiTimings.first;
-    if (!sort_baiTimings.second.empty() && !settings.NoBAI)
-        PBLOG_INFO << "BAI Generation Time: " << sort_baiTimings.second;
+    if (!sort_baiTimings.second.empty() && settings.BamIdx != BamIndex::_from_string("NONE")) {
+        PBLOG_INFO << settings.BamIdx._to_string()
+                   << " Generation Time: " << sort_baiTimings.second;
+    }
     if (!pbiTiming.empty()) PBLOG_INFO << "PBI Generation Time: " << pbiTiming;
     PBLOG_INFO << "Run Time: " << startTime.ElapsedTime();
     PBLOG_INFO << "CPU Time: "

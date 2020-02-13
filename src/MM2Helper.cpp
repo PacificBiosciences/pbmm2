@@ -4,13 +4,19 @@
 
 #include <iostream>
 #include <memory>
+#include <sstream>
 
+#include <boost/algorithm/clamp.hpp>
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
 
 #include <pbcopper/data/Cigar.h>
 #include <pbcopper/data/Position.h>
 #include <pbcopper/data/Strand.h>
+
+#include "AbortException.h"
+
+using namespace std::literals::string_literals;
 
 namespace PacBio {
 namespace minimap2 {
@@ -86,11 +92,9 @@ Data::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const int opt_
                     break;
                 case 'S':
                 case 'H':
-                    PBLOG_FATAL << "Cigar should not occur " << cigarChar;
-                    std::exit(EXIT_FAILURE);
+                    throw AbortException("Cigar should not occur "s + cigarChar);
                 default:
-                    PBLOG_FATAL << "Unknown cigar " << cigarChar;
-                    std::exit(EXIT_FAILURE);
+                    throw AbortException("Unknown cigar "s + cigarChar);
                     break;
             }
         }
@@ -160,8 +164,7 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             IdxOpts.w = 15;
             break;
         default:
-            PBLOG_FATAL << "No AlignmentMode --preset selected!";
-            std::exit(EXIT_FAILURE);
+            throw AbortException("No AlignmentMode --preset selected!");
     }
     if (settings.DisableHPC && IdxOpts.flag & MM_I_HPC) IdxOpts.flag &= ~MM_I_HPC;
     if (settings.Kmer >= 0) IdxOpts.k = settings.Kmer;
@@ -192,9 +195,10 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             MapOpts.zdrop = 400;
             MapOpts.zdrop_inv = 50;
             MapOpts.bw = 2000;
+            MapOpts.max_gap = 5000;
             break;
         case AlignmentMode::CCS:
-            *preset = "CCS";
+            *preset = "CCS / HiFi";
             MapOpts.a = 2;
             MapOpts.q = 5;
             MapOpts.q2 = 56;
@@ -204,6 +208,7 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             MapOpts.zdrop = 400;
             MapOpts.zdrop_inv = 50;
             MapOpts.bw = 2000;
+            MapOpts.max_gap = 5000;
             break;
         case AlignmentMode::ISOSEQ:
             *preset = "ISOSEQ";
@@ -240,8 +245,7 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             MapOpts.noncan = 0;
             break;
         default:
-            PBLOG_FATAL << "No AlignmentMode --preset selected!";
-            std::exit(EXIT_FAILURE);
+            throw AbortException("No AlignmentMode --preset selected!");
     }
     if (settings.GapOpen1 >= 0) MapOpts.q = settings.GapOpen1;
     if (settings.GapOpen2 >= 0) MapOpts.q2 = settings.GapOpen2;
@@ -253,6 +257,7 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
     if (settings.ZdropInv >= 0) MapOpts.zdrop_inv = settings.ZdropInv;
     if (settings.NonCanon >= 0) MapOpts.noncan = settings.NonCanon;
     if (settings.MaxIntronLength >= 0) mm_mapopt_max_intron_len(&MapOpts, settings.MaxIntronLength);
+    if (settings.MaxGap >= 0) MapOpts.max_gap = settings.MaxGap;
     if (settings.Bandwidth >= 0) MapOpts.bw = settings.Bandwidth;
     if (settings.NoSpliceFlank) MapOpts.flag &= ~MM_F_SPLICE_FLANK;
     if (settings.LongJoinFlankRatio >= 0)
@@ -260,18 +265,15 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
 
     if ((MapOpts.q != MapOpts.q2 || MapOpts.e != MapOpts.e2) &&
         !(MapOpts.e > MapOpts.e2 && MapOpts.q + MapOpts.e < MapOpts.q2 + MapOpts.e2)) {
-        PBLOG_FATAL << "Violation of dual gap penalties, E1>E2 and O1+E1<O2+E2";
-        std::exit(EXIT_FAILURE);
+        throw AbortException("Violation of dual gap penalties, E1>E2 and O1+E1<O2+E2");
     }
 
     if ((MapOpts.q + MapOpts.e) + (MapOpts.q2 + MapOpts.e2) > 127) {
-        PBLOG_FATAL << "Violation of scoring system ({-O}+{-E})+({-O2}+{-E2}) <= 127";
-        std::exit(EXIT_FAILURE);
+        throw AbortException("Violation of scoring system ({-O}+{-E})+({-O2}+{-E2}) <= 127");
     }
 
     if (MapOpts.zdrop < MapOpts.zdrop_inv) {
-        PBLOG_FATAL << "Z-drop should not be less than inversion-Z-drop";
-        std::exit(EXIT_FAILURE);
+        throw AbortException("Z-drop should not be less than inversion-Z-drop");
     }
 }
 
@@ -281,8 +283,7 @@ void MM2Helper::PostInit(const MM2Settings& settings, const std::string& preset,
     mm_mapopt_update(&MapOpts, Idx->idx_);
 
     if (Idx->idx_->k <= 0 || Idx->idx_->w <= 0) {
-        PBLOG_FATAL << "Index parameter -k and -w must be positive.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException("Index parameter -k and -w must be positive.");
     }
 
     PBLOG_DEBUG << "Minimap2 parameters based on preset: " << preset;
@@ -300,6 +301,7 @@ void MM2Helper::PostInit(const MM2Settings& settings, const std::string& preset,
         PBLOG_DEBUG << "Z-drop                 : " << MapOpts.zdrop;
         PBLOG_DEBUG << "Z-drop inv             : " << MapOpts.zdrop_inv;
         PBLOG_DEBUG << "Bandwidth              : " << MapOpts.bw;
+        PBLOG_DEBUG << "Max gap                : " << MapOpts.max_gap;
         PBLOG_DEBUG << "Long join flank ratio  : " << MapOpts.min_join_flank_ratio;
         if (settings.AlignMode == AlignmentMode::ISOSEQ) {
             PBLOG_DEBUG << "Max ref intron length  : " << MapOpts.max_gap_ref;
@@ -362,7 +364,7 @@ std::unique_ptr<BAM::BamRecord> createUnalignedCopy(const BAM::BamRecord& record
             seq, record.Qualities(BAM::Orientation::NATIVE).Fastq());
         unalignedCopy->Impl().SetReverseStrand(false);
         unalignedCopy->Impl().SetMapped(false);
-        unalignedCopy->Impl().CigarData("");
+        unalignedCopy->Impl().CigarData(Data::Cigar{});
         for (const auto& tag : record.Impl().Tags())
             if (tag.first != "RG") unalignedCopy->Impl().AddTag(tag.first, tag.second);
         unalignedCopy->ReadGroupId(record.ReadGroupId());
@@ -395,7 +397,7 @@ void postprocess(std::vector<AlignedRecord>& localResults,
     if (localResults.empty()) {
         if (record.IsMapped()) {
             const auto RemovePbmm2MappedTags = [](BAM::BamRecord& r) {
-                for (const auto& t : {"SA", "rm", "mc"})
+                for (const auto& t : {"SA", "rm", "mc", "mi", "mg"})
                     r.Impl().RemoveTag(t);
             };
             if (unalignedCopy) {
@@ -598,9 +600,10 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
                     int32_t curBegin = spans[j].first;
                     int32_t curEnd = spans[j].second;
                     if (fixedEnd > curBegin && fixedBegin < curEnd) {
-                        PBLOG_FATAL << "Overlapping intervals: " << record.FullName() << "\t"
-                                    << fixedBegin << "-" << fixedEnd << "\t" << curBegin << "-"
-                                    << curEnd;
+                        std::ostringstream os;
+                        os << "Overlapping intervals: " << record.FullName() << "\t" << fixedBegin
+                           << "-" << fixedEnd << "\t" << curBegin << "-" << curEnd;
+                        throw AbortException(os.str());
                     }
                 }
             }
@@ -782,6 +785,8 @@ void AlignedRecordImpl<T>::ComputeAccuracyBases()
 {
     int32_t ins = 0;
     int32_t del = 0;
+    int32_t insEvents = 0;
+    int32_t delEvents = 0;
     int32_t mismatch = 0;
     int32_t match = 0;
     for (const auto& cigar : Record.CigarData()) {
@@ -789,9 +794,11 @@ void AlignedRecordImpl<T>::ComputeAccuracyBases()
         switch (cigar.Type()) {
             case Data::CigarOperationType::INSERTION:
                 ins += len;
+                ++insEvents;
                 break;
             case Data::CigarOperationType::DELETION:
                 del += len;
+                ++delEvents;
                 break;
             case Data::CigarOperationType::SEQUENCE_MISMATCH:
                 mismatch += len;
@@ -808,19 +815,25 @@ void AlignedRecordImpl<T>::ComputeAccuracyBases()
                 break;
             case Data::CigarOperationType::UNKNOWN_OP:
             default:
-                PBLOG_FATAL << "UNKNOWN OP";
-                std::exit(EXIT_FAILURE);
+                throw AbortException("UNKNOWN OP");
                 break;
         }
     }
     Span = Record.AlignedEnd() - Record.AlignedStart();
-    const int32_t nErr = ins + del + mismatch;
     NumAlignedBases = match + ins + mismatch;
-    Concordance = 100 * (1.0 - 1.0 * nErr / Span);
-    if (Record.Impl().HasTag("mc"))
-        Record.Impl().EditTag("mc", static_cast<float>(Concordance));
-    else
-        Record.Impl().AddTag("mc", static_cast<float>(Concordance));
+    Concordance =
+        boost::algorithm::clamp(100 * (1.0 - 1.0 * (ins + del + mismatch) / Span), 0.0, 100.0);
+    Identity = 100.0 * match / (match + mismatch + del + ins);
+    IdentityGapComp = 100.0 * match / (match + mismatch + delEvents + insEvents);
+    const auto SetTag = [&](const char* tag, float value) {
+        if (Record.Impl().HasTag(tag))
+            Record.Impl().EditTag(tag, value);
+        else
+            Record.Impl().AddTag(tag, value);
+    };
+    SetTag("mc", Concordance);
+    SetTag("mg", IdentityGapComp);
+    SetTag("mi", Identity);
 }
 
 AlignedRecord::AlignedRecord(BAM::BamRecord record) : AlignedRecordImpl{std::move(record)} {}

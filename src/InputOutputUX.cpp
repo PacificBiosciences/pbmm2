@@ -1,11 +1,13 @@
 // Author: Armin Töpfer
 
 #include <fstream>
+#include <sstream>
 
 #include <pbbam/DataSet.h>
 #include <pbcopper/utility/FileUtils.h>
 #include <boost/algorithm/string.hpp>
 
+#include "AbortException.h"
 #include "AlignSettings.h"
 
 #include "InputOutputUX.h"
@@ -38,8 +40,7 @@ InputType DetermineInputFileSuffix(const std::string& inputFile)
         try {
             dsInput = BAM::DataSet{inputFile};
         } catch (...) {
-            PBLOG_FATAL << UNKNOWN_FILE_TYPES;
-            std::exit(EXIT_FAILURE);
+            throw AbortException(UNKNOWN_FILE_TYPES);
         }
         switch (dsInput.Type()) {
             case TypeEnum::ALIGNMENT:
@@ -54,17 +55,18 @@ InputType DetermineInputFileSuffix(const std::string& inputFile)
             case TypeEnum::REFERENCE:
                 return InputType::XML_FASTA;
                 break;
-            default:
-                PBLOG_FATAL << "Unsupported input data file " << inputFile << " of type "
-                            << BAM::DataSet::TypeToName(dsInput.Type());
-                std::exit(EXIT_FAILURE);
+            default: {
+                std::ostringstream os;
+                os << "Unsupported input data file " << inputFile << " of type "
+                   << BAM::DataSet::TypeToName(dsInput.Type());
+                throw AbortException(os.str());
+            }
         }
     }
 
     if (boost::iends_with(inputFile, "mmi")) return InputType::MMI;
 
-    PBLOG_FATAL << "Unknown file suffix of " << inputFile;
-    std::exit(EXIT_FAILURE);
+    throw AbortException("Unknown file suffix of " + inputFile);
 }
 InputType DetermineFofnContent(const std::string& fofnInputFile, UserIO& uio)
 {
@@ -74,11 +76,14 @@ InputType DetermineFofnContent(const std::string& fofnInputFile, UserIO& uio)
     while (std::getline(infile, line)) {
         boost::trim(line);
         const InputType t = DetermineInputFileSuffix(line);
+        if (!Utility::FileExists(line)) {
+            throw AbortException("Input fofn contains non-existing file: " + line);
+        }
         if (!type) {
             type = std::make_unique<InputType>(t);
         } else if (!InputTypeEquality(*type, t)) {
-            PBLOG_FATAL << "Input fofn contains different file types. This is not supported.";
-            std::exit(EXIT_FAILURE);
+            throw AbortException(
+                "Input fofn contains different file types. This is not supported.");
         }
         uio.inputFiles.emplace_back(line);
     }
@@ -91,8 +96,7 @@ InputType DetermineFofnContent(const std::string& fofnInputFile, UserIO& uio)
         case InputType::FASTQ:
             return InputType::FOFN_FASTQ;
         default:
-            PBLOG_FATAL << "Unsupported file types in file " << fofnInputFile;
-            std::exit(EXIT_FAILURE);
+            throw AbortException("Unsupported file types in file " + fofnInputFile);
     }
 }
 }  // namespace
@@ -108,8 +112,7 @@ std::string InputOutputUX::UnpackJson(const std::string& jsonInputFile)
     JSON::Json j = ReadJson(jsonInputFile);
     std::string inputFile;
     const auto panic = [](const std::string& error) {
-        PBLOG_FATAL << "JSON Datastore: " << error;
-        std::exit(EXIT_FAILURE);
+        throw AbortException("JSON Datastore: " + error);
     };
     if (j.empty()) panic("Empty file!");
     if (j.count("files") == 0) panic("Could not find files element!");
@@ -126,8 +129,7 @@ std::string InputOutputUX::UnpackJson(const std::string& jsonInputFile)
 InputType InputOutputUX::DetermineInputTypeApprox(std::string inputFile, UserIO& uio)
 {
     if (!Utility::FileExists(inputFile)) {
-        PBLOG_FATAL << "Input data file does not exist: " << inputFile;
-        std::exit(EXIT_FAILURE);
+        throw AbortException("Input data file does not exist: " + inputFile);
     }
     if (boost::iends_with(inputFile, "json")) inputFile = UnpackJson(inputFile);
     if (boost::iends_with(inputFile, "fofn")) return DetermineFofnContent(inputFile, uio);
@@ -140,9 +142,9 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
 {
     UserIO uio;
     if (args.size() < 2) {
-        PBLOG_FATAL << "Please provide at least the input arguments: reference input output!";
-        PBLOG_FATAL << "EXAMPLE: pbmm2 reference.fasta input.subreads.bam output.bam";
-        std::exit(EXIT_FAILURE);
+        throw AbortException(
+            "Please provide at least the input arguments: reference input output!\n"
+            "EXAMPLE: pbmm2 reference.fasta input.subreads.bam output.bam");
     }
 
     std::string inputFile;
@@ -158,29 +160,26 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
 
     const std::string noGC = " Output BAM file cannot be used for polishing with GenomicConsensus!";
     if (IsExactCombination(InputType::BAM, InputType::BAM)) {
-        PBLOG_FATAL << "Both input files are of type BAM. Please check your inputs.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException("Both input files are of type BAM. Please check your inputs.");
     } else if (IsExactCombination(InputType::FASTQ, InputType::FASTQ)) {
-        PBLOG_FATAL << "Both input files are of type FASTQ. Please check your inputs.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException("Both input files are of type FASTQ. Please check your inputs.");
     } else if (IsExactCombination(InputType::MMI, InputType::MMI)) {
-        PBLOG_FATAL << "Both input files are of type MMI. Please check your inputs.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException("Both input files are of type MMI. Please check your inputs.");
     } else if (IsExactCombination(InputType::XML_BAM, InputType::XML_BAM)) {
-        PBLOG_FATAL << "Both input files are of type BAM from XML. Please check your inputs.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException(
+            "Both input files are of type BAM from XML. Please check your inputs.");
     } else if (IsExactCombination(InputType::XML_FASTA, InputType::XML_FASTA)) {
-        PBLOG_FATAL << "Both input files are of type FASTA from XML. Please check your inputs.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException(
+            "Both input files are of type FASTA from XML. Please check your inputs.");
     } else if (IsExactCombination(InputType::FOFN_BAM, InputType::FOFN_BAM)) {
-        PBLOG_FATAL << "Both input files are of type BAM from FOFN. Please check your inputs.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException(
+            "Both input files are of type BAM from FOFN. Please check your inputs.");
     } else if (IsExactCombination(InputType::FOFN_FASTA, InputType::FOFN_FASTA)) {
-        PBLOG_FATAL << "Both input files are of type FASTA from FOFN. Please check your inputs.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException(
+            "Both input files are of type FASTA from FOFN. Please check your inputs.");
     } else if (IsExactCombination(InputType::FOFN_FASTQ, InputType::FOFN_FASTQ)) {
-        PBLOG_FATAL << "Both input files are of type FASTQ from FOFN. Please check your inputs.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException(
+            "Both input files are of type FASTQ from FOFN. Please check your inputs.");
     } else if (IsExactCombination(InputType::FASTA, InputType::FASTA) ||
                IsExactCombination(InputType::XML_FASTA, InputType::FASTA) ||
                IsExactCombination(InputType::MMI, InputType::FASTA)) {
@@ -268,8 +267,7 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
         inputFile = args[0];
         referenceFile = args[1];
     } else {
-        PBLOG_FATAL << "Unknown combination";
-        std::exit(EXIT_FAILURE);
+        throw AbortException("Unknown combination");
     }
 
     if (uio.inputFiles.empty()) {
@@ -293,8 +291,7 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
         try {
             dsInput = BAM::DataSet{inputFile};
         } catch (...) {
-            PBLOG_FATAL << UNKNOWN_FILE_TYPES;
-            std::exit(EXIT_FAILURE);
+            throw AbortException(UNKNOWN_FILE_TYPES);
         }
         uio.inputType = dsInput.Type();
 
@@ -345,13 +342,10 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
             case BAM::DataSet::TypeEnum::BARCODE:
             case BAM::DataSet::TypeEnum::REFERENCE:
             default: {
-                PBLOG_FATAL << "BLA!";
-                // const auto inType = DetermineInputTypeFastx(inputFile);
-                // if (inType != InputType::FASTA && inType != InputType::FASTQ) {
-                PBLOG_FATAL << "Unsupported input data file " << inputFile << " of type "
-                            << BAM::DataSet::TypeToName(dsInput.Type());
-                std::exit(EXIT_FAILURE);
-                // }
+                std::ostringstream os;
+                os << "Unsupported input data file " << inputFile << " of type "
+                   << BAM::DataSet::TypeToName(dsInput.Type());
+                throw AbortException(os.str());
             }
         }
     }
@@ -366,25 +360,25 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
         try {
             dsRef = BAM::DataSet(referenceFile);
         } catch (...) {
-            PBLOG_FATAL << UNKNOWN_FILE_TYPES;
-            std::exit(EXIT_FAILURE);
+            throw AbortException(UNKNOWN_FILE_TYPES);
         }
         if (dsRef.Type() != BAM::DataSet::TypeEnum::REFERENCE) {
-            PBLOG_FATAL << "ERROR: Unsupported reference input file " << referenceFile
-                        << " of type " << BAM::DataSet::TypeToName(dsRef.Type());
-            std::exit(EXIT_FAILURE);
+            std::ostringstream os;
+            os << "ERROR: Unsupported reference input file " << referenceFile << " of type "
+               << BAM::DataSet::TypeToName(dsRef.Type());
+            throw AbortException(os.str());
         }
         const auto fastaFiles = dsRef.FastaFiles();
         if (fastaFiles.size() != 1) {
-            PBLOG_FATAL << "Only one reference sequence allowed!";
-            std::exit(EXIT_FAILURE);
+            std::ostringstream os;
+            os << "Only one reference sequence allowed!";
+            throw AbortException(os.str());
         }
         reference = fastaFiles.front();
     }
 
     if (DetermineInputFileSuffix(reference) == InputType::FASTQ) {
-        PBLOG_FATAL << "Cannot use FASTQ input as reference. Please use FASTA!";
-        std::exit(EXIT_FAILURE);
+        throw AbortException("Cannot use FASTQ input as reference. Please use FASTA!");
     }
 
     if (args.size() == 3)
@@ -393,17 +387,11 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
         uio.outFile = "-";
 
     if (uio.outFile == "-" && settings.SplitBySample) {
-        PBLOG_FATAL << "Cannot split by sample and use output pipe!";
-        std::exit(EXIT_FAILURE);
+        throw AbortException("Cannot split by sample and use output pipe!");
     }
 
     if (uio.outFile == "-" && settings.CreatePbi) {
-        PBLOG_FATAL << "Cannot generate pbi and use output pipe!";
-        std::exit(EXIT_FAILURE);
-    }
-
-    if (uio.outFile == "-" && settings.NoBAI) {
-        PBLOG_WARN << "Option --no-bai has no effect when using an output pipe!";
+        throw AbortException("Cannot generate pbi and use output pipe!");
     }
 
     if (args.size() == 3) {
@@ -412,17 +400,12 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
         uio.isToXML = outExt == "xml";
         uio.isToJson = outExt == "json";
 
-        // if ((uio.isFastaInput || uio.isFastqInput) && uio.isToXML) {
-        //     PBLOG_FATAL << "Cannot create dataset output from fastx input. Please use a XML input "
-        //                    "file containing BAM files for XML output.";
-        //     std::exit(EXIT_FAILURE);
-        // }
         if (uio.isToXML && (boost::algorithm::ends_with(outlc, ".subreadset.xml") ||
                             boost::algorithm::ends_with(outlc, ".consensusreadset.xml") ||
                             boost::algorithm::ends_with(outlc, ".transcriptset.xml"))) {
-            PBLOG_FATAL << "Output has to be an alignment dataset! Please use alignmentset.xml, "
-                           "consensusalignmentset.xml, or transcriptalignmentset.xml!";
-            std::exit(EXIT_FAILURE);
+            throw AbortException(
+                "Output has to be an alignment dataset! Please use alignmentset.xml, "
+                "consensusalignmentset.xml, or transcriptalignmentset.xml!");
         }
 
         const bool toAlignmentSet = boost::algorithm::ends_with(outlc, ".alignmentset.xml");
@@ -433,9 +416,9 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
 
         if (uio.isToXML && !toAlignmentSet && !toConsensusAlignmentSet &&
             !toTranscriptAlignmentSet) {
-            PBLOG_FATAL << "Output is XML, but of unknown type! Please use alignmentset.xml, "
-                           "consensusalignmentset.xml, or transcriptalignmentset.xml";
-            std::exit(EXIT_FAILURE);
+            throw AbortException(
+                "Output is XML, but of unknown type! Please use alignmentset.xml, "
+                "consensusalignmentset.xml, or transcriptalignmentset.xml");
         }
 
         if (uio.isFromXML && uio.isToXML) {
@@ -448,23 +431,19 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
                 outputTypeProvided = "TranscriptSet";
 
             if (uio.isFromSubreadset && !toAlignmentSet) {
-                PBLOG_FATAL << "Unsupported dataset combination! Input SubreadSet with output "
-                            << outputTypeProvided
-                            << "! Please use AlignmentSet as output XML type!";
-                std::exit(EXIT_FAILURE);
+                throw AbortException(
+                    "Unsupported dataset combination! Input SubreadSet with output " +
+                    outputTypeProvided + "! Please use AlignmentSet as output XML type!");
             }
             if (uio.isFromConsensuReadSet && !toConsensusAlignmentSet) {
-                PBLOG_FATAL
-                    << "Unsupported dataset combination! Input ConsensusReadSet with output "
-                    << outputTypeProvided
-                    << "! Please use ConsensusAlignmentSet as output XML type!";
-                std::exit(EXIT_FAILURE);
+                throw AbortException(
+                    "Unsupported dataset combination! Input ConsensusReadSet with output " +
+                    outputTypeProvided + "! Please use ConsensusAlignmentSet as output XML type!");
             }
             if (uio.isFromTranscriptSet && !toTranscriptAlignmentSet) {
-                PBLOG_FATAL << "Unsupported dataset combination! Input TranscriptSet with output "
-                            << outputTypeProvided
-                            << "! Please use TranscriptAlignmentSet as output XML type!";
-                std::exit(EXIT_FAILURE);
+                throw AbortException(
+                    "Unsupported dataset combination! Input TranscriptSet with output " +
+                    outputTypeProvided + "! Please use TranscriptAlignmentSet as output XML type!");
             }
         }
 
@@ -483,19 +462,23 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
     } else if (args.size() == 2) {
         uio.outPrefix = '-';
     } else if (args.size() == 1 || args.size() > 3) {
-        PBLOG_FATAL << "Incorrect number of arguments. Accepted are at most three!";
-        std::exit(EXIT_FAILURE);
+        throw AbortException("Incorrect number of arguments. Accepted are at most three!");
     }
 
     uio.inFile = inputFile;
     uio.refFile = reference;
+
+    if (settings.Sort && settings.BamIdx != BamIndex::_from_index(0)) {
+        uio.bamIndex = settings.BamIdx;
+    }
     return uio;
 }
 
 std::string InputOutputUX::CreateDataSet(const BAM::DataSet& dsIn, const std::string& refFile,
                                          const bool isFromXML, const std::string& outputFile,
                                          const std::string& origOutputFile, std::string* id,
-                                         size_t numAlignments, size_t numBases)
+                                         size_t numAlignments, size_t numBases,
+                                         const BamIndex& bamIndex)
 {
     using BAM::DataSet;
     using TypeEnum = BAM::DataSet::TypeEnum;
@@ -569,9 +552,9 @@ std::string InputOutputUX::CreateDataSet(const BAM::DataSet& dsIn, const std::st
         } else if (boost::algorithm::ends_with(origOutputFile, ".json")) {
             SetFromDatasetInput();
         } else {
-            PBLOG_FATAL << "Unknown file ending. Please use alignmentset.xml, "
-                           "consensusalignmentset.xml, or transcriptalignmentset.xml!";
-            std::exit(EXIT_FAILURE);
+            throw AbortException(
+                "Unknown file ending. Please use alignmentset.xml, "
+                "consensusalignmentset.xml, or transcriptalignmentset.xml!");
         }
     }
     DataSet ds(outputEnum);
@@ -591,6 +574,22 @@ std::string InputOutputUX::CreateDataSet(const BAM::DataSet& dsIn, const std::st
     BAM::ExternalResource resource(metatype, outputFile + ".bam");
     BAM::FileIndex pbi("PacBio.Index.PacBioIndex", outputFile + ".bam.pbi");
     resource.FileIndices().Add(pbi);
+
+    switch (bamIndex) {
+        case BamIndex::BAI: {
+            BAM::FileIndex index("PacBio.Index.BamIndex", outputFile + ".bam.bai");
+            resource.FileIndices().Add(index);
+            break;
+        }
+        case BamIndex::CSI: {
+            BAM::FileIndex index("PacBio.Index.CsiIndex", outputFile + ".bam.csi");
+            resource.FileIndices().Add(index);
+            break;
+        }
+        default:
+            break;
+    }
+
     BAM::ExternalResource refResource("PacBio.ReferenceFile.ReferenceFastaFile", refFile);
     resource.ExternalResources().Add(refResource);
     ds.ExternalResources().Add(resource);
@@ -632,8 +631,7 @@ std::string InputOutputUX::OutPrefix(const std::string& outputFile)
     } else if (outputExtLc == "json") {
         boost::ireplace_last(prefix, ".json", "");
     } else {
-        PBLOG_FATAL << "Unknown file extension for output file: " << outputFile;
-        std::exit(EXIT_FAILURE);
+        throw AbortException("Unknown file extension for output file: " + outputFile);
     }
     return prefix;
 }

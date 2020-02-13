@@ -8,6 +8,8 @@
   0
   $ ls -alh $CRAMTMP/unsorted.bam.bai 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/unsorted.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/unsorted.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/unsorted.json 2> /dev/null | wc -l | tr -d ' '
@@ -22,6 +24,8 @@
   1
   $ ls -alh $CRAMTMP/unsorted_pbi.bam.bai 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/unsorted_pbi.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/unsorted_pbi.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/unsorted_pbi.json 2> /dev/null | wc -l | tr -d ' '
@@ -34,17 +38,22 @@
   0
   $ ls -alh $CRAMTMP/sorted.bam.bai 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/sorted.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/sorted.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/sorted.json 2> /dev/null | wc -l | tr -d ' '
   0
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sorted_nobai.bam --sort --no-bai
+  *Overriding --bam-index with --no-bai! (glob)
   $ samtools view -H $CRAMTMP/sorted_nobai.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/sorted_nobai.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/sorted_nobai.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/sorted_nobai.bam.csi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/sorted_nobai.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
@@ -58,9 +67,25 @@
   1
   $ ls -alh $CRAMTMP/sorted_pbi.bam.bai 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/sorted_pbi.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/sorted_pbi.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/sorted_pbi.json 2> /dev/null | wc -l | tr -d ' '
+  0
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sorted_csi.bam --sort --bam-index CSI
+  $ samtools view -H $CRAMTMP/sorted_csi.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/sorted_csi.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/sorted_csi.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/sorted_csi.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/sorted_csi.*.xml 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/sorted_csi.json 2> /dev/null | wc -l | tr -d ' '
   0
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/unsortedds.alignmentset.xml 2> $CRAMTMP/unsortedds.err || echo $?
@@ -71,6 +96,8 @@
   $ ls -alh $CRAMTMP/unsortedds.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/unsortedds.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/unsortedds.bam.csi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/unsortedds.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
@@ -86,9 +113,57 @@
   1
   $ ls -alh $CRAMTMP/sortedds.bam.bai 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/sortedds.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/sortedds.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/sortedds.json 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ grep PacBio.Index.PacBioIndex $CRAMTMP/sortedds.*.xml
+  *MetaType="PacBio.Index.PacBioIndex" ResourceId="*.bam.pbi"* (glob)
+  $ grep PacBio.Index.BamIndex $CRAMTMP/sortedds.*.xml
+  *MetaType="PacBio.Index.BamIndex" ResourceId="*.bam.bai"* (glob)
+  $ grep PacBio.Index.CsiIndex $CRAMTMP/sortedds.*.xml | wc -l | tr -d ' '
+  0
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sorteddscsi.alignmentset.xml --sort --bam-index CSI 2> $CRAMTMP/sorteddscsi.err || echo $?
+  $ cut -f 8 -d '|' < $CRAMTMP/sorteddscsi.err
+  - Input is not a dataset, but output is. Please use dataset input for full SMRT Link compatibility!
+  $ samtools view -H $CRAMTMP/sorteddscsi.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/sorteddscsi.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/sorteddscsi.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/sorteddscsi.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/sorteddscsi.*.xml 2> /dev/null | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/sorteddscsi.json 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ grep PacBio.Index.BamIndex $CRAMTMP/sorteddscsi.*.xml | wc -l | tr -d ' '
+  0
+  $ grep PacBio.Index.CsiIndex $CRAMTMP/sorteddscsi.*.xml
+  *MetaType="PacBio.Index.CsiIndex" ResourceId="*.bam.csi"* (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sorteddsnoidx.alignmentset.xml --sort --bam-index NONE 2> $CRAMTMP/sorteddsnoidx.err || echo $?
+  $ cut -f 8 -d '|' < $CRAMTMP/sorteddsnoidx.err
+  - Input is not a dataset, but output is. Please use dataset input for full SMRT Link compatibility!
+  $ samtools view -H $CRAMTMP/sorteddsnoidx.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/sorteddsnoidx.bam.pbi 2> /dev/null | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/sorteddsnoidx.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/sorteddsnoidx.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/sorteddsnoidx.*.xml 2> /dev/null | wc -l | tr -d ' '
+  1
+  $ ls -alh $CRAMTMP/sorteddsnoidx.json 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ grep PacBio.Index.BamIndex $CRAMTMP/sorteddsnoidx.*.xml | wc -l | tr -d ' '
+  0
+  $ grep PacBio.Index.CsiIndex $CRAMTMP/sorteddsnoidx.*.xml | wc -l | tr -d ' '
   0
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/unsortedjs.json
@@ -97,6 +172,8 @@
   $ ls -alh $CRAMTMP/unsortedjs.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/unsortedjs.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/unsortedjs.bam.csi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/unsortedjs.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
@@ -110,6 +187,8 @@
   1
   $ ls -alh $CRAMTMP/sortedjs.bam.bai 2> /dev/null | wc -l | tr -d ' '
   1
+  $ ls -alh $CRAMTMP/sortedjs.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/sortedjs.*.xml 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/sortedjs.json 2> /dev/null | wc -l | tr -d ' '
@@ -121,6 +200,8 @@
   $ ls -alh $CRAMTMP/unsortedoutstream.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/unsortedoutstream.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/unsortedoutstream.bam.csi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/unsortedoutstream.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
@@ -134,6 +215,8 @@
   0
   $ ls -alh $CRAMTMP/sortedoutstream.bam.bai 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/sortedoutstream.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/sortedoutstream.*.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/sortedoutstream.json 2> /dev/null | wc -l | tr -d ' '
@@ -142,7 +225,7 @@
   $ $__PBTEST_PBMM2_EXE align $TESTDIR/data/median.subreadset.xml $REF $CRAMTMP/out_sub.subreadset.xml 2> $CRAMTMP/out_sub.err || echo $?
   1
   $ cut -f 8 -d '|' < $CRAMTMP/out_sub.err
-  - Output has to be an alignment dataset! Please use alignmentset.xml, consensusalignmentset.xml, or transcriptalignmentset.xml!
+  *Output has to be an alignment dataset! Please use alignmentset.xml, consensusalignmentset.xml, or transcriptalignmentset.xml!* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $TESTDIR/data/median.subreadset.xml $REF $CRAMTMP/out_sub.alignmentset.xml
   $ ls -alh $CRAMTMP/out_sub.bam 2> /dev/null | wc -l | tr -d ' '
@@ -150,6 +233,8 @@
   $ ls -alh $CRAMTMP/out_sub.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/out_sub.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/out_sub.bam.csi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/out_sub.alignmentset.xml 2> /dev/null | wc -l | tr -d ' '
   1
@@ -166,6 +251,8 @@
   $ ls -alh $CRAMTMP/out_cons.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
   $ ls -alh $CRAMTMP/out_cons.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/out_cons.bam.csi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/out_cons.alignmentset.xml 2> /dev/null | wc -l | tr -d ' '
   0
@@ -185,6 +272,8 @@
   1
   $ ls -alh $CRAMTMP/out_trans.bam.bai 2> /dev/null | wc -l | tr -d ' '
   0
+  $ ls -alh $CRAMTMP/out_trans.bam.csi 2> /dev/null | wc -l | tr -d ' '
+  0
   $ ls -alh $CRAMTMP/out_trans.alignmentset.xml 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/out_trans.consensusalignmentset.xml 2> /dev/null | wc -l | tr -d ' '
@@ -197,17 +286,17 @@
   $ $__PBTEST_PBMM2_EXE align $TESTDIR/data/median.subreadset.xml $REF $CRAMTMP/out_cons_fail.consensusalignmentset.xml 2> $CRAMTMP/out_cons_fail.err || echo $?
   1
   $ cut -f 8 -d '|' < $CRAMTMP/out_cons_fail.err
-  - Unsupported dataset combination! Input SubreadSet with output ConsensusReadSet! Please use AlignmentSet as output XML type!
+  *Unsupported dataset combination! Input SubreadSet with output ConsensusReadSet! Please use AlignmentSet as output XML type!* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $TESTDIR/data/median.consensusreadset.xml $REF $CRAMTMP/out_trans_fail.transcriptalignmentset.xml 2> $CRAMTMP/out_trans_fail.err || echo $?
   1
   $ cut -f 8 -d '|' < $CRAMTMP/out_trans_fail.err
-  - Unsupported dataset combination! Input ConsensusReadSet with output TranscriptSet! Please use ConsensusAlignmentSet as output XML type!
+  *Unsupported dataset combination! Input ConsensusReadSet with output TranscriptSet! Please use ConsensusAlignmentSet as output XML type!* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $TESTDIR/data/median.transcriptset.xml $REF $CRAMTMP/out_align_fail.alignmentset.xml 2> $CRAMTMP/out_align_fail.err || echo $?
   1
   $ cut -f 8 -d '|' < $CRAMTMP/out_align_fail.err
-  - Unsupported dataset combination! Input TranscriptSet with output AlignmentSet! Please use TranscriptAlignmentSet as output XML type!
+  *Unsupported dataset combination! Input TranscriptSet with output AlignmentSet! Please use TranscriptAlignmentSet as output XML type!* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $TESTDIR/data/median.subreadset.xml $REF $CRAMTMP/out_json_sub.json
   $ grep fileTypeId $CRAMTMP/out_json_sub.json | tr -d ' '
@@ -232,7 +321,7 @@
   $ $__PBTEST_PBMM2_EXE align $TESTDIR/data/median.transcriptset.xml $REF $CRAMTMP/out_xml_upper.XML 2> $CRAMTMP/out_xml_upper.err  || echo $?
   1
   $ cut -f 8 -d '|' < $CRAMTMP/out_xml_upper.err
-  - Output is XML, but of unknown type! Please use alignmentset.xml, consensusalignmentset.xml, or transcriptalignmentset.xml
+  *Output is XML, but of unknown type! Please use alignmentset.xml, consensusalignmentset.xml, or transcriptalignmentset.xml* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sorted.bam --sort -j 2 -J 2 -m 100M --log-level INFO 2>&1| grep INFO
   *Using 2 threads for alignments, 2 threads for sorting, and 200M bytes RAM for sorting. (glob)
@@ -275,8 +364,8 @@
   *Trying to allocate more memory for sorting* (glob)
   [1]
 
-  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sort_percentage_4.bam -j 8 --sort --log-level INFO 2>&1 | grep "threads for alignments"
-  *Using 6 threads for alignments, 2 threads for sorting, and 1.5G bytes RAM for sorting.* (glob)
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sort_percentage_4.bam -j 4 --sort --log-level INFO 2>&1 | grep "threads for alignments"
+  *Using 3 threads for alignments, 1 threads for sorting, and 768M bytes RAM for sorting.* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/default_parameters.bam --log-level DEBUG 2>&1| grep DEBUG
   *Minimap2 parameters* (glob)
@@ -292,9 +381,10 @@
   *Z-drop                 : 400 (glob)
   *Z-drop inv             : 50 (glob)
   *Bandwidth              : 2000 (glob)
+  *Max gap                : 5000 (glob)
   *Long join flank ratio  : 0.5 (glob)
 
-  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/default_overrides.bam --log-level DEBUG -o 5 -O 56 -e 4 -E 1 -k 19 -w 10 -A 2 -B 5 -z 400 -Z 50 -r 2000 -L 0.4 2>&1| grep DEBUG
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/default_overrides.bam --log-level DEBUG -o 5 -O 56 -e 4 -E 1 -k 19 -w 10 -A 2 -B 5 -z 400 -Z 50 -r 1000 -L 0.4 -g 10000 2>&1| grep DEBUG
   *Minimap2 parameters* (glob)
   *Kmer size              : 19 (glob)
   *Minimizer window size  : 10 (glob)
@@ -307,8 +397,47 @@
   *Mismatch penalty       : 5 (glob)
   *Z-drop                 : 400 (glob)
   *Z-drop inv             : 50 (glob)
-  *Bandwidth              : 2000 (glob)
+  *Bandwidth              : 1000 (glob)
+  *Max gap                : 10000 (glob)
   *Long join flank ratio  : 0.4 (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/ccs_parameters.bam --log-level DEBUG --preset CCS 2>&1| grep DEBUG
+  *Minimap2 parameters* (glob)
+  *Kmer size              : 19 (glob)
+  *Minimizer window size  : 10 (glob)
+  *Homopolymer compressed : false (glob)
+  *Gap open 1             : 5 (glob)
+  *Gap open 2             : 56 (glob)
+  *Gap extension 1        : 4 (glob)
+  *Gap extension 2        : 1 (glob)
+  *Match score            : 2 (glob)
+  *Mismatch penalty       : 5 (glob)
+  *Z-drop                 : 400 (glob)
+  *Z-drop inv             : 50 (glob)
+  *Bandwidth              : 2000 (glob)
+  *Max gap                : 5000 (glob)
+  *Long join flank ratio  : 0.5 (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/ccs_parameters.bam --log-level DEBUG --preset HiFi 2>&1| grep DEBUG
+  *Minimap2 parameters* (glob)
+  *Kmer size              : 19 (glob)
+  *Minimizer window size  : 10 (glob)
+  *Homopolymer compressed : false (glob)
+  *Gap open 1             : 5 (glob)
+  *Gap open 2             : 56 (glob)
+  *Gap extension 1        : 4 (glob)
+  *Gap extension 2        : 1 (glob)
+  *Match score            : 2 (glob)
+  *Mismatch penalty       : 5 (glob)
+  *Z-drop                 : 400 (glob)
+  *Z-drop inv             : 50 (glob)
+  *Bandwidth              : 2000 (glob)
+  *Max gap                : 5000 (glob)
+  *Long join flank ratio  : 0.5 (glob)
+
+  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/ccs_parameters.bam --preset foo 2>&1
+  *Could not find --preset foo* (glob)
+  [1]
 
 Test bam_sort
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sorted_small.bam --sort -J 1 -m 1M --log-level INFO --log-file $CRAMTMP/sorted_small.txt
@@ -326,6 +455,8 @@ Test that median filter does not fail
   $ ls -alh $CRAMTMP/rle.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/rle.bam.bai 2> /dev/null | wc -l | tr -d ' '
+  0
+  $ ls -alh $CRAMTMP/rle.bam.csi 2> /dev/null | wc -l | tr -d ' '
   0
   $ ls -alh $CRAMTMP/rle.*.xml 2> /dev/null | wc -l | tr -d ' '
   0

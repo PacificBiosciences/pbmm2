@@ -1,362 +1,407 @@
 // Author: Armin Töpfer
 
+#include "AlignSettings.h"
+
 #include <unistd.h>
+
+#include <cmath>
 #include <iterator>
 #include <map>
+#include <sstream>
 #include <string>
 #include <vector>
 
-#include <pbcopper/cli/Parser.h>
+#include <pbcopper/cli2/internal/BuiltinOptions.h>
 #include <boost/algorithm/string.hpp>
+
+#include "AbortException.h"
 
 #include <Pbmm2Version.h>
 
-#include "AlignSettings.h"
-
 namespace PacBio {
 namespace minimap2 {
+namespace {
+
+int64_t SizeStringToIntMG(const std::string& s)
+{
+    if (isalpha(s[s.size() - 1])) {
+        int64_t size = std::stoll(s.substr(0, s.size() - 1));
+        switch (s[s.size() - 1]) {
+            case 'm':
+            case 'M':
+                size <<= 20;
+                break;
+            case 'g':
+            case 'G':
+                size <<= 30;
+                break;
+            default:
+                std::ostringstream os;
+                os << "Unknown size multiplier " << s[s.size() - 1];
+                throw AbortException(os.str());
+        }
+        return size;
+    } else {
+        return std::stoll(s);
+    }
+}
+
+}  // namespace
+
 namespace OptionNames {
 // clang-format off
-static const CLI::Option HelpOption{
-    "help",
-    {"h","help"},
-    "Output this help.",
-    CLI::Option::BoolType()
-};
-static const CLI::Option VersionOption{
-    "version",
-    {"version"},
-    "Output version information.",
-    CLI::Option::BoolType()
-};
-static const CLI::Option LogLevelOption{
-    "log_level",
-    {"log-level"},
-    R"(Set log level: "TRACE", "DEBUG", "INFO", "WARN", "FATAL".)",
-    CLI::Option::StringType("WARN"),
-    {"TRACE", "DEBUG", "INFO", "WARN", "FATAL"}
-};
-const PlainOption LogFile{
-    "log_file",
-    { "log-file" },
-    "Log to a File",
-    "Log to a file, instead of stdout.",
-    CLI::Option::StringType("")
-};
-const PlainOption NumThreads{
-    "numthreads",
-    { "j", "alignment-threads" },
-    "Number of Threads",
-    "Number of threads used for alignment, 0 means autodetection.",
-    CLI::Option::IntType(0)
-};
-const PlainOption MinPercConcordance{
-    "min_perc_concordance",
-    { "c", "min-concordance-perc" },
-    "Minimum Concordance (%)",
-    "Minimum alignment concordance in percent.",
-    CLI::Option::IntType(70)
-};
-const PlainOption MinAlignmentLength{
-    "minalnlength",
-    { "l", "min-length" },
-    "Minimum Length (bp)",
-    "Minimum mapped read length in basepair.",
-    CLI::Option::IntType(50)
-};
-const PlainOption SampleName{
-    "biosample_name",
-    { "sample" },
-    "Sample Name",
-    "Sample name for all read groups. Defaults, in order of precedence: SM field in input read group, biosample name, well sample name, \"UnnamedSample\".",
-    CLI::Option::StringType()
-};
-const PlainOption AlignModeOpt{
-    "align_mode",
-    { "preset" },
-    "Alignment mode",
-    "Set alignment mode:\n  - \"SUBREAD\" -k 19 -w 10 -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000 -L 0.5\n"
-    "  - \"CCS\" -k 19 -w 10 -u -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50 -r 2000 -L 0.5\n"
-    "  - \"ISOSEQ\" -k 15 -w 5 -u -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -C 5 -r 200000 -G 200000 -L 0.5\n"
-    "  - \"UNROLLED\" -k 15 -w 15 -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 2000 -L 0.5\n"
-    "Default",
-    CLI::Option::StringType("SUBREAD"),
-    {"SUBREAD", "CCS", "ISOSEQ", "UNROLLED"}
-};
-const PlainOption ChunkSize{
-    "chunk_size",
-    { "chunk-size" },
-    "Chunk Size",
-    "Process N records per chunk.",
-    CLI::Option::IntType(100)
-};
-const PlainOption Kmer{
-    "kmer_size",
-    { "k" },
-    "K-mer Size",
-    "k-mer size (no larger than 28).",
-    CLI::Option::IntType(-1)
-};
-const PlainOption MinimizerWindowSize{
-    "minimizer_window_size",
-    { "w" },
-    "Minimizer Window Size",
-    "Minimizer window size.",
-    CLI::Option::IntType(-1)
-};
-const PlainOption GapOpen1{
-    "gap_open_1",
-    { "o", "gap-open-1" },
-    "Gap Open Penalty 1",
-    "Gap open penalty 1.",
-    CLI::Option::IntType(-1)
-};
-const PlainOption GapOpen2{
-    "gap_open_2",
-    { "O", "gap-open-2" },
-    "Gap Open Penalty 2",
-    "Gap open penalty 2.",
-    CLI::Option::IntType(-1)
-};
-const PlainOption GapExtension1{
-    "gap_extension_1",
-    { "e", "gap-extend-1" },
-    "Gap Extension Penalty 1",
-    "Gap extension penalty 1.",
-    CLI::Option::IntType(-1)
-};
-const PlainOption GapExtension2{
-    "gap_extension_ins",
-    { "E", "gap-extend-2" },
-    "Gap Extension Penalty 2",
-    "Gap extension penalty 2.",
-    CLI::Option::IntType(-1)
-};
-const PlainOption MatchScore{
-    "match_score",
-    { "A" },
-    "Matching Score",
-    "Matching score.",
-    CLI::Option::IntType(-1)
-};
-const PlainOption MismatchPenalty{
-    "mismatch_penalty",
-    { "B" },
-    "Mismatch Penalty",
-    "Mismatch penalty.",
-    CLI::Option::IntType(-1)
-};
-const PlainOption Zdrop{
-    "zdrop_score",
-    { "z" },
-    "Z-Drop Score",
-    "Z-drop score.",
-    CLI::Option::IntType(-1)
-};
-const PlainOption ZdropInv{
-    "zdrop_score_ins",
-    { "Z" },
-    "Z-Drop Inversion Score",
-    "Z-drop inversion score.",
-    CLI::Option::IntType(-1)
-};
-const PlainOption Bandwidth{
-    "bandwidth",
-    { "r" },
-    "Bandwidth Used in Chaining and DP-based Alignment",
-    "Bandwidth used in chaining and DP-based alignment.",
-    CLI::Option::IntType(-1)
-};
-const PlainOption MaxIntronLength{
-    "max_intron_length",
-    { "G" },
-    "Max Intron Length (effective in ISOSEQ preset; changing bandwidth)",
-    "Max intron length (changes -r).",
-    CLI::Option::IntType(-1)
-};
-const PlainOption NonCanon{
-    "non_canon",
-    { "C" },
-    "Cost For a Non-Canonical GT-AG Splicing (effective in ISOSEQ preset)",
-    "Cost for a non-canonical GT-AG splicing.",
-    CLI::Option::IntType(-1)
-};
-const PlainOption NoSpliceFlank{
-    "no_splice_flank",
-    { "no-splice-flank" },
-    "Do Not Prefer Splice Flanks GT-AG (effective in ISOSEQ preset)",
-    "Do not prefer splice flanks GT-AG.",
-    CLI::Option::BoolType(false)
-};
-const PlainOption MedianFilter{
-    "median_filter",
-    { "median-filter" },
-    "Pick One Read per ZMW of Median Length",
-    "Pick one read per ZMW of median length.",
-    CLI::Option::BoolType(false)
-};
-const PlainOption Sort{
-    "sort",
-    { "sort" },
-    "Generate sorted BAM file",
-    "Generate sorted BAM file.",
-    CLI::Option::BoolType(false)
-};
-const PlainOption Pbi{
-    "pbi",
-    { "pbi" },
-    "Generate PBI file",
-    "Generate PBI file, only works with --sort.",
-    CLI::Option::BoolType(false)
-};
-const PlainOption SortThreadsTC{
-    "sort_threads_tc",
-    { "sort-threads-perc" },
-    "Percentage of threads used for sorting",
-    "Percentage of threads used exclusively for sorting (absolute number of sort threads is capped at 8).",
-    CLI::Option::IntType(25),
-    JSON::Json(nullptr),
-    CLI::OptionFlags::HIDE_FROM_HELP
-};
-const PlainOption SortThreads{
-    "sort_threads",
-    { "J", "sort-threads" },
-    "Number of threads used for sorting",
-    "Number of threads used for sorting; 0 means 25% of -j, maximum 8.",
-    CLI::Option::IntType(0)
-};
-const PlainOption SortMemory{
-    "sort_memory",
-    { "m", "sort-memory" },
-    "Memory per thread for sorting",
-    "Memory per thread for sorting.",
-    CLI::Option::StringType("768M")
-};
-const PlainOption SortMemoryTC{
-    "sort_memory_tc",
-    { "sort-memory-tc" },
-    "Memory per thread for sorting",
-    "Memory per thread for sorting.",
-    CLI::Option::StringType("4G"),
-    JSON::Json(nullptr),
-    CLI::OptionFlags::HIDE_FROM_HELP
-};
-const PlainOption DisableHPC{
-    "disable_hpc",
-    { "u", "no-kmer-compression" },
-    "Disable Homopolymer-Compressed seeding",
-    "Disable homopolymer-compressed k-mer (compression is active for SUBREAD & UNROLLED presets).",
-    CLI::Option::BoolType(false)
-};
-const PlainOption ZMW{
-    "zmw_mode",
-    { "zmw" },
-    "Process ZMW Reads",
-    "Process ZMW Reads, subreadset.xml input required (activates UNROLLED preset).",
-    CLI::Option::BoolType(false)
-};
-const PlainOption HQRegion{
-    "hq_mode",
-    { "hqregion" },
-    "Process HQ Regions",
-    "Process HQ region of each ZMW, subreadset.xml input required (activates UNROLLED preset).",
-    CLI::Option::BoolType(false)
-};
-const PlainOption Strip{
-    "strip",
-    { "strip" },
-    "Strip Base Tags",
-    "Remove all kinetic and extra QV tags. Output cannot be polished.",
-    CLI::Option::BoolType(false)
-};
-const PlainOption SplitBySample{
-    "split_by_sample",
-    { "split-by-sample" },
-    "Split by Sample",
-    "One output BAM per sample.",
-    CLI::Option::BoolType(false)
-};
-const PlainOption Rg{
-    "rg",
-    { "rg" },
-    "Read group",
-    "Read group header line such as '@RG\\tID:xyz\\tSM:abc'. Only for FASTA/Q inputs.",
-    CLI::Option::StringType()
-};
-const PlainOption CreatePbi{
-    "create_pbi",
-    { "pbi" },
-    "Generate PBI for BAM only output",
-    "Generate PBI for BAM only output.",
-    CLI::Option::BoolType(false),
-    JSON::Json(nullptr),
-    CLI::OptionFlags::HIDE_FROM_HELP
-};
-const PlainOption LongJoinFlankRatio{
-    "long_join_flank_ratio",
-    { "L", "lj-min-ratio" },
-    "Long Join Flank Ratio",
-    "Long join flank ratio.",
-    CLI::Option::FloatType(-1)
-};
-const PlainOption NoBAI{
-    "no_bai",
-    { "no-bai" },
-    "Omit BAI Generation",
-    "Omit BAI generation for sorted output.",
-    CLI::Option::BoolType(false)
-};
-const PlainOption NoTrimming{
-    "disable_repeated_matches_trimming",
-    { "no-rmt" },
-    "No Repeated Matches Trimming",
-    "Disable repeated matches trimming.",
-    CLI::Option::BoolType(false),
-    JSON::Json(nullptr),
-    CLI::OptionFlags::HIDE_FROM_HELP
-};
-const PlainOption OutputUnmapped{
-    "output_unmapped",
-    { "unmapped" },
-    "Output Unmapped Records",
-    "Include unmapped records in output.",
-    CLI::Option::BoolType(false)
-};
-const PlainOption TCOverrides{
-    "tc_overrides",
-    { "tc-overrides" },
-    "Override Options",
-    "Space-separated list of arguments to pbmm2 align. Allowed arguments: k, w, u, A, B, z, Z, r, o, O, e, E, L.",
-    CLI::Option::StringType(),
-    JSON::Json(nullptr),
-    CLI::OptionFlags::HIDE_FROM_HELP
-};
-const PlainOption MaxNumAlns{
-    "best_n",
-    { "N", "best-n" },
-    "Max Alignments per Read",
-    "Output at maximum N alignments for each read, 0 means no maximum.",
-    CLI::Option::IntType(0)
-};
-const PlainOption CompressSequenceHomopolymers{
-    "compress",
-    { "collapse-homopolymers" },
-    "",
-    "Collapse homopolymers in reads and reference.",
-    CLI::Option::BoolType(false)
-};
+
+const CLI_v2::Option MinPercConcordance{
+R"({
+    "names" : ["c", "min-concordance-perc"],
+    "description" : "Minimum alignment concordance in percent.",
+    "type" : "double",
+    "default" : 70
+})"};
+
+const CLI_v2::Option MinPercIdentity{
+R"({
+    "names" : ["x", "min-id-perc"],
+    "description" : "Minimum sequence identity in percent.",
+    "type" : "double",
+    "default" : 0
+})"};
+
+const CLI_v2::Option MinPercIdentityGapComp{
+R"({
+    "names" : ["y", "min-gap-comp-id-perc"],
+    "description" : "Minimum gap compressed sequence identity in percent.",
+    "type" : "double",
+    "default" : 0
+})"};
+
+const CLI_v2::Option MinAlignmentLength{
+R"({
+    "names" : ["l", "min-length"],
+    "description" : "Minimum mapped read length in basepairs.",
+    "type" : "int",
+    "default" : 50
+})"};
+
+const CLI_v2::Option SampleName{
+R"({
+    "names" : ["sample"],
+    "description" : [
+        "Sample name for all read groups. Defaults, in order of precedence:",
+        " SM field in input read group, biosample name, well sample name, \"UnnamedSample\"."
+    ],
+    "type" : "string"
+})"};
+
+const CLI_v2::Option AlignModeOpt{
+R"({
+    "names" : ["preset"],
+    "description" : "Set alignment mode. See below for preset parameter details.",
+    "type" : "string",
+    "choices" : ["SUBREAD", "CCS", "HIFI", "ISOSEQ", "UNROLLED"],
+    "default" : "SUBREAD"
+})"};
+
+const CLI_v2::Option ChunkSize{
+R"({
+    "names" : ["chunk-size"],
+    "description" : "Process N records per chunk.",
+    "type" : "int",
+    "default" : 100
+})"};
+
+const CLI_v2::Option Kmer{
+R"({
+    "names" : ["k"],
+    "description" : "k-mer size (no larger than 28).",
+    "type" : "int",
+    "default" : -1
+})"};
+
+const CLI_v2::Option MinimizerWindowSize{
+R"({
+    "names" : ["w"],
+    "description" : "Minimizer window size.",
+    "type" : "int",
+    "default" : -1
+})"};
+
+const CLI_v2::Option GapOpen1{
+R"({
+    "names" : ["o", "gap-open-1"],
+    "description" : "Gap open penalty 1.",
+    "type" : "int",
+    "default" : -1
+})"};
+
+const CLI_v2::Option GapOpen2{
+R"({
+    "names" : ["O", "gap-open-2"],
+    "description" : "Gap open penalty 2.",
+    "type" : "int",
+    "default" : -1
+})"};
+
+const CLI_v2::Option GapExtension1{
+R"({
+    "names" : ["e", "gap-extend-1"],
+    "description" : "Gap extension penalty 1.",
+    "type" : "int",
+    "default" : -1
+})"};
+
+const CLI_v2::Option GapExtension2{
+R"({
+    "names" : ["E", "gap-extend-2"],
+    "description" : "Gap extension penalty 2.",
+    "type" : "int",
+    "default" : -1
+})"};
+
+const CLI_v2::Option MatchScore{
+R"({
+    "names" : ["A"],
+    "description" : "Matching score.",
+    "type" : "int",
+    "default" : -1
+})"};
+
+const CLI_v2::Option MismatchPenalty{
+R"({
+    "names" : ["B"],
+    "description" : "Mismatch penalty.",
+    "type" : "int",
+    "default" : -1
+})"};
+
+const CLI_v2::Option Zdrop{
+R"({
+    "names" : ["z"],
+    "description" : "Z-drop score.",
+    "type" : "int",
+    "default" : -1
+})"};
+
+const CLI_v2::Option ZdropInv{
+R"({
+    "names" : ["Z"],
+    "description" : "Z-drop inversion score.",
+    "type" : "int",
+    "default" : -1
+})"};
+
+const CLI_v2::Option Bandwidth{
+R"({
+    "names" : ["r"],
+    "description" : "Bandwidth used in chaining and DP-based alignment.",
+    "type" : "int",
+    "default" : -1
+})"};
+
+const CLI_v2::Option MaxIntronLength{
+R"({
+    "names" : ["G"],
+    "description" : "Max intron length (changes -r).",
+    "type" : "int",
+    "default" : -1
+})"};
+
+const CLI_v2::Option NonCanon{
+R"({
+    "names" : ["C"],
+    "description" : "Cost for a non-canonical GT-AG splicing (effective in ISOSEQ preset).",
+    "type" : "int",
+    "default" : -1
+})"};
+
+const CLI_v2::Option NoSpliceFlank{
+R"({
+    "names" : ["no-splice-flank"],
+    "description" : "Do not prefer splice flanks GT-AG (effective in ISOSEQ preset)."
+})"};
+
+const CLI_v2::Option MedianFilter{
+R"({
+    "names" : ["median-filter"],
+    "description" : "Pick one read per ZMW of median length."
+})"};
+
+const CLI_v2::Option Sort{
+R"({
+    "names" : ["sort"],
+    "description" : "Generate sorted BAM file."
+})"};
+
+const CLI_v2::Option SortThreadsTC{
+R"({
+    "names" : ["sort-threads-perc"],
+    "description" : [
+        "Percentage of threads used exclusively for sorting (absolute number of ",
+        "sort threads is capped at 8)."
+    ],
+    "type" : "int",
+    "default" : 25,
+    "hidden" : true
+})"};
+
+const CLI_v2::Option SortThreads{
+R"({
+    "names" : ["J", "sort-threads"],
+    "description" : "Number of threads used for sorting; 0 means 25% of -j, maximum 8.",
+    "type" : "int",
+    "default" : 0
+})"};
+
+const CLI_v2::Option SortMemory{
+R"({
+    "names" : ["m", "sort-memory"],
+    "description" : "Memory per thread for sorting.",
+    "type" : "string",
+    "default" : "768M"
+})"};
+
+const CLI_v2::Option SortMemoryTC{
+R"({
+    "names" : ["sort-memory-tc"],
+    "description" : "Memory per thread for sorting.",
+    "type" : "string",
+    "default" : "4G",
+    "hidden" : true
+})"};
+
+const CLI_v2::Option DisableHPC{
+R"({
+    "names" : ["u", "no-kmer-compression"],
+    "description" : "Disable homopolymer-compressed k-mer (compression is active for SUBREAD & UNROLLED presets)."
+})"};
+
+const CLI_v2::Option ZMW{
+R"({
+    "names" : ["zmw"],
+    "description" : "Process ZMW Reads, subreadset.xml input required (activates UNROLLED preset)."
+})"};
+
+const CLI_v2::Option HQRegion{
+R"({
+    "names" : ["hqregion"],
+    "description" : "Process HQ region of each ZMW, subreadset.xml input required (activates UNROLLED preset)."
+})"};
+
+const CLI_v2::Option Strip{
+R"({
+    "names" : ["strip"],
+    "description" : "Remove all kinetic and extra QV tags. Output cannot be polished."
+})"};
+
+const CLI_v2::Option SplitBySample{
+R"({
+    "names" : ["split-by-sample"],
+    "description" : "One output BAM per sample."
+})"};
+
+const CLI_v2::Option Rg{
+R"({
+    "names" : ["rg"],
+    "description" : "Read group header line such as '@RG\\tID:xyz\\tSM:abc'. Only for FASTA/Q inputs.",
+    "type" : "string"
+})"};
+
+const CLI_v2::Option CreatePbi{
+R"({
+    "names" : ["pbi"],
+    "description" : "Generate PBI for BAM only output.",
+    "hidden" : true
+})"};
+
+const CLI_v2::Option LongJoinFlankRatio{
+R"({
+    "names" : ["L", "lj-min-ratio"],
+    "description" : "Long join flank ratio.",
+    "type" : "float",
+    "default" : -1
+})"};
+
+const CLI_v2::Option NoBAI{
+R"({
+    "names" : ["no-bai"],
+    "description" : "Omit BAI generation for sorted output.",
+    "hidden" : true
+})"};
+
+const CLI_v2::Option NoTrimming{
+R"({
+    "names" : ["no-rmt"],
+    "description" : "Disable repeated matches trimming.",
+    "hidden" : true
+})"};
+
+const CLI_v2::Option OutputUnmapped{
+R"({
+    "names" : ["unmapped"],
+    "description" : "Include unmapped records in output."
+})"};
+
+const CLI_v2::Option MaxNumAlns{
+R"({
+    "names" : ["N", "best-n"],
+    "description" : "Output at maximum N alignments for each read, 0 means no maximum.",
+    "type" : "int",
+    "default" : 0
+})"};
+
+const CLI_v2::Option CompressSequenceHomopolymers{
+R"({
+    "names" : ["collapse-homopolymers"],
+    "description" : "Collapse homopolymers in reads and reference."
+})"};
+
+const CLI_v2::Option MaxGap{
+R"({
+    "names" : ["g"],
+    "description" : "Stop chain enlongation if there are no minimizers in N bp.",
+    "type" : "int",
+    "default" : -1
+})"};
+
+const CLI_v2::Option BamIndexInput{
+R"({
+    "names" : ["bam-index"],
+    "description" : "Generate index for sorted BAM output.",
+    "type" : "string",
+    "choices" : ["NONE", "BAI", "CSI"],
+    "default" : "BAI"
+})"};
+
+const CLI_v2::PositionalArgument Reference {
+R"({
+    "name" : "ref.fa|xml|mmi",
+    "description" : "Reference FASTA, ReferenceSet XML, or Reference Index"
+})"};
+
+const CLI_v2::PositionalArgument Input {
+R"({
+    "name" : "in.bam|xml|fa|fq|gz|fofn",
+    "description" : "Input BAM, DataSet XML, FASTA, or FASTQ"
+})"};
+
+const CLI_v2::PositionalArgument Output {
+R"({
+    "name" : "out.aligned.bam|xml",
+    "description" : "Output BAM or DataSet XML",
+    "required" : false
+})"};
+
 // clang-format on
 }  // namespace OptionNames
 
-AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
+AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
     : CLI(options.InputCommandLine())
     , InputFiles(options.PositionalArguments())
-    , IsFromRTC(options.IsFromRTC())
     , MinPercConcordance(options[OptionNames::MinPercConcordance])
+    , MinPercIdentity(options[OptionNames::MinPercIdentity])
+    , MinPercIdentityGapComp(options[OptionNames::MinPercIdentityGapComp])
     , MinAlignmentLength(options[OptionNames::MinAlignmentLength])
-    , LogFile{options[OptionNames::LogFile].get<decltype(LogFile)>()}
-    , LogLevel{options.LogLevel()}
-    , SampleName{options[OptionNames::SampleName].get<decltype(SampleName)>()}
+    , SampleName(options[OptionNames::SampleName])
     , ChunkSize(options[OptionNames::ChunkSize])
     , MedianFilter(options[OptionNames::MedianFilter])
     , Sort(options[OptionNames::Sort])
@@ -364,9 +409,8 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     , HQRegion(options[OptionNames::HQRegion])
     , Strip(options[OptionNames::Strip])
     , SplitBySample(options[OptionNames::SplitBySample])
-    , Rg(options[OptionNames::Rg].get<decltype(Rg)>())
+    , Rg(options[OptionNames::Rg])
     , CreatePbi(options[OptionNames::CreatePbi])
-    , NoBAI(options[OptionNames::NoBAI])
     , OutputUnmapped(options[OptionNames::OutputUnmapped])
     , CompressSequenceHomopolymers(options[OptionNames::CompressSequenceHomopolymers])
 {
@@ -388,46 +432,17 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     MM2Settings::LongJoinFlankRatio = options[OptionNames::LongJoinFlankRatio];
     MM2Settings::NoTrimming = options[OptionNames::NoTrimming];
     MM2Settings::MaxNumAlns = options[OptionNames::MaxNumAlns];
-    TcOverrides = options[OptionNames::TCOverrides].get<std::string>();
-    if (!TcOverrides.empty()) {
-        std::string tcOverrides = "recursion " + TcOverrides;
-        std::vector<std::string> strs;
-        boost::split(strs, tcOverrides, boost::is_any_of(" "));
-        CLI::Parser parser(AlignSettings::CreateCLI());
-        const auto results = parser.Parse(strs);
-        AlignSettings os(results);
+    MM2Settings::MaxGap = options[OptionNames::MaxGap];
 
-        if (os.Kmer >= 0) MM2Settings::Kmer = os.Kmer;
-        if (os.MinimizerWindowSize >= 0) MM2Settings::MinimizerWindowSize = os.MinimizerWindowSize;
-        if (os.GapOpen1 >= 0) MM2Settings::GapOpen1 = os.GapOpen1;
-        if (os.GapOpen2 >= 0) MM2Settings::GapOpen2 = os.GapOpen2;
-        if (os.GapExtension1 >= 0) MM2Settings::GapExtension1 = os.GapExtension1;
-        if (os.GapExtension2 >= 0) MM2Settings::GapExtension2 = os.GapExtension2;
-        if (os.MatchScore >= 0) MM2Settings::MatchScore = os.MatchScore;
-        if (os.MismatchPenalty >= 0) MM2Settings::MismatchPenalty = os.MismatchPenalty;
-        if (os.Zdrop >= 0) MM2Settings::Zdrop = os.Zdrop;
-        if (os.ZdropInv >= 0) MM2Settings::ZdropInv = os.ZdropInv;
-        if (os.Bandwidth >= 0) MM2Settings::Bandwidth = os.Bandwidth;
-        if (os.DisableHPC) MM2Settings::DisableHPC = os.DisableHPC;
-        if (os.LongJoinFlankRatio >= 0) MM2Settings::LongJoinFlankRatio = os.LongJoinFlankRatio;
-        if (os.NoTrimming) MM2Settings::NoTrimming = os.NoTrimming;
-    }
-
-    if (boost::starts_with(CLI, "recursion")) return;
+    const bool noBai = options[OptionNames::NoBAI];
+    const std::string bamIdx = options[OptionNames::BamIndexInput];
 
     int numAvailableCores = std::thread::hardware_concurrency();
-    int32_t requestedNThreads;
-    std::string requestedMemory;
+    const unsigned int rawRequestedNThreads = options[PacBio::CLI_v2::Builtin::NumThreads];
+    int requestedNThreads =
+        static_cast<int>(rawRequestedNThreads);  // since we're doing subtractions here
+    std::string requestedMemory = options[OptionNames::SortMemory];
     int sortThreadPerc = 25;
-
-    if (IsFromRTC) {
-        Sort = true;
-        requestedNThreads = options.NumProcessors();
-        requestedMemory = options[OptionNames::SortMemoryTC].get<std::string>();
-    } else {
-        requestedNThreads = options[OptionNames::NumThreads];
-        requestedMemory = options[OptionNames::SortMemory].get<std::string>();
-    }
     SortThreads = options[OptionNames::SortThreads];
 
     if (sortThreadPerc > 50)
@@ -473,7 +488,7 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     } else {
         MM2Settings::NumThreads = availableThreads;
     }
-    SortMemory = PlainOption::SizeStringToInt(requestedMemory);
+    SortMemory = SizeStringToIntMG(requestedMemory);
 
     if (!Sort) {
         if (SortThreads != 0)
@@ -521,10 +536,18 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
         MemoryToHumanReadable(availableMemory, &availFloat, &availSuffix);
 
         if (maxMem > availableMemory) {
-            PBLOG_FATAL << "Trying to allocate more memory for sorting (" << maxMemSortFloat
-                        << maxMemSortSuffix << ") than system-wide available (" << availFloat
-                        << availSuffix << ")";
-            std::exit(EXIT_FAILURE);
+            std::ostringstream os;
+            os << "Trying to allocate more memory for sorting (" << maxMemSortFloat
+               << maxMemSortSuffix << ") than system-wide available (" << availFloat << availSuffix
+               << ")";
+            throw AbortException(os.str());
+        }
+
+        BamIdx = BamIndex::_from_string(bamIdx.c_str());
+
+        if (noBai) {
+            PBLOG_WARN << "Overriding --bam-index with --no-bai!";
+            BamIdx = BamIndex::NONE;
         }
     } else {
         PBLOG_INFO << "Using " << MM2Settings::NumThreads << " threads for alignments.";
@@ -533,13 +556,19 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     const std::map<std::string, AlignmentMode> alignModeMap{{"SUBREAD", AlignmentMode::SUBREADS},
                                                             {"ISOSEQ", AlignmentMode::ISOSEQ},
                                                             {"CCS", AlignmentMode::CCS},
+                                                            {"HIFI", AlignmentMode::CCS},
                                                             {"UNROLLED", AlignmentMode::UNROLLED}};
 
-    MM2Settings::AlignMode = alignModeMap.at(options[OptionNames::AlignModeOpt].get<std::string>());
+    const std::string alignModeUsr = options[OptionNames::AlignModeOpt];
+    const std::string alingModeUpr = boost::to_upper_copy(alignModeUsr);
+    if (alignModeMap.find(alingModeUpr) == alignModeMap.cend()) {
+        throw AbortException("Could not find --preset " + alignModeUsr);
+    }
+    MM2Settings::AlignMode = alignModeMap.at(alingModeUpr);
     int inputFilterCounts = ZMW + MedianFilter + HQRegion;
     if (inputFilterCounts > 1) {
-        PBLOG_FATAL << "Options --zmw, --hqregion and --median-filter are mutually exclusive.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException(
+            "Options --zmw, --hqregion and --median-filter are mutually exclusive.");
     }
     if (ZMW || HQRegion) {
         if (ChunkSize != 100)
@@ -550,33 +579,29 @@ AlignSettings::AlignSettings(const PacBio::CLI::Results& options)
     }
 
     if (!Rg.empty() && !boost::contains(Rg, "ID") && !boost::starts_with(Rg, "@RG\t")) {
-        PBLOG_FATAL << "Invalid @RG line. Missing ID field. Please provide following "
-                       "format: '@RG\\tID:xyz\\tSM:abc'";
-        std::exit(EXIT_FAILURE);
+        throw AbortException(
+            "Invalid @RG line. Missing ID field. Please provide following format: "
+            "'@RG\\tID:xyz\\tSM:abc'");
     }
     if (MM2Settings::LongJoinFlankRatio > 1) {
-        PBLOG_FATAL << "Option -L,--lj-min-ratio has to be between a ratio betweem 0 and 1.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException("Option -L,--lj-min-ratio has to be between a ratio betweem 0 and 1.");
     }
 
-    if (!Sort && NoBAI) {
+    if (!Sort && noBai) {
         PBLOG_WARN << "Option --no-bai has no effect without option --sort!";
     }
 
     if (MM2Settings::GapOpen1 < -1 || MM2Settings::GapOpen2 < -1 ||
         MM2Settings::GapExtension1 < -1 || MM2Settings::GapExtension2 < -1) {
-        PBLOG_FATAL << "Gap options have to be strictly positive.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException("Gap options have to be strictly positive.");
     }
     if (MM2Settings::Kmer < -1 || MM2Settings::Kmer == 0 || MM2Settings::MinimizerWindowSize < -1 ||
         MM2Settings::MinimizerWindowSize == 0) {
-        PBLOG_FATAL << "Index parameter -k and -w must be positive.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException("Index parameter -k and -w must be positive.");
     }
 
     if (MM2Settings::MaxNumAlns < 0) {
-        PBLOG_FATAL << "Parameter --best-n, -N must be positive.";
-        std::exit(EXIT_FAILURE);
+        throw AbortException("Parameter --best-n, -N must be positive.");
     }
 
     // Override Sample Name for all Read Groups, disable SplitBySample.
@@ -594,44 +619,41 @@ int32_t AlignSettings::ThreadCount(int32_t n)
     return std::max(1, std::min(m, n));
 }
 
-PacBio::CLI::Interface AlignSettings::CreateCLI()
+PacBio::CLI_v2::Interface AlignSettings::CreateCLI()
 {
-    using Task = PacBio::CLI::ToolContract::Task;
+    PacBio::CLI_v2::Interface i{"pbmm2 align", "Align PacBio reads to reference sequences",
+                                PacBio::Pbmm2FormattedVersion()};
 
-    const auto version = PacBio::Pbmm2Version() + " (commit " + PacBio::Pbmm2GitSha1() + ")";
-    PacBio::CLI::Interface i{"pbmm2_align", "Align PacBio reads to reference sequences", version};
+    i.Example("pbmm2 align ref.referenceset.xml movie.subreadset.xml ref.movie.alignmentset.xml");
 
     // clang-format off
-    i.AddGroup("Basic Options", {
-        OptionNames::HelpOption,
-        OptionNames::VersionOption,
-        OptionNames::LogFile,
-        OptionNames::LogLevelOption,
+    i.AddPositionalArguments({
+        OptionNames::Reference,
+        OptionNames::Input,
+        OptionNames::Output
+    });
+
+    i.AddOptionGroup("Basic Options", {
         OptionNames::ChunkSize,
         OptionNames::NoTrimming,
 
         // hidden
         OptionNames::SortMemoryTC,
         OptionNames::CreatePbi,
-        OptionNames::TCOverrides,
     });
 
-    i.AddGroup("Sorting Options", {
+    i.AddOptionGroup("Sorting Options", {
         OptionNames::Sort,
         OptionNames::SortMemory,
-    });
-
-    i.AddGroup("Threading Options", {
-        OptionNames::NumThreads,
         OptionNames::SortThreads,
         OptionNames::SortThreadsTC,
     });
 
-    i.AddGroup("Parameter Set Options", {
+    i.AddOptionGroup("Parameter Set Options", {
         OptionNames::AlignModeOpt,
     });
 
-    i.AddGroup("General Parameter Override Options", {
+    i.AddOptionGroup("General Parameter Override Options", {
         OptionNames::Kmer,
         OptionNames::MinimizerWindowSize,
         OptionNames::DisableHPC,
@@ -640,9 +662,10 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         OptionNames::Zdrop,
         OptionNames::ZdropInv,
         OptionNames::Bandwidth,
+        OptionNames::MaxGap,
     });
 
-    i.AddGroup("Gap Parameter Override Options (a k-long gap costs min{o+k*e,O+k*E})", {
+    i.AddOptionGroup("Gap Parameter Override Options (a k-long gap costs min{o+k*e,O+k*E})", {
         OptionNames::GapOpen1,
         OptionNames::GapOpen2,
         OptionNames::GapExtension1,
@@ -650,92 +673,51 @@ PacBio::CLI::Interface AlignSettings::CreateCLI()
         OptionNames::LongJoinFlankRatio,
     });
 
-    i.AddGroup("IsoSeq Parameter Override Options", {
+    i.AddOptionGroup("IsoSeq Parameter Override Options", {
         OptionNames::MaxIntronLength,
         OptionNames::NonCanon,
         OptionNames::NoSpliceFlank,
     });
 
-    i.AddGroup("Read Group Options", {
+    i.AddOptionGroup("Read Group Options", {
         OptionNames::SampleName,
         OptionNames::Rg,
     });
 
-    i.AddGroup("Output Options", {
+    i.AddOptionGroup("Identity Filter Options (combined with AND)", {
         OptionNames::MinPercConcordance,
+        OptionNames::MinPercIdentity,
+        OptionNames::MinPercIdentityGapComp,
+    });
+
+    i.AddOptionGroup("Output Options", {
         OptionNames::MinAlignmentLength,
         OptionNames::MaxNumAlns,
         OptionNames::Strip,
         OptionNames::SplitBySample,
-        OptionNames::NoBAI,
         OptionNames::OutputUnmapped,
+        OptionNames::BamIndexInput,
+        OptionNames::NoBAI,
     });
 
-    i.AddGroup("Input Manipulation Options (mutually exclusive)", {
+    i.AddOptionGroup("Input Manipulation Options (mutually exclusive)", {
         OptionNames::MedianFilter,
         OptionNames::ZMW,
         OptionNames::HQRegion,
     });
 
-    i.AddGroup("Sequence Manipulation Options", {
+    i.AddOptionGroup("Sequence Manipulation Options", {
         OptionNames::CompressSequenceHomopolymers
     });
 
-    i.AddGroup("Output File Options", {
+    i.HelpFooter(R"(Alignment modes of --preset:
+    SUBREAD     : -k 19 -w 10    -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50  -r 2000   -L 0.5 -g 5000
+    CCS or HiFi : -k 19 -w 10 -u -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50  -r 2000   -L 0.5 -g 5000
+    ISOSEQ      : -k 15 -w 5  -u -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 200000 -L 0.5 -g 2000 -C 5 -G 200000
+    UNROLLED    : -k 15 -w 15    -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 2000   -L 0.5 -g 10000
+    )");
 
-    });
-
-    i.AddPositionalArguments({
-        { "ref.fa|xml|mmi", "Reference FASTA, ReferenceSet XML, or Reference Index", "<ref.fa|xml|mmi>" },
-        { "in.bam|xml|fa|fq|gz|fofn", "Input BAM, DataSet XML, FASTA, or FASTQ", "<in.bam|xml|fa|fq|gz|fofn>" },
-        { "out.aligned.bam|xml", "Output BAM or DataSet XML", "[out.aligned.bam|xml]" }
-    });
-
-    const std::string id = "mapping.tasks.pbmm2_align";
-    Task tcTask(id);
-    tcTask.NumProcessors(Task::MAX_NPROC);
-    tcTask.AddOption(OptionNames::MinPercConcordance);
-    tcTask.AddOption(OptionNames::MinAlignmentLength);
-    tcTask.AddOption(OptionNames::SortMemoryTC);
-    tcTask.AddOption(OptionNames::SampleName);
-    tcTask.AddOption(OptionNames::ZMW);
-    tcTask.AddOption(OptionNames::HQRegion);
-    tcTask.AddOption(OptionNames::MedianFilter);
-    tcTask.AddOption(OptionNames::Strip);
-    tcTask.AddOption(OptionNames::SplitBySample);
-    tcTask.AddOption(OptionNames::TCOverrides);
-
-    tcTask.InputFileTypes({
-        {
-            "datastore_input",
-            "Datastore",
-            "Datastore containing ONE dataset",
-            "PacBio.FileTypes.json"
-        },
-        {
-            "reference_set",
-            "ReferenceSet",
-            "ReferenceSet or .fasta file",
-            "PacBio.DataSet.ReferenceSet"
-        }
-    });
-
-    tcTask.OutputFileTypes({
-        {
-            "datastore_output",
-            "Datastore",
-            "Datastore containing one dataset",
-            "PacBio.FileTypes.json",
-            "out"
-        },
-    });
-
-    CLI::ToolContract::Driver driver;
-    driver.Exe("pbmm2 align --resolved-tool-contract");
-    CLI::ToolContract::Config tcConfig(tcTask, driver);
-    i.EnableToolContract(tcConfig);
     // clang-format on
-
     return i;
 }
 }  // namespace minimap2
