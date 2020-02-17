@@ -21,7 +21,7 @@ Please refer to our [official pbbioconda page](https://github.com/PacificBioscie
 for information on Installation, Support, License, Copyright, and Disclaimer.
 
 ## Latest Version
-Version **1.1.0**: [Full changelog here](#full-changelog)
+Version **1.2.0**: [Full changelog here](#full-changelog)
 
 ## Usage
 _pbmm2_ offers following tools
