@@ -74,9 +74,6 @@
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam --zmw --hqregion 2>&1; rm -rf $CRAMTMP/fail.bam
   *Options --zmw, --hqregion and --median-filter are mutually exclusive.* (glob)
 
-  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam --sort -J 1 -m 1000G 2>&1; rm -rf $CRAMTMP/fail.bam
-  *Trying to allocate more memory for sorting* (glob)
-
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail.bam --sort -J 1 -m 1000P 2>&1; rm -rf $CRAMTMP/fail.bam
   *Unknown size multiplier P* (glob)
 
