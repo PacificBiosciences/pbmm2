@@ -527,22 +527,6 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
                    << SortThreads << " threads for sorting, and " << maxMemSortFloat
                    << maxMemSortSuffix << " bytes RAM for sorting.";
 
-        auto pages = sysconf(_SC_PHYS_PAGES);
-        auto page_size = sysconf(_SC_PAGE_SIZE);
-        auto availableMemory = pages * page_size;
-
-        float availFloat;
-        std::string availSuffix;
-        MemoryToHumanReadable(availableMemory, &availFloat, &availSuffix);
-
-        if (maxMem > availableMemory) {
-            std::ostringstream os;
-            os << "Trying to allocate more memory for sorting (" << maxMemSortFloat
-               << maxMemSortSuffix << ") than system-wide available (" << availFloat << availSuffix
-               << ")";
-            throw AbortException(os.str());
-        }
-
         BamIdx = BamIndex::_from_string(bamIdx.c_str());
 
         if (noBai) {
