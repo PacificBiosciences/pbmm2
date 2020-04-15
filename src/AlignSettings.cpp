@@ -539,7 +539,6 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
                 *suffix = "G";
             }
         };
-        int64_t maxMem = SortMemory * SortThreads;
         float maxMemSortFloat;
         std::string maxMemSortSuffix;
         MemoryToHumanReadable(SortMemory * SortThreads, &maxMemSortFloat, &maxMemSortSuffix);
