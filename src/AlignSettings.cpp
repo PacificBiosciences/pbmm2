@@ -372,6 +372,23 @@ R"({
     "default" : "BAI"
 })"};
 
+const CLI_v2::Option EnforcedMapping{
+R"({
+    "names" : ["enforced-mapping"],
+    "description" : "Enforce mapping of reads to reference.",
+    "type" : "string",
+    "hidden" : true
+})"};
+
+const CLI_v2::Option MaxSecondaryAlns{
+R"({
+    "names" : ["max-secondary-alns"],
+    "description" : "Retain at most N secondary alignments prior filtering.",
+    "type" : "int",
+    "default" : 5,
+    "hidden" : true
+})"};
+
 const CLI_v2::PositionalArgument Reference {
 R"({
     "name" : "ref.fa|xml|mmi",
@@ -433,6 +450,9 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
     MM2Settings::NoTrimming = options[OptionNames::NoTrimming];
     MM2Settings::MaxNumAlns = options[OptionNames::MaxNumAlns];
     MM2Settings::MaxGap = options[OptionNames::MaxGap];
+    MM2Settings::EnforcedMapping = std::string(options[OptionNames::EnforcedMapping]);
+    if (!MM2Settings::EnforcedMapping.empty()) MM2Settings::NoTrimming = true;
+    MM2Settings::MaxSecondaryAlns = options[OptionNames::MaxSecondaryAlns];
 
     const bool noBai = options[OptionNames::NoBAI];
     const std::string bamIdx = options[OptionNames::BamIndexInput];
@@ -624,6 +644,8 @@ PacBio::CLI_v2::Interface AlignSettings::CreateCLI()
         // hidden
         OptionNames::SortMemoryTC,
         OptionNames::CreatePbi,
+        OptionNames::EnforcedMapping,
+        OptionNames::MaxSecondaryAlns,
     });
 
     i.AddOptionGroup("Sorting Options", {
