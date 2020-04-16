@@ -111,6 +111,7 @@ private:
     void PreInit(const MM2Settings& settings, std::string* preset);
     void PostInit(const MM2Settings& settings, const std::string& preset,
                   const bool postAlignParameter);
+    void SetEnforcedMapping(const std::string& filePath);
 
 private:
     // this is the actual weight-lifting alignment function
@@ -126,6 +127,9 @@ private:
     AlignmentMode alnMode_;
     const bool trimRepeatedMatches_;
     const int32_t maxNumAlns_;
+    bool enforcedMapping_ = false;
+    std::vector<std::string> refNames_;
+    std::unordered_map<std::string, std::vector<std::string>> readToRefsEnforcedMapping_;
 };
 
 // BamRecord API

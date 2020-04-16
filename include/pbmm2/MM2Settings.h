@@ -3,6 +3,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 #include <pbmm2/AlignmentMode.h>
 
@@ -27,10 +28,12 @@ struct MM2Settings
     int32_t NonCanon = -1;
     int32_t MaxNumAlns = 0;
     int32_t MaxGap = -1;
+    int32_t MaxSecondaryAlns = -1;
     bool NoSpliceFlank = false;
     bool DisableHPC = false;
     bool NoTrimming = false;
     float LongJoinFlankRatio = -1;
+    std::string EnforcedMapping;
 };
 }  // namespace minimap2
 }  // namespace PacBio

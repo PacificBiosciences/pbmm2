@@ -4,6 +4,7 @@ pbmm2_cram_test_data = files([
   'biosampleSubreads.t',
   'demuxed.t',
   'empty.t',
+  'enforcedMapping.t',
   'fastxinput.t',
   'idempotence.t',
   'jsoninput.t',
