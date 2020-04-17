@@ -24,6 +24,20 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.  */
 
+// disable all the warnings in this file
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wimplicit-function-declaration"
+#pragma GCC diagnostic ignored "-Wint-conversion"
+#pragma GCC diagnostic ignored "-Wformat"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+
+#if __GNUC__ >= 8
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
+#endif
+
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
@@ -2273,6 +2287,9 @@ void sam_global_args_free(sam_global_args *ga)
     if (ga->reference) free(ga->reference);
 }
 
+#if defined(__clang__) || (__GNUC__ >= 8)
+__attribute__((no_sanitize("address", "undefined")))
+#endif
 int bam_sort(const char *inputName, const char *outputName, const char *tmpDir, bool useTmpDir,
              int numThreads, int merge_threads, size_t memory, int *numFiles, int *numBlocks)
 {
@@ -2320,3 +2337,5 @@ sort_end:
 
     return ret;
 }
+
+#pragma GCC diagnostic pop
