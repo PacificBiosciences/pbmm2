@@ -600,25 +600,27 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
                     return 0.0;
                 }
             };
-            for (const auto& u : unusedOffTargetSupplementary) {
-                const auto& sup = alns[u];
-                const int32_t supLeft = sup.rev ? qlen - sup.qe : sup.qs;
-                const int32_t supRight = sup.rev ? qlen - sup.qs : sup.qe;
-                bool overlapsWithSecondary = false;
-                for (const auto& s : usedSecondaries) {
-                    const auto& sec = alns[s];
-                    const int32_t secLeft = sec.rev ? qlen - sec.qe : sec.qs;
-                    const int32_t secRight = sec.rev ? qlen - sec.qs : sec.qe;
-                    if (CheckOverlap(secLeft, secRight, supLeft, supRight) >= 0.5 ||
-                        (sec.rid == sup.rid &&
-                         CheckOverlap(sec.rs, sec.re, sup.rs, sup.re) > 0.0)) {
-                        overlapsWithSecondary = true;
-                        break;
+            if (!usedSecondaries.empty()) {
+                for (const auto& u : unusedOffTargetSupplementary) {
+                    const auto& sup = alns[u];
+                    const int32_t supLeft = sup.rev ? qlen - sup.qe : sup.qs;
+                    const int32_t supRight = sup.rev ? qlen - sup.qs : sup.qe;
+                    bool overlapsWithSecondary = false;
+                    for (const auto& s : usedSecondaries) {
+                        const auto& sec = alns[s];
+                        const int32_t secLeft = sec.rev ? qlen - sec.qe : sec.qs;
+                        const int32_t secRight = sec.rev ? qlen - sec.qs : sec.qe;
+                        if (CheckOverlap(secLeft, secRight, supLeft, supRight) >= 0.5 ||
+                            (sec.rid == sup.rid &&
+                             CheckOverlap(sec.rs, sec.re, sup.rs, sup.re) > 0.0)) {
+                            overlapsWithSecondary = true;
+                            break;
+                        }
                     }
-                }
-                if (!overlapsWithSecondary) {
-                    ++secondaryAlignStatRecovered;
-                    usedOnTarget.emplace_back(u);
+                    if (!overlapsWithSecondary) {
+                        ++secondaryAlignStatRecovered;
+                        usedOnTarget.emplace_back(u);
+                    }
                 }
             }
 
