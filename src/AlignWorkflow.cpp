@@ -506,9 +506,11 @@ int AlignWorkflow::Runner(const CLI_v2::Results& options)
     for (const auto& l : s.Lengths) {
         maxMappedLength = std::max(maxMappedLength, l);
     }
-    double meanMappedConcordance = 1.0 * s.Concordance / s.NumAlns;
-    double meanIdentity = 1.0 * s.Identity / s.NumAlns;
-    double meanIdentityGapComp = 1.0 * s.IdentityGapComp / s.NumAlns;
+
+    const auto DenomNumAlns = std::max(1, s.NumAlns);  // Avoid dividing by zero later
+    double meanMappedConcordance = 1.0 * s.Concordance / DenomNumAlns;
+    double meanIdentity = 1.0 * s.Identity / DenomNumAlns;
+    double meanIdentityGapComp = 1.0 * s.IdentityGapComp / DenomNumAlns;
 
     std::string pbiTiming;
     if (uio.isToXML || uio.isToJson)
@@ -526,7 +528,7 @@ int AlignWorkflow::Runner(const CLI_v2::Results& options)
     if (settings.MinPercIdentityGapComp > 0)
         PBLOG_INFO << "Mean Gap Compressed Sequence Identity: " << meanIdentityGapComp << "%";
     PBLOG_INFO << "Max Mapped Read Length: " << maxMappedLength;
-    PBLOG_INFO << "Mean Mapped Read Length: " << (1.0 * s.Bases / s.NumAlns);
+    PBLOG_INFO << "Mean Mapped Read Length: " << (1.0 * s.Bases / DenomNumAlns);
 
     PBLOG_INFO << "Index Build/Read Time: " << indexTime.ElapsedTime();
     PBLOG_INFO << "Alignment Time: " << alignmentTime.ElapsedTime();
