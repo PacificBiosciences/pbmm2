@@ -93,7 +93,7 @@ R"({
     "type" : "string"
 })"};
 
-const CLI_v2::Option AlignModeOpt{
+const CLI_v2::Option AlignAlignmentModeOpt{
 R"({
     "names" : ["preset"],
     "description" : "Set alignment mode. See below for preset parameter details.",
@@ -110,7 +110,7 @@ R"({
     "default" : 100
 })"};
 
-const CLI_v2::Option Kmer{
+const CLI_v2::Option AlignKmer{
 R"({
     "names" : ["k"],
     "description" : "k-mer size (no larger than 28).",
@@ -118,7 +118,7 @@ R"({
     "default" : -1
 })"};
 
-const CLI_v2::Option MinimizerWindowSize{
+const CLI_v2::Option AlignMinimizerWindowSize{
 R"({
     "names" : ["w"],
     "description" : "Minimizer window size.",
@@ -269,7 +269,7 @@ R"({
     "hidden" : true
 })"};
 
-const CLI_v2::Option DisableHPC{
+const CLI_v2::Option AlignDisableHPC{
 R"({
     "names" : ["u", "no-kmer-compression"],
     "description" : "Disable homopolymer-compressed k-mer (compression is active for SUBREAD & UNROLLED presets)."
@@ -431,8 +431,8 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
     , OutputUnmapped(options[OptionNames::OutputUnmapped])
     , CompressSequenceHomopolymers(options[OptionNames::CompressSequenceHomopolymers])
 {
-    MM2Settings::Kmer = options[OptionNames::Kmer];
-    MM2Settings::MinimizerWindowSize = options[OptionNames::MinimizerWindowSize];
+    MM2Settings::Kmer = options[OptionNames::AlignKmer];
+    MM2Settings::MinimizerWindowSize = options[OptionNames::AlignMinimizerWindowSize];
     MM2Settings::GapOpen1 = options[OptionNames::GapOpen1];
     MM2Settings::GapOpen2 = options[OptionNames::GapOpen2];
     MM2Settings::GapExtension1 = options[OptionNames::GapExtension1];
@@ -445,7 +445,7 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
     MM2Settings::MaxIntronLength = options[OptionNames::MaxIntronLength];
     MM2Settings::NonCanon = options[OptionNames::NonCanon];
     MM2Settings::NoSpliceFlank = options[OptionNames::NoSpliceFlank];
-    MM2Settings::DisableHPC = options[OptionNames::DisableHPC];
+    MM2Settings::DisableHPC = options[OptionNames::AlignDisableHPC];
     MM2Settings::LongJoinFlankRatio = options[OptionNames::LongJoinFlankRatio];
     MM2Settings::NoTrimming = options[OptionNames::NoTrimming];
     MM2Settings::MaxNumAlns = options[OptionNames::MaxNumAlns];
@@ -562,7 +562,7 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
                                                             {"HIFI", AlignmentMode::CCS},
                                                             {"UNROLLED", AlignmentMode::UNROLLED}};
 
-    const std::string alignModeUsr = options[OptionNames::AlignModeOpt];
+    const std::string alignModeUsr = options[OptionNames::AlignAlignmentModeOpt];
     const std::string alingModeUpr = boost::to_upper_copy(alignModeUsr);
     if (alignModeMap.find(alingModeUpr) == alignModeMap.cend()) {
         throw AbortException("Could not find --preset " + alignModeUsr);
@@ -655,13 +655,13 @@ PacBio::CLI_v2::Interface AlignSettings::CreateCLI()
     });
 
     i.AddOptionGroup("Parameter Set Options", {
-        OptionNames::AlignModeOpt,
+        OptionNames::AlignAlignmentModeOpt,
     });
 
     i.AddOptionGroup("General Parameter Override Options", {
-        OptionNames::Kmer,
-        OptionNames::MinimizerWindowSize,
-        OptionNames::DisableHPC,
+        OptionNames::AlignKmer,
+        OptionNames::AlignMinimizerWindowSize,
+        OptionNames::AlignDisableHPC,
         OptionNames::MatchScore,
         OptionNames::MismatchPenalty,
         OptionNames::Zdrop,

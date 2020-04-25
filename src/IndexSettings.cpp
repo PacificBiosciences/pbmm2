@@ -13,7 +13,7 @@ namespace minimap2 {
 namespace OptionNames {
 // clang-format off
 
-const CLI_v2::Option AlignModeOpt{
+const CLI_v2::Option IndexAlignmentModeOpt{
 R"({
     "names" : ["preset"],
     "description" : "Set alignment mode. See below for preset parameter details.",
@@ -22,7 +22,7 @@ R"({
     "default" : "SUBREAD"
 })"};
 
-const CLI_v2::Option Kmer{
+const CLI_v2::Option IndexKmer{
 R"({
     "names" : ["k"],
     "description" : "k-mer size (no larger than 28).",
@@ -30,7 +30,7 @@ R"({
     "default" : -1
 })"};
 
-const CLI_v2::Option MinimizerWindowSize{
+const CLI_v2::Option IndexMinimizerWindowSize{
 R"({
     "names" : ["w"],
     "description" : "Minimizer window size.",
@@ -38,7 +38,7 @@ R"({
     "default" : -1
 })"};
 
-const CLI_v2::Option DisableHPC{
+const CLI_v2::Option IndexDisableHPC{
 R"({
     "names" : ["u", "no-kmer-compression"],
     "description" : "Disable homopolymer-compressed k-mer (compression is active for SUBREAD & UNROLLED presets)."
@@ -62,16 +62,16 @@ R"({
 IndexSettings::IndexSettings(const PacBio::CLI_v2::Results& options)
     : CLI{options.InputCommandLine()}, InputFiles{options.PositionalArguments()}
 {
-    MM2Settings::Kmer = options[OptionNames::Kmer];
-    MM2Settings::MinimizerWindowSize = options[OptionNames::MinimizerWindowSize];
-    MM2Settings::DisableHPC = options[OptionNames::DisableHPC];
+    MM2Settings::Kmer = options[OptionNames::IndexKmer];
+    MM2Settings::MinimizerWindowSize = options[OptionNames::IndexMinimizerWindowSize];
+    MM2Settings::DisableHPC = options[OptionNames::IndexDisableHPC];
     MM2Settings::NumThreads = options.NumThreads();
 
     const std::map<std::string, AlignmentMode> alignModeMap{{"SUBREAD", AlignmentMode::SUBREADS},
                                                             {"CCS", AlignmentMode::CCS},
                                                             {"ISOSEQ", AlignmentMode::ISOSEQ},
                                                             {"UNROLLED", AlignmentMode::UNROLLED}};
-    MM2Settings::AlignMode = alignModeMap.at(options[OptionNames::AlignModeOpt]);
+    MM2Settings::AlignMode = alignModeMap.at(options[OptionNames::IndexAlignmentModeOpt]);
 
     if (MM2Settings::Kmer < -1 || MM2Settings::Kmer == 0 || MM2Settings::MinimizerWindowSize < -1 ||
         MM2Settings::MinimizerWindowSize == 0) {
@@ -93,13 +93,13 @@ PacBio::CLI_v2::Interface IndexSettings::CreateCLI()
     });
 
     i.AddOptionGroup("Parameter Set Option", {
-        OptionNames::AlignModeOpt,
+        OptionNames::IndexAlignmentModeOpt,
     });
 
     i.AddOptionGroup("Parameter Override Options", {
-        OptionNames::Kmer,
-        OptionNames::MinimizerWindowSize,
-        OptionNames::DisableHPC
+        OptionNames::IndexKmer,
+        OptionNames::IndexMinimizerWindowSize,
+        OptionNames::IndexDisableHPC
     });
 
     i.HelpFooter(R"(Alignment modes of --preset:
