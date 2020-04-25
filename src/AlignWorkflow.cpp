@@ -361,7 +361,7 @@ int AlignWorkflow::Runner(const CLI_v2::Results& options)
 
                 std::stable_sort(tmp.begin(), tmp.end(),
                                  [&](const RecordAnnotated& l, const RecordAnnotated& r) {
-                                     return std::tie(l.FullLength, l.Length) <=
+                                     return std::tie(l.FullLength, l.Length) <
                                             std::tie(r.FullLength, r.Length);
                                  });
                 size_t mid = tmp.size() / 2;
