@@ -1,18 +1,19 @@
 // Author: Armin Töpfer
+#include "SampleNames.h"
+
+#include <fstream>
 
 #include <pbbam/BamHeader.h>
 #include <pbbam/DataSet.h>
 #include <pbbam/virtual/ZmwReadStitcher.h>
 #include <pbcopper/logging/Logging.h>
 #include <boost/algorithm/string.hpp>
-#include <fstream>
 
-#include <AbortException.h>
-#include <AlignSettings.h>
-#include <InputOutputUX.h>
-#include <Pbmm2Version.h>
+#include <pbmm2/Pbmm2Version.h>
 
-#include <SampleNames.h>
+#include "AbortException.h"
+#include "AlignSettings.h"
+#include "InputOutputUX.h"
 
 namespace PacBio {
 namespace minimap2 {

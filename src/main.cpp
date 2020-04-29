@@ -5,7 +5,7 @@
 
 #include <pbcopper/cli2/CLI.h>
 
-#include <Pbmm2Version.h>
+#include <pbmm2/Pbmm2Version.h>
 
 #include "AbortException.h"
 #include "AlignSettings.h"

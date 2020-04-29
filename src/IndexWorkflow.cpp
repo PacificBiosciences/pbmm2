@@ -12,8 +12,8 @@
 #include <pbcopper/logging/Logging.h>
 #include <pbcopper/utility/FileUtils.h>
 
-#include <Pbmm2Version.h>
 #include <pbmm2/MM2Helper.h>
+#include <pbmm2/Pbmm2Version.h>
 
 #include "AbortException.h"
 #include "IndexSettings.h"
