@@ -14,9 +14,9 @@
 #include <pbcopper/cli2/internal/BuiltinOptions.h>
 #include <boost/algorithm/string.hpp>
 
-#include "AbortException.h"
+#include <pbmm2/Pbmm2Version.h>
 
-#include <Pbmm2Version.h>
+#include "AbortException.h"
 
 namespace PacBio {
 namespace minimap2 {

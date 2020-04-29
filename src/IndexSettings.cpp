@@ -1,12 +1,11 @@
 // Author: Armin Töpfer
+#include "IndexSettings.h"
 
 #include <map>
 
-#include <Pbmm2Version.h>
+#include <pbmm2/Pbmm2Version.h>
 
 #include "AbortException.h"
-
-#include "IndexSettings.h"
 
 namespace PacBio {
 namespace minimap2 {
