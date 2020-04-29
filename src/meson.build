@@ -19,6 +19,7 @@ pbmm2_version_sources = [
     configuration : pbmm2_config)]
 
 pbmm2_lib_cpp_sources = files(['MM2Helper.cpp'])
+pbmm2_lib_cpp_sources += pbmm2_version_sources
 
 pbmm2_install = (not meson.is_subproject()) or (get_option('default_library') != 'static')
 
@@ -49,8 +50,6 @@ pbmm2_cpp_sources = files([
   'SampleNames.cpp',
   'StreamWriters.cpp',
   'Timer.cpp'])
-
-pbmm2_cpp_sources += pbmm2_version_sources
 
 # executables
 ## pbmm2
