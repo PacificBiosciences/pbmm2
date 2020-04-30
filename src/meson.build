@@ -6,6 +6,7 @@ pbmm2_patch_version = pbmm2_ver_arr[2]
 
 pbmm2_config = configuration_data()
 pbmm2_config.set('PBMM2_VERSION', meson.project_version())
+pbmm2_config.set('MINIMAP2_VERSION', pbmm2_minimap2_dep.version())
 
 pbmm2_version_sources = [
   vcs_tag(
