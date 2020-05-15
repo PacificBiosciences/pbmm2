@@ -1,0 +1,11 @@
+// Author: Derek Barnett
+
+#pragma once
+
+namespace PacBio {
+namespace Pbmm2 {
+
+constexpr const char LibraryGitSha1[] = "@PBMM2_GIT_SHA1@";
+
+}  // namespace Pbmm2
+}  // namespace PacBio
