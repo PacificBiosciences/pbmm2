@@ -115,5 +115,6 @@ pbmm2_dep = declare_dependency(
   include_directories : pbmm2_include_directories,
   link_with : pbmm2_lib,
   dependencies : pbmm2_lib_deps,
+  sources: pbmm2_gen_headers,
   version : meson.project_version(),
   compile_args : pbmm2_flags)

@@ -20,7 +20,9 @@ pbmm2_version_sources = [
     input : 'Pbmm2Version.cpp.in',
     output : 'Pbmm2Version.cpp',
     configuration : pbmm2_config),
+]
 
+pbmm2_gen_headers = [
   # new
   vcs_tag(
     input : 'LibraryGitHash.h.in',
@@ -35,6 +37,7 @@ pbmm2_version_sources = [
 
 pbmm2_lib_cpp_sources = files(['MM2Helper.cpp'])
 pbmm2_lib_cpp_sources += pbmm2_version_sources
+pbmm2_lib_cpp_sources += pbmm2_gen_headers
 
 pbmm2_install = (not meson.is_subproject()) or (get_option('default_library') != 'static')
 
@@ -66,6 +69,8 @@ pbmm2_cpp_sources = files([
   'SampleNames.cpp',
   'StreamWriters.cpp',
   'Timer.cpp'])
+
+pbmm2_cpp_sources += pbmm2_gen_headers
 
 # executables
 ## pbmm2
