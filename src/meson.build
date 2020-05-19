@@ -35,7 +35,10 @@ pbmm2_gen_headers = [
     configuration : pbmm2_config),
 ]
 
-pbmm2_lib_cpp_sources = files(['MM2Helper.cpp'])
+pbmm2_lib_cpp_sources = files([
+  'LibraryInfo.cpp',
+  'MM2Helper.cpp',
+])
 pbmm2_lib_cpp_sources += pbmm2_version_sources
 pbmm2_lib_cpp_sources += pbmm2_gen_headers
 
@@ -65,7 +68,6 @@ pbmm2_cpp_sources = files([
   'IndexSettings.cpp',
   'IndexWorkflow.cpp',
   'InputOutputUX.cpp',
-  'LibraryInfo.cpp',
   'SampleNames.cpp',
   'StreamWriters.cpp',
   'Timer.cpp'])
