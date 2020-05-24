@@ -10,7 +10,10 @@ pbmm2_TestData_h = configure_file(
 pbmm2_test_cpp_sources += pbmm2_TestData_h
 
 # find GoogleTest and GoogleMock
-pbmm2_gmock_main_dep = dependency('gmock_main', fallback : ['gtest', 'gmock_main_dep'])
+pbmm2_gmock_main_dep = dependency(
+  'gmock',
+  main : true,
+  fallback : ['gtest', 'gmock_main_dep'])
 
 pbmm2_test = executable(
   'pbmm2_test',
