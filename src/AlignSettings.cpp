@@ -408,7 +408,7 @@ R"({
     "required" : false
 })"};
 
-const CLI_v2::Option NoSpliceFlank{
+const CLI_v2::Option OutCS{
 R"({
     "names" : ["cstag"],
     "description" : "Output minimap2 cs tag."
