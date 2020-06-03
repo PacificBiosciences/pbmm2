@@ -33,6 +33,7 @@ struct MM2Settings
     bool DisableHPC = false;
     bool NoTrimming = false;
     float LongJoinFlankRatio = -1;
+    bool OutCS = false;
     std::string EnforcedMapping;
 };
 }  // namespace minimap2

@@ -408,6 +408,12 @@ R"({
     "required" : false
 })"};
 
+const CLI_v2::Option NoSpliceFlank{
+R"({
+    "names" : ["cstag"],
+    "description" : "Output minimap2 cs tag."
+})"};
+
 // clang-format on
 }  // namespace OptionNames
 
@@ -451,6 +457,7 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
     MM2Settings::MaxNumAlns = options[OptionNames::MaxNumAlns];
     MM2Settings::MaxGap = options[OptionNames::MaxGap];
     MM2Settings::EnforcedMapping = std::string(options[OptionNames::EnforcedMapping]);
+    MM2Settings::OutCS = options[OptionNames::OutCS];
     if (!MM2Settings::EnforcedMapping.empty()) MM2Settings::NoTrimming = true;
     MM2Settings::MaxSecondaryAlns = options[OptionNames::MaxSecondaryAlns];
 
@@ -703,6 +710,7 @@ PacBio::CLI_v2::Interface AlignSettings::CreateCLI()
         OptionNames::OutputUnmapped,
         OptionNames::BamIndexInput,
         OptionNames::NoBAI,
+        OptionNames::OutCS,
     });
 
     i.AddOptionGroup("Input Manipulation Options (mutually exclusive)", {

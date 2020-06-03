@@ -191,6 +191,9 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
     }
     MapOpts.min_join_flank_ratio = 0.5;
 
+    //Allow for optional minimap2 'cs' tag
+    if (settings.OutCS) MapOpts.flag |= MM_F_OUT_CS;
+
     switch (settings.AlignMode) {
         case AlignmentMode::SUBREADS:
             *preset = "SUBREADS";

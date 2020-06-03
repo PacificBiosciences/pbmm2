@@ -66,6 +66,8 @@ Usage: pbmm2 index [options] <ref.fa|xml> <out.mmi>
 The output argument is optional. If not provided, BAM output is streamed to stdout.
 ```
 Usage: pbmm2 align [options] <ref.fa|xml|mmi> <in.bam|xml|fa|fq> [out.aligned.bam|xml]
+
+ - Optional: --cstag, outputs minimap2 'cs' tag. See minimap2 manual for details. Default: false.
 ```
 
 #### Alignment Parallelization
