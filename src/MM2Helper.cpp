@@ -193,7 +193,7 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
 
     switch (settings.AlignMode) {
         case AlignmentMode::SUBREADS:
-            *preset = "SUBREADS";
+            *preset = "SUBREAD";
             MapOpts.a = 2;
             MapOpts.q = 5;
             MapOpts.q2 = 56;
