@@ -3,6 +3,8 @@
 
 #include <map>
 
+#include <boost/algorithm/string.hpp>
+
 #include <pbmm2/Pbmm2Version.h>
 
 #include "AbortException.h"
@@ -67,10 +69,17 @@ IndexSettings::IndexSettings(const PacBio::CLI_v2::Results& options)
     MM2Settings::NumThreads = options.NumThreads();
 
     const std::map<std::string, AlignmentMode> alignModeMap{{"SUBREAD", AlignmentMode::SUBREADS},
-                                                            {"CCS", AlignmentMode::CCS},
                                                             {"ISOSEQ", AlignmentMode::ISOSEQ},
+                                                            {"CCS", AlignmentMode::CCS},
+                                                            {"HIFI", AlignmentMode::CCS},
                                                             {"UNROLLED", AlignmentMode::UNROLLED}};
-    MM2Settings::AlignMode = alignModeMap.at(options[OptionNames::IndexAlignmentModeOpt]);
+
+    const std::string alignModeUsr = options[OptionNames::IndexAlignmentModeOpt];
+    const std::string alingModeUpr = boost::to_upper_copy(alignModeUsr);
+    if (alignModeMap.find(alingModeUpr) == alignModeMap.cend()) {
+        throw AbortException("Could not find --preset " + alignModeUsr);
+    }
+    MM2Settings::AlignMode = alignModeMap.at(alingModeUpr);
 
     if (MM2Settings::Kmer < -1 || MM2Settings::Kmer == 0 || MM2Settings::MinimizerWindowSize < -1 ||
         MM2Settings::MinimizerWindowSize == 0) {
@@ -102,10 +111,10 @@ PacBio::CLI_v2::Interface IndexSettings::CreateCLI()
     });
 
     i.HelpFooter(R"(Alignment modes of --preset:
-    SUBREAD  : -k 19 -w 10
-    CCS      : -k 19 -w 10 -u
-    ISOSEQ   : -k 15 -w 5 -u
-    UNROLLED : -k 15 -w 15
+    SUBREAD     : -k 19 -w 10
+    CCS or HiFi : -k 19 -w 10 -u
+    ISOSEQ      : -k 15 -w 5  -u
+    UNROLLED    : -k 15 -w 15
     )");
 
     // clang-format on
