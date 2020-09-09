@@ -57,10 +57,36 @@ MovieToSampleToInfix SampleNames::DetermineMovieToSampleToInfix(const UserIO& ui
         } catch (...) {
             throw AbortException(UNKNOWN_FILE_TYPES);
         }
+
+        // Check dataset's BAM header(s) for '@RG SM' tags.
+        int namedSampleCount = 0;
+        for (const auto& bamFile : ds.BamFiles()) {
+            const auto& header = bamFile.Header();
+            for (const auto& rg : header.ReadGroups()) {
+                const auto movie = rg.MovieName();
+                const auto sample = rg.Sample();
+                if (!sample.empty()) {
+                    movieNameToSampleAndInfix.emplace(
+                        movie,
+                        std::make_pair(SanitizeSampleName(sample), SanitizeFileInfix(sample)));
+                    ++namedSampleCount;
+                } else {
+                    movieNameToSampleAndInfix.emplace(
+                        movie, std::make_pair(SanitizeSampleName("UnnamedSample"),
+                                              SanitizeFileInfix("UnnamedSample")));
+                }
+            }
+        }
+
         const auto& md = ds.Metadata();
         const auto& biosamples = md.BioSamples();
         std::string nameFromMetadata;
         if (biosamples.Size() > 0) {
+            if (namedSampleCount == 0) {
+                throw AbortException(
+                    "<BioSamples> list element is present in dataset XML, but SM tags are "
+                    "missing from BAM header read groups");
+            }
             if (biosamples.Size() > 1) {
                 PBLOG_WARN << "Found more than 1 biosample, which is not yet supported. Will pick "
                               "the first!";
@@ -70,6 +96,7 @@ MovieToSampleToInfix SampleNames::DetermineMovieToSampleToInfix(const UserIO& ui
                 break;
             }
         }
+
         if (md.HasChild("Collections")) {
             using DataSetElement = PacBio::BAM::internal::DataSetElement;
 
