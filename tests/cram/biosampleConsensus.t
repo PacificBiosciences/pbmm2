@@ -48,6 +48,3 @@
   *\tSM:testSample\t* (glob)
   *\tSM:testSample\t* (glob)
 
-  $ $__PBTEST_PBMM2_EXE align $NO_SM_BIOSAMPLES $REF $CRAMTMP/ccs8.bam
-  *<BioSamples> list element is present in dataset XML, but SM tags are missing* (glob)
-  [1]

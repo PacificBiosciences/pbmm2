@@ -80,20 +80,15 @@ MovieToSampleToInfix SampleNames::DetermineMovieToSampleToInfix(const UserIO& ui
 
         const auto& md = ds.Metadata();
         const auto& biosamples = md.BioSamples();
+        const auto biosampleCount = biosamples.Size();
         std::string nameFromMetadata;
-        if (biosamples.Size() > 0) {
-            if (namedSampleCount == 0) {
-                throw AbortException(
-                    "<BioSamples> list element is present in dataset XML, but SM tags are "
-                    "missing from BAM header read groups");
-            }
-            if (biosamples.Size() > 1) {
-                PBLOG_WARN << "Found more than 1 biosample, which is not yet supported. Will pick "
-                              "the first!";
-            }
-            for (const auto& biosample : biosamples) {
-                nameFromMetadata = biosample.Name();
-                break;
+        if (biosampleCount > 0) {
+            if (biosampleCount > 1 && namedSampleCount == 0) {
+                PBLOG_INFO << "Found more than 1 biosample, but read groups lack the SM tag - "
+                              "using 'UnnamedSample'!";
+                nameFromMetadata = "UnnamedSample";
+            } else {
+                nameFromMetadata = biosamples[0].Name();
             }
         }
 

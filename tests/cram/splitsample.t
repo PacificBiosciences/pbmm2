@@ -1,5 +1,6 @@
   $ MERGED=$TESTDIR/data/merged.dataset.xml
   $ REF=$TESTDIR/data/ecoliK12_pbi_March2013.fasta
+  $ NO_SM_BIOSAMPLES=$TESTDIR/data/no_sm_biosamples.subreadset.xml
 
   $ $__PBTEST_PBMM2_EXE align $MERGED $REF $CRAMTMP/split.bam --split-by-sample
 
@@ -57,3 +58,9 @@ When both --split-by-sample and --sample were set, expect to see only one bam fi
   $ [[ -f $CRAMTMP/splitsampleoverride.bam ]] || echo "File does not exist!"
   $ samtools view -H $CRAMTMP/splitsampleoverride.bam | grep "@RG" | grep -vP "@PG\tID:samtools" | cut -f 6 | sort | uniq
   SM:MySample
+
+  $ $__PBTEST_PBMM2_EXE align --split-by-sample $NO_SM_BIOSAMPLES $REF $CRAMTMP/split-no-sm.bam
+  $ samtools view -H $CRAMTMP/split-no-sm.UnnamedSample.bam | grep -c "@RG"
+  1
+  $ samtools view -H $CRAMTMP/split-no-sm.UnnamedSample.bam | grep -c "SM:UnnamedSample"
+  1
