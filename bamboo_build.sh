@@ -24,16 +24,20 @@ module load samtools
 module load datamash
 module load gcovr
 
-case "${bamboo_planRepository_branchName}" in
-  master)
-    module load pbbam/master
-    module load pbcopper/master
-    ;;
-  *)
-    module load pbbam/develop
-    module load pbcopper/develop
-    ;;
-esac
+if [[ ${ENABLED_WRAP_MODE:-nofallback} == nofallback ]]; then
+  case "${bamboo_planRepository_branchName}" in
+    master)
+      module load pbbam/master
+      module load pbcopper/master
+      ;;
+    *)
+      module load pbbam/develop
+      module load pbcopper/develop
+      ;;
+  esac
+else
+  module load htslib
+fi
 set -vx
 
 BOOST_ROOT="${BOOST_ROOT%/include}"
@@ -49,7 +53,7 @@ source scripts/ci/setup.sh
 source scripts/ci/build.sh
 source scripts/ci/test.sh
 
-if [[ ${BUILD_NUMBER} == 0 ]]; then
+if [[ ${BUILD_NUMBER} == 0 || ${SHOULD_INSTALL} != true ]]; then
   echo "Not installing anything (branch: ${bamboo_planRepository_branchName}), exiting."
   exit 0
 fi

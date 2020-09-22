@@ -6,8 +6,11 @@ pbmm2_patch_version = pbmm2_ver_arr[2]
 
 pbmm2_config = configuration_data()
 pbmm2_config.set('PBMM2_VERSION', meson.project_version())
+pbmm2_config.set('MINIMAP2_VERSION', pbmm2_minimap2_dep.version())
 
 pbmm2_version_sources = [
+
+  # old <-- to be removed
   vcs_tag(
     input : 'Pbmm2GitHash.cpp.in',
     output : 'Pbmm2GitHash.cpp',
@@ -16,9 +19,28 @@ pbmm2_version_sources = [
   configure_file(
     input : 'Pbmm2Version.cpp.in',
     output : 'Pbmm2Version.cpp',
-    configuration : pbmm2_config)]
+    configuration : pbmm2_config),
+]
 
-pbmm2_lib_cpp_sources = files(['MM2Helper.cpp'])
+pbmm2_gen_headers = [
+  # new
+  vcs_tag(
+    input : 'LibraryGitHash.h.in',
+    output : 'LibraryGitHash.h',
+    command : ['git', 'describe', '--always', '--dirty=*'],
+    replace_string : '@PBMM2_GIT_SHA1@'),
+  configure_file(
+    input : 'LibraryVersion.h.in',
+    output : 'LibraryVersion.h',
+    configuration : pbmm2_config),
+]
+
+pbmm2_lib_cpp_sources = files([
+  'LibraryInfo.cpp',
+  'MM2Helper.cpp',
+])
+pbmm2_lib_cpp_sources += pbmm2_version_sources
+pbmm2_lib_cpp_sources += pbmm2_gen_headers
 
 pbmm2_install = (not meson.is_subproject()) or (get_option('default_library') != 'static')
 
@@ -50,7 +72,7 @@ pbmm2_cpp_sources = files([
   'StreamWriters.cpp',
   'Timer.cpp'])
 
-pbmm2_cpp_sources += pbmm2_version_sources
+pbmm2_cpp_sources += pbmm2_gen_headers
 
 # executables
 ## pbmm2

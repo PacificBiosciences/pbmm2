@@ -3,29 +3,28 @@ set -vex
 
 export BUILD_NUMBER="0"
 export ENABLED_TESTS="true"
+export SHOULD_INSTALL="false"
 
 case "${GCC_VERSION}" in
-  4.8)
-    module load gtest/gcc48
-
-    # have to use wrap fallback due to ABI changes
-    module unload pbbam pbcopper
-    export WRAP_MODE="forcefallback"
-
-    module load zlib
-    module load htslib
-    ;;
-
   next)
     module load gcc/8.1.0
     module load gtest
     ;;
 
+  clang)
+    module load gtest/gcc48
+
+    source /opt/rh/llvm-toolset-6.0/enable
+    CC="clang"
+    CXX="clang++"
+    ;;
+
   *)
-    case "${bamboo_planRepository_branchName}-${bamboo_shortJobKey}" in
-      develop-GM|master-GM)
+    case "${bamboo_planRepository_branchName}-${BUILDTYPE:-release}-${ENABLED_UNITY_BUILD:-off}-${ENABLED_COVERAGE:-false}" in
+      develop-release-off-false|master-release-off-false)
         export PREFIX_ARG="/mnt/software/p/pbmm2/${bamboo_planRepository_branchName}"
         export BUILD_NUMBER="${bamboo_globalBuildNumber:-0}"
+        export SHOULD_INSTALL="${INSTALL_IMAGE:-false}"
         ;;
     esac
 
@@ -36,8 +35,8 @@ esac
 
 module load ccache
 
-export CC="ccache gcc"
-export CXX="ccache g++"
+export CC="ccache ${CC:-gcc}"
+export CXX="ccache ${CXX:-g++}"
 export CCACHE_BASEDIR="${PWD}"
 
 if [[ -z ${bamboo_planRepository_branchName+x} ]]; then

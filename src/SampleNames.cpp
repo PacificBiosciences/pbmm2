@@ -1,18 +1,19 @@
 // Author: Armin Töpfer
+#include "SampleNames.h"
+
+#include <fstream>
 
 #include <pbbam/BamHeader.h>
 #include <pbbam/DataSet.h>
 #include <pbbam/virtual/ZmwReadStitcher.h>
 #include <pbcopper/logging/Logging.h>
 #include <boost/algorithm/string.hpp>
-#include <fstream>
 
-#include <AbortException.h>
-#include <AlignSettings.h>
-#include <InputOutputUX.h>
-#include <Pbmm2Version.h>
+#include <pbmm2/Pbmm2Version.h>
 
-#include <SampleNames.h>
+#include "AbortException.h"
+#include "AlignSettings.h"
+#include "InputOutputUX.h"
 
 namespace PacBio {
 namespace minimap2 {
@@ -56,19 +57,41 @@ MovieToSampleToInfix SampleNames::DetermineMovieToSampleToInfix(const UserIO& ui
         } catch (...) {
             throw AbortException(UNKNOWN_FILE_TYPES);
         }
-        const auto& md = ds.Metadata();
-        const auto& biosamples = md.BioSamples();
-        std::string nameFromMetadata;
-        if (biosamples.Size() > 0) {
-            if (biosamples.Size() > 1) {
-                PBLOG_WARN << "Found more than 1 biosample, which is not yet supported. Will pick "
-                              "the first!";
-            }
-            for (const auto& biosample : biosamples) {
-                nameFromMetadata = biosample.Name();
-                break;
+
+        // Check dataset's BAM header(s) for '@RG SM' tags.
+        int namedSampleCount = 0;
+        for (const auto& bamFile : ds.BamFiles()) {
+            const auto& header = bamFile.Header();
+            for (const auto& rg : header.ReadGroups()) {
+                const auto movie = rg.MovieName();
+                const auto sample = rg.Sample();
+                if (!sample.empty()) {
+                    movieNameToSampleAndInfix.emplace(
+                        movie,
+                        std::make_pair(SanitizeSampleName(sample), SanitizeFileInfix(sample)));
+                    ++namedSampleCount;
+                } else {
+                    movieNameToSampleAndInfix.emplace(
+                        movie, std::make_pair(SanitizeSampleName("UnnamedSample"),
+                                              SanitizeFileInfix("UnnamedSample")));
+                }
             }
         }
+
+        const auto& md = ds.Metadata();
+        const auto& biosamples = md.BioSamples();
+        const auto biosampleCount = biosamples.Size();
+        std::string nameFromMetadata;
+        if (biosampleCount > 0) {
+            if (biosampleCount > 1 && namedSampleCount == 0) {
+                PBLOG_INFO << "Found more than 1 biosample, but read groups lack the SM tag - "
+                              "using 'UnnamedSample'!";
+                nameFromMetadata = "UnnamedSample";
+            } else {
+                nameFromMetadata = biosamples[0].Name();
+            }
+        }
+
         if (md.HasChild("Collections")) {
             using DataSetElement = PacBio::BAM::internal::DataSetElement;
 

@@ -2,9 +2,11 @@
 
 #include <pbmm2/MM2Helper.h>
 
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <string>
 
 #include <boost/algorithm/clamp.hpp>
 #include <boost/assert.hpp>
@@ -13,6 +15,7 @@
 #include <pbcopper/data/Cigar.h>
 #include <pbcopper/data/Position.h>
 #include <pbcopper/data/Strand.h>
+#include <pbcopper/utility/FileUtils.h>
 
 #include "AbortException.h"
 
@@ -118,6 +121,7 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
     PreInit(settings, &preset);
     Idx = std::make_unique<Index>(refs, IdxOpts, NumThreads, outputMmi);
     PostInit(settings, preset, outputMmi.empty());
+    SetEnforcedMapping(settings.EnforcedMapping);
 }
 MM2Helper::MM2Helper(const std::vector<BAM::FastaSequence>& refs, const MM2Settings& settings)
     : NumThreads{settings.NumThreads}
@@ -129,6 +133,7 @@ MM2Helper::MM2Helper(const std::vector<BAM::FastaSequence>& refs, const MM2Setti
     PreInit(settings, &preset);
     Idx = std::make_unique<Index>(refs, IdxOpts);
     PostInit(settings, preset, true);
+    SetEnforcedMapping(settings.EnforcedMapping);
 }
 MM2Helper::MM2Helper(std::vector<BAM::FastaSequence>&& refs, const MM2Settings& settings)
     : NumThreads{settings.NumThreads}
@@ -140,9 +145,11 @@ MM2Helper::MM2Helper(std::vector<BAM::FastaSequence>&& refs, const MM2Settings& 
     PreInit(settings, &preset);
     Idx = std::make_unique<Index>(std::move(refs), IdxOpts);
     PostInit(settings, preset, true);
+    SetEnforcedMapping(settings.EnforcedMapping);
 }
 void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
 {
+    enforcedMapping_ = !settings.EnforcedMapping.empty();
     mm_idxopt_init(&IdxOpts);
     switch (settings.AlignMode) {
         case AlignmentMode::SUBREADS:
@@ -176,8 +183,9 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
     MapOpts.flag |= MM_F_SOFTCLIP;
     MapOpts.flag |= MM_F_LONG_CIGAR;
     MapOpts.flag |= MM_F_EQX;
-    MapOpts.flag |= MM_F_NO_PRINT_2ND;
-    if (settings.NoTrimming) {
+    // Allow secondaries with enforced mapping, but disable per default!
+    if (!enforcedMapping_) MapOpts.flag |= MM_F_NO_PRINT_2ND;
+    if (settings.NoTrimming && !enforcedMapping_) {
         MapOpts.flag |= MM_F_HARD_MLEVEL;
         MapOpts.mask_level = 0;
     }
@@ -185,7 +193,7 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
 
     switch (settings.AlignMode) {
         case AlignmentMode::SUBREADS:
-            *preset = "SUBREADS";
+            *preset = "SUBREAD";
             MapOpts.a = 2;
             MapOpts.q = 5;
             MapOpts.q2 = 56;
@@ -262,6 +270,7 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
     if (settings.NoSpliceFlank) MapOpts.flag &= ~MM_F_SPLICE_FLANK;
     if (settings.LongJoinFlankRatio >= 0)
         MapOpts.min_join_flank_ratio = settings.LongJoinFlankRatio;
+    if (settings.MaxSecondaryAlns >= 0) MapOpts.best_n = settings.MaxSecondaryAlns;
 
     if ((MapOpts.q != MapOpts.q2 || MapOpts.e != MapOpts.e2) &&
         !(MapOpts.e > MapOpts.e2 && MapOpts.q + MapOpts.e < MapOpts.q2 + MapOpts.e2)) {
@@ -306,6 +315,9 @@ void MM2Helper::PostInit(const MM2Settings& settings, const std::string& preset,
         if (settings.AlignMode == AlignmentMode::ISOSEQ) {
             PBLOG_DEBUG << "Max ref intron length  : " << MapOpts.max_gap_ref;
             PBLOG_DEBUG << "Prefer splice flanks   : " << (!settings.NoSpliceFlank ? "yes" : "no");
+        }
+        if (enforcedMapping_) {
+            PBLOG_DEBUG << "Max secondary alns     : " << MapOpts.best_n;
         }
     }
 }
@@ -414,6 +426,33 @@ void postprocess(std::vector<AlignedRead>&, std::unique_ptr<Data::Read>&, const 
 
 }  // namespace
 
+void MM2Helper::SetEnforcedMapping(const std::string& filePath)
+{
+    if (filePath.empty()) return;
+    PBLOG_DEBUG << "Start parsing --enforced-mapping";
+    for (uint32_t i = 0; i < Idx->idx_->n_seq; ++i)
+        refNames_.emplace_back(Idx->idx_->seq[i].name);
+
+    if (!Utility::FileExists(filePath))
+        throw AbortException("Input file does not exist: " + filePath);
+
+    std::ifstream file(filePath);
+    std::string line;
+    std::array<std::string, 2> splits;
+    while (std::getline(file, line)) {
+        const std::size_t pos = line.find_first_of(' ');
+        if (pos != std::string::npos) {
+            readToRefsEnforcedMapping_[line.substr(0, pos)].emplace_back(line.substr(pos + 1));
+        } else {
+            throw AbortException(
+                "Input file for --enforced-mapping is not sanitized. Could not find two strings "
+                "separated with a single whitespace! Offending line: \"" +
+                line + "\"");
+        }
+    }
+    PBLOG_DEBUG << "Finished parsing --enforced-mapping";
+}
+
 template <typename In, typename Out>
 std::vector<Out> MM2Helper::AlignImpl(const In& record,
                                       const std::function<bool(const Out&)>& filter,
@@ -437,14 +476,169 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
     std::vector<int> used;
     std::vector<int32_t> queryHits(seq.size(), 0);
 
+    bool enforcedMapping = enforcedMapping_;
+    std::vector<std::string> enforcedReferences;
+    if (enforcedMapping) {
+        const std::string name = record.FullName();
+        auto it = readToRefsEnforcedMapping_.find(name);
+        if (it != readToRefsEnforcedMapping_.cend())
+            enforcedReferences = it->second;
+        else
+            enforcedMapping = false;
+    }
     for (int i = 0; i < numAlns; ++i) {
         auto& aln = alns[i];
         // if no alignment, continue
         if (aln.p == nullptr) continue;
-        // secondary alignment
-        if (aln.id != aln.parent) continue;
+        // secondary alignment and no enforced mapping
+        if (aln.id != aln.parent && !enforcedMapping) continue;
         used.emplace_back(i);
         if (alnMode_ == AlignmentMode::UNROLLED) break;
+    }
+
+    if (enforcedMapping_ && !enforcedMapping) {
+        PBLOG_DEBUG << "[Enforced mapping] (" << record.FullName() << ") Not present for read";
+    }
+
+    if (enforcedMapping) {
+        if (used.empty()) return localResults;
+        bool hasPrimaryOnly = std::all_of(used.cbegin(), used.cend(), [&alns](const int32_t i) {
+            return alns[i].id == alns[i].parent;
+        });
+
+        if (hasPrimaryOnly) {
+            // Check if primary alignment is on target, otherwise return no alignment
+            const auto primaryAln = alns[used.front()];
+            if (std::find(enforcedReferences.cbegin(), enforcedReferences.cend(),
+                          refNames_[primaryAln.rid]) == enforcedReferences.cend()) {
+                PBLOG_DEBUG << "[Enforced mapping] (" << record.FullName()
+                            << ") Wrong mapping, primary only present";
+                return localResults;
+            }
+        } else {
+            int32_t primaryOnTargetIdx = -1;
+            bool secondaryOnTarget = false;
+            // Store used index of primary on-target alignment and if there are
+            // secondary on-target alignments.
+            for (const auto i : used) {
+                const auto& aln = alns[i];
+                // Primary alignments
+                if (aln.id == aln.parent && primaryOnTargetIdx == -1) {
+                    if (std::find(enforcedReferences.cbegin(), enforcedReferences.cend(),
+                                  refNames_[aln.rid]) != enforcedReferences.cend()) {
+                        primaryOnTargetIdx = i;
+                    }
+                } else if (aln.id != aln.parent && !secondaryOnTarget) {  // secondary
+                    secondaryOnTarget |=
+                        std::find(enforcedReferences.cbegin(), enforcedReferences.cend(),
+                                  refNames_[aln.rid]) != enforcedReferences.cend();
+                }
+            }
+
+            std::vector<int32_t> usedOnTarget;
+            int32_t primaryAlignStatsOnTarget = 0;
+            int32_t primaryAlignStatsOffTarget = 0;
+            int32_t primaryAlignStatsMissing = 0;
+            std::vector<int32_t> unusedOffTargetSupplementary;
+            // Among all alignments, only use primary alignments, if one of them
+            // is on target
+            if (primaryOnTargetIdx != -1) {
+                usedOnTarget.emplace_back(primaryOnTargetIdx);
+                ++primaryAlignStatsOnTarget;
+                for (const auto i : used) {
+                    if (i != primaryOnTargetIdx && alns[i].id == alns[i].parent) {
+                        usedOnTarget.emplace_back(i);
+                        if (std::find(enforcedReferences.cbegin(), enforcedReferences.cend(),
+                                      refNames_[alns[i].rid]) != enforcedReferences.cend()) {
+                            ++primaryAlignStatsOnTarget;
+                        } else {
+                            ++primaryAlignStatsOffTarget;
+                        }
+                    }
+                }
+            } else {
+                for (const auto i : used) {
+                    if (alns[i].id == alns[i].parent) {
+                        ++primaryAlignStatsMissing;
+                        if (!alns[i].sam_pri) unusedOffTargetSupplementary.emplace_back(i);
+                    }
+                }
+            }
+
+            int32_t secondaryAlignStatsOnTarget = 0;
+            int32_t secondaryAlignStatsOffTarget = 0;
+            std::vector<int32_t> usedSecondaries;
+            if (secondaryOnTarget) {
+                for (const auto i : used) {
+                    if (alns[i].id != alns[i].parent) {
+                        if (std::find(enforcedReferences.cbegin(), enforcedReferences.cend(),
+                                      refNames_[alns[i].rid]) != enforcedReferences.cend()) {
+                            usedSecondaries.emplace_back(i);
+                            usedOnTarget.emplace_back(i);
+                            ++secondaryAlignStatsOnTarget;
+                        } else {
+                            ++secondaryAlignStatsOffTarget;
+                        }
+                    }
+                }
+            }
+
+            int32_t secondaryAlignStatRecovered = 0;
+            const auto CheckOverlap = [](const int32_t chosenLeft, const int32_t chosenRight,
+                                         const int32_t testLeft, const int32_t testRight) {
+                const int32_t chosenLength = chosenRight - chosenLeft;
+                const int32_t testLength = testRight - testLeft;
+                // Test for Overlap
+                if (chosenLeft < testRight && chosenRight > testLeft) {
+                    const int32_t left = std::max(chosenLeft, testLeft);
+                    const int32_t right = std::min(chosenRight, testRight);
+                    const int32_t overlapLength = right - left;
+                    const int32_t maxLength = std::max(chosenLength, testLength);
+                    return 1.0 * overlapLength / maxLength;
+                } else {
+                    // Does not overlap
+                    return 0.0;
+                }
+            };
+            if (!usedSecondaries.empty()) {
+                for (const auto& u : unusedOffTargetSupplementary) {
+                    const auto& sup = alns[u];
+                    const int32_t supLeft = sup.rev ? qlen - sup.qe : sup.qs;
+                    const int32_t supRight = sup.rev ? qlen - sup.qs : sup.qe;
+                    bool overlapsWithSecondary = false;
+                    for (const auto& s : usedSecondaries) {
+                        const auto& sec = alns[s];
+                        const int32_t secLeft = sec.rev ? qlen - sec.qe : sec.qs;
+                        const int32_t secRight = sec.rev ? qlen - sec.qs : sec.qe;
+                        if (CheckOverlap(secLeft, secRight, supLeft, supRight) >= 0.5 ||
+                            (sec.rid == sup.rid &&
+                             CheckOverlap(sec.rs, sec.re, sup.rs, sup.re) > 0.0)) {
+                            overlapsWithSecondary = true;
+                            break;
+                        }
+                    }
+                    if (!overlapsWithSecondary) {
+                        ++secondaryAlignStatRecovered;
+                        usedOnTarget.emplace_back(u);
+                    }
+                }
+            }
+
+            if (usedOnTarget.empty()) {
+                PBLOG_DEBUG << "[Enforced mapping] (" << record.FullName()
+                            << ") Wrong mapping of both primaries and secondaries";
+                return localResults;
+            }
+
+            PBLOG_DEBUG << "[Enforced mapping] (" << record.FullName() << ") "
+                        << primaryAlignStatsOnTarget << " on-prim / " << primaryAlignStatsOffTarget
+                        << " off-suppl / " << secondaryAlignStatsOnTarget << " on-sec. Omitted "
+                        << primaryAlignStatsMissing << " off-prim / "
+                        << secondaryAlignStatsOffTarget << " off-sec. Recovered "
+                        << secondaryAlignStatRecovered << " off-suppl.";
+
+            used.swap(usedOnTarget);
+        }
     }
 
     const auto SetQryHits = [&](mm_reg1_t& aln, int* begin, int* end) {

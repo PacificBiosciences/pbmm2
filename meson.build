@@ -1,14 +1,14 @@
 project(
   'pbmm2',
   ['c', 'cpp'],
-  version : '1.2.0',
+  version : '1.3.0',
   default_options : [
     'buildtype=release',
     'warning_level=3',
     'cpp_std=c++14',
     'c_std=gnu11'],
   license : 'BSD-3',
-  meson_version : '>= 0.46.0')
+  meson_version : '>= 0.52.0')
 
 # CXXFLAGS
 pbmm2_flags = []
@@ -55,7 +55,7 @@ endif
 pbmm2_thread_dep = dependency('threads', required : true)
 
 ## boost
-pbmm2_boost_dep = dependency('boost', required : true)
+pbmm2_boost_dep = dependency('boost', include_type : 'system', required : true)
 
 ## zlib
 pbmm2_zlib_dep = dependency('zlib', required : true, fallback : ['zlib', 'zlib_dep'])
@@ -115,5 +115,6 @@ pbmm2_dep = declare_dependency(
   include_directories : pbmm2_include_directories,
   link_with : pbmm2_lib,
   dependencies : pbmm2_lib_deps,
+  sources: pbmm2_gen_headers,
   version : meson.project_version(),
   compile_args : pbmm2_flags)

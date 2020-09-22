@@ -1,0 +1,12 @@
+// Author: Derek Barnett
+
+#pragma once
+
+namespace PacBio {
+namespace Pbmm2 {
+
+constexpr const char ReleaseVersion[] = "@PBMM2_VERSION@";
+constexpr const char Minimap2ReleaseVersion[] = "@MINIMAP2_VERSION@";
+
+}  // namespace Pbmm2
+}  // namespace PacBio

@@ -364,7 +364,6 @@ std::string StreamWriters::WriteDatasetsJson(const UserIO& uio, const Summary& s
             datastoreFile["name"] = "Aligned reads";
             datastoreFile["path"] = xmlNames[i];
             datastoreFile["sourceId"] = "mapping.tasks.pbmm2_align-out-1";
-            boost::uuids::random_generator gen;
             datastoreFile["uniqueId"] = ids[i];
             ++i;
             files.emplace_back(datastoreFile);

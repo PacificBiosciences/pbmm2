@@ -1,6 +1,7 @@
   $ IN=$TESTDIR/data/m54075_180905_221350.ccs.bam
   $ IN2=$TESTDIR/data/m54075_180905_225130.ccs.bam
   $ MERGED=$TESTDIR/data/merged.consensusreadset.xml
+  $ NO_SM_BIOSAMPLES=$TESTDIR/data/no_sm_biosamples.consensusreadset.xml
   $ REF=$TESTDIR/data/ecoliK12_pbi_March2013.fasta
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/ccs.bam
@@ -46,3 +47,4 @@
   *\tSM:testSample\t* (glob)
   *\tSM:testSample\t* (glob)
   *\tSM:testSample\t* (glob)
+

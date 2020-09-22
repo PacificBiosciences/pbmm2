@@ -360,10 +360,6 @@
   *Requested more threads for sorting* (glob)
   *Requested more threads for sorting* (glob)
 
-  $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/fail4.bam -j 1 -J 2 --sort -m 1000G 2>&1
-  *Trying to allocate more memory for sorting* (glob)
-  [1]
-
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/sort_percentage_4.bam -j 4 --sort --log-level INFO 2>&1 | grep "threads for alignments"
   *Using 3 threads for alignments, 1 threads for sorting, and 768M bytes RAM for sorting.* (glob)
 

@@ -21,7 +21,7 @@ Please refer to our [official pbbioconda page](https://github.com/PacificBioscie
 for information on Installation, Support, License, Copyright, and Disclaimer.
 
 ## Latest Version
-Version **1.1.0**: [Full changelog here](#full-changelog)
+Version **1.3.0**: [Full changelog here](#full-changelog)
 
 ## Usage
 _pbmm2_ offers following tools
@@ -414,7 +414,9 @@ before alignment. This mode cannot be combined with `.mmi` input.
 
 ## Full Changelog
 
- * **1.2.0**:
+ * **1.3.0**:
+   * New internal features for HiFi assembly
+ * 1.2.1:
    * Abort if input fofn contains non-existing files
    * Add new filters `--min-id-perc` and `--min-gap-comp-id-perc`
    * Updated CLI UX
