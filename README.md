@@ -414,8 +414,15 @@ before alignment. This mode cannot be combined with `.mmi` input.
 
 ## Full Changelog
 
- * **1.3.0**:
+ * **1.4.0**:
+   * Official SMRT Link v10 release
+   * Case-insensitive `--preset`
+   * Read groups without `SM` tag are labelled as `UnnamedSample`
+
+ * 1.3.0:
    * New internal features for HiFi assembly
+   * htslib 1.10 support
+
  * 1.2.1:
    * Abort if input fofn contains non-existing files
    * Add new filters `--min-id-perc` and `--min-gap-comp-id-perc`
