@@ -222,7 +222,7 @@ _pbmm2_ offers following filters:
   1. `--min-id-perc`, a [sequence identity percentage](#how-do-you-define-identity) filter defined as the BLAST identity
   2. `--min-gap-comp-id-perc`, a [gap compressed sequence identity](#how-do-you-define-gap-compressed-identity) filter accounting insertions and deletions as single events only
 
-By default, (1) is set to 70%, (2) and (3) are deactivated.
+By default, (3) is set to 70%, (1) and (2) are deactivated.
 The problem with (1) the mapped concordance filter is that it also removes
 biological structural variations, such as true insertions and deletions
 w.r.t. used reference; it is only appropriate if applied to resequencing
@@ -414,7 +414,10 @@ before alignment. This mode cannot be combined with `.mmi` input.
 
 ## Full Changelog
 
- * **1.4.0**:
+ * **1.5.0**:
+   * Change default identity filter to `--min-gap-comp-id-perc`
+
+ * 1.4.0:
    * Official SMRT Link v10 release
    * Case-insensitive `--preset`
    * Read groups without `SM` tag are labelled as `UnnamedSample`

@@ -31,7 +31,7 @@
   *Mapped Reads: 2 (glob)
   *Alignments: 2 (glob)
   *Mapped Bases: 55704 (glob)
-  *Mean Mapped Concordance: 82.0908% (glob)
+  *Mean Gap Compressed Sequence Identity* (glob)
   *Max Mapped Read Length: 39629 (glob)
   *Mean Mapped Read Length: 27852 (glob)
   *Index Build/Read Time:* (glob)
