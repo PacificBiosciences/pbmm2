@@ -218,9 +218,9 @@ but the exact definition of a threshold is tricky and
 varies between tools and applications. More [on sequence identity](https://lh3.github.io/2018/11/25/on-the-definition-of-sequence-identity)
 from Heng Li.\
 _pbmm2_ offers following filters:
-  1. `--min-concordance-perc`, legacy [mapped concordance](#how-do-you-define-identity) filter, inherited from its predecessor BLASR
-  2. `--min-id-perc`, a [sequence identity percentage](#how-do-you-define-identity) filter defined as the BLAST identity
-  3. `--min-gap-comp-id-perc`, a [gap-compressed sequence identity](#how-do-you-define-gap-compressed-identity) filter accounting insertions and deletions as single events only
+  1. `--min-concordance-perc`, legacy [mapped concordance](#how-do-you-define-identity) filter, inherited from its predecessor BLASR (hidden option)
+  2. `--min-id-perc`, a [sequence identity percentage](#how-do-you-define-identity) filter defined as the BLAST identity (hidden option)
+  3. `--min-gap-comp-id-perc`, a [gap-compressed sequence identity](#how-do-you-define-gap-compressed-identity) filter accounting insertions and deletions as single events only (default)
 
 By default, (3) is set to 70%, (1) and (2) are deactivated.
 The problem with (1) the mapped concordance filter is that it also removes
@@ -263,6 +263,7 @@ The `--min-gap-comp-id-perc, -y` option, whereas gap-compressed identity is defi
 ```
 
 will remove alignments that do not pass the provided threshold in percent.\
+This is the default filter.
 You can deactivate this filter with `--min-gap-comp-id-perc 0`.
 
 ### What is repeated matches trimming?
@@ -415,6 +416,7 @@ before alignment. This mode cannot be combined with `.mmi` input.
 ## Full Changelog
 
  * **1.5.0**:
+   * Hide `--min-concordance-perc` and `--min-id-perc`
    * Change default identity filter to `--min-gap-comp-id-perc`
 
  * 1.4.0:
