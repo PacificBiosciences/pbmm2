@@ -526,7 +526,7 @@ int AlignWorkflow::Runner(const CLI_v2::Results& options)
     if (settings.MinPercIdentity > 0)
         PBLOG_INFO << "Mean Sequence Identity: " << meanIdentity << "%";
     if (settings.MinPercIdentityGapComp > 0)
-        PBLOG_INFO << "Mean Gap Compressed Sequence Identity: " << meanIdentityGapComp << "%";
+        PBLOG_INFO << "Mean Gap-Compressed Sequence Identity: " << meanIdentityGapComp << "%";
     PBLOG_INFO << "Max Mapped Read Length: " << maxMappedLength;
     PBLOG_INFO << "Mean Mapped Read Length: " << (1.0 * s.Bases / DenomNumAlns);
 

@@ -220,7 +220,7 @@ from Heng Li.\
 _pbmm2_ offers following filters:
   1. `--min-concordance-perc`, legacy [mapped concordance](#how-do-you-define-identity) filter, inherited from its predecessor BLASR
   1. `--min-id-perc`, a [sequence identity percentage](#how-do-you-define-identity) filter defined as the BLAST identity
-  2. `--min-gap-comp-id-perc`, a [gap compressed sequence identity](#how-do-you-define-gap-compressed-identity) filter accounting insertions and deletions as single events only
+  2. `--min-gap-comp-id-perc`, a [gap-compressed sequence identity](#how-do-you-define-gap-compressed-identity) filter accounting insertions and deletions as single events only
 
 By default, (3) is set to 70%, (1) and (2) are deactivated.
 The problem with (1) the mapped concordance filter is that it also removes
@@ -228,7 +228,7 @@ biological structural variations, such as true insertions and deletions
 w.r.t. used reference; it is only appropriate if applied to resequencing
 data of haploid organisms.
 The (2) sequence identity is the BLAST identity, a very natural metric for filtering.
-The (3) gap compressed sequence identity filter is very similar to (2),
+The (3) gap-compressed sequence identity filter is very similar to (2),
 but accounts insertions and deletions as single events only and
 is the fairest metric when it comes to assess the actual error rate.\
 All three filters are combined with `AND`, meaning an alignment has to pass all
@@ -255,8 +255,8 @@ The `--min-id-perc` option, whereas sequence identity is defined as the BLAST id
 will remove alignments that do not pass the provided threshold in percent.\
 You can deactivate this filter with `--min-id-perc 0`.
 
-### How do you define gap compressed identity?
-The `--min-gap-comp-id-perc, -y` option, whereas gap compressed identity is defined as
+### How do you define gap-compressed identity?
+The `--min-gap-comp-id-perc, -y` option, whereas gap-compressed identity is defined as
 
 ```
     100 * #Matches / (#Matches + #Mismatches + #DeletionEvents + #InsertionEvents)
@@ -299,7 +299,7 @@ but boost SV recall rate.
 _pbmm2_ adds following tags to each aligned record:
 
  - `mc`, stores [mapped concordance percentage](#how-do-you-define-identity) between 0.0 and 100.0, if the filter was used
- - `mg`, stores [gap compressed sequence identity percentage](#how-do-you-define-gap-compressed-identity) between 0.0 and 100.0, if the filter was used
+ - `mg`, stores [gap-compressed sequence identity percentage](#how-do-you-define-gap-compressed-identity) between 0.0 and 100.0, if the filter was used
  - `mi`, stores [sequence identity percentage](#how-do-you-define-identity) between 0.0 and 100.0, if the filter was used
  - `rm`, is set to `1` if alignment has been manipulated by [repeated matches trimming](#what-is-repeated-matches-trimming)
 

@@ -70,7 +70,7 @@ R"({
 const CLI_v2::Option MinPercIdentityGapComp{
 R"({
     "names" : ["y", "min-gap-comp-id-perc"],
-    "description" : "Minimum gap compressed sequence identity in percent.",
+    "description" : "Minimum gap-compressed sequence identity in percent.",
     "type" : "double",
     "default" : 70
 })"};
