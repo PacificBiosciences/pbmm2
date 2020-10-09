@@ -219,8 +219,8 @@ varies between tools and applications. More [on sequence identity](https://lh3.g
 from Heng Li.\
 _pbmm2_ offers following filters:
   1. `--min-concordance-perc`, legacy [mapped concordance](#how-do-you-define-identity) filter, inherited from its predecessor BLASR
-  1. `--min-id-perc`, a [sequence identity percentage](#how-do-you-define-identity) filter defined as the BLAST identity
-  2. `--min-gap-comp-id-perc`, a [gap-compressed sequence identity](#how-do-you-define-gap-compressed-identity) filter accounting insertions and deletions as single events only
+  2. `--min-id-perc`, a [sequence identity percentage](#how-do-you-define-identity) filter defined as the BLAST identity
+  3. `--min-gap-comp-id-perc`, a [gap-compressed sequence identity](#how-do-you-define-gap-compressed-identity) filter accounting insertions and deletions as single events only
 
 By default, (3) is set to 70%, (1) and (2) are deactivated.
 The problem with (1) the mapped concordance filter is that it also removes
