@@ -28,9 +28,15 @@ std::string SampleNames::SanitizeSampleName(const std::string& in)
     if (trimmed.empty()) return fallbackSampleName;
     std::string sanitizedName;
     for (const char& c : trimmed) {
-        if (c < '!' || c > '~')
+        if (c < '!' || c > '~') {
             sanitizedName += '_';
-        else
+            if (c == ' ') {
+                std::ostringstream msg;
+                msg << "Sample name '" << in << "' contains a space character. "
+                    << "This may interfere with matching read groups and samples later.";
+                PBLOG_WARN << msg.str();
+            }
+        } else
             sanitizedName += c;
     }
     return sanitizedName;

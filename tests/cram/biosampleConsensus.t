@@ -17,6 +17,7 @@
   *\tSM:testSample\t* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $IN $REF $CRAMTMP/ccs3.bam --sample "   TEST bla   "
+  *Sample name '   TEST bla   ' contains a space character* (glob)
   $ samtools view -H $CRAMTMP/ccs3.bam | grep "@RG"
   *\tSM:TEST_bla\t* (glob)
 
@@ -37,12 +38,18 @@
   *\tSM:UnnamedSample\t* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $MERGED $REF $CRAMTMP/ccs6.bam
+  *Sample name 'test test' contains a space character* (glob)
+  *Sample name 'test test' contains a space character* (glob)
+  *Sample name 'test test' contains a space character* (glob)
   $ samtools view -H $CRAMTMP/ccs6.bam | grep "@RG"
   *\tSM:bamSample\t* (glob)
   *\tSM:test_test\t* (glob)
   *\tSM:test_test\t* (glob)
 
   $ $__PBTEST_PBMM2_EXE align $MERGED $REF $CRAMTMP/ccs7.bam --sample testSample
+  *Sample name 'test test' contains a space character* (glob)
+  *Sample name 'test test' contains a space character* (glob)
+  *Sample name 'test test' contains a space character* (glob)
   $ samtools view -H $CRAMTMP/ccs7.bam | grep "@RG"
   *\tSM:testSample\t* (glob)
   *\tSM:testSample\t* (glob)
