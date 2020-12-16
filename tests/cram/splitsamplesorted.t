@@ -2,6 +2,8 @@
   $ REF=$TESTDIR/data/ecoliK12_pbi_March2013.fasta
 
   $ $__PBTEST_PBMM2_EXE align $MERGED $REF $CRAMTMP/split_dataset_sorted.alignmentset.xml --split-by-sample --sort
+  *Sample name '  UCLA 1023 ' contains a space character* (glob)
+  *Sample name 'test test ' contains a space character* (glob)
 
   $ [[ -f $CRAMTMP/split_dataset_sorted.3260208_188nM-GTAC_2xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494.alignmentset.xml ]] || echo "File does not exist!"
   $ [[ -f $CRAMTMP/split_dataset_sorted.test_test.alignmentset.xml ]] || echo "File does not exist!"

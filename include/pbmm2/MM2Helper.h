@@ -5,6 +5,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #include <boost/algorithm/string.hpp>

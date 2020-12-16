@@ -977,48 +977,18 @@ AlignedRecordImpl<T>::AlignedRecordImpl(T record) : Record(std::move(record))
 template <typename T>
 void AlignedRecordImpl<T>::ComputeAccuracyBases()
 {
-    int32_t ins = 0;
-    int32_t del = 0;
-    int32_t insEvents = 0;
-    int32_t delEvents = 0;
-    int32_t mismatch = 0;
-    int32_t match = 0;
-    for (const auto& cigar : Record.CigarData()) {
-        int32_t len = cigar.Length();
-        switch (cigar.Type()) {
-            case Data::CigarOperationType::INSERTION:
-                ins += len;
-                ++insEvents;
-                break;
-            case Data::CigarOperationType::DELETION:
-                del += len;
-                ++delEvents;
-                break;
-            case Data::CigarOperationType::SEQUENCE_MISMATCH:
-                mismatch += len;
-                break;
-            case Data::CigarOperationType::REFERENCE_SKIP:
-                break;
-            case Data::CigarOperationType::SEQUENCE_MATCH:
-            case Data::CigarOperationType::ALIGNMENT_MATCH:
-                match += len;
-                break;
-            case Data::CigarOperationType::PADDING:
-            case Data::CigarOperationType::SOFT_CLIP:
-            case Data::CigarOperationType::HARD_CLIP:
-                break;
-            case Data::CigarOperationType::UNKNOWN_OP:
-            default:
-                throw AbortException("UNKNOWN OP");
-                break;
-        }
-    }
+    const auto cigarCounts = Data::CigarOpsCalculator(Record.CigarData());
+    NumAlignedBases = cigarCounts.NumAlignedBases;
+    Identity = cigarCounts.Identity;
+    IdentityGapComp = cigarCounts.GapCompressedIdentity;
     Span = Record.AlignedEnd() - Record.AlignedStart();
-    NumAlignedBases = match + ins + mismatch;
-    Concordance =
-        boost::algorithm::clamp(100 * (1.0 - 1.0 * (ins + del + mismatch) / Span), 0.0, 100.0);
-    Identity = 100.0 * match / (match + mismatch + del + ins);
-    IdentityGapComp = 100.0 * match / (match + mismatch + delEvents + insEvents);
+    Concordance = boost::algorithm::clamp(
+        100 * (1.0 - 1.0 *
+                         (cigarCounts.InsertionBases + cigarCounts.DeletionBases +
+                          cigarCounts.MismatchBases) /
+                         Span),
+        0.0, 100.0);
+
     const auto SetTag = [&](const char* tag, float value) {
         if (Record.Impl().HasTag(tag))
             Record.Impl().EditTag(tag, value);

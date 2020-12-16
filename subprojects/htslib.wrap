@@ -1,10 +1,12 @@
 [wrap-file]
-directory = htslib-1.9
+directory = htslib-1.10.2
+source_url = https://github.com/samtools/htslib/archive/1.10.2.zip
+source_filename = htslib-1.10.2.zip
+source_hash = f7994e9636f8a4032dea477a8613f5f73b330c23b5538e45666ce7306240ac14
+patch_url = https://wrapdb.mesonbuild.com/v1/projects/htslib/1.10.2/1/get_zip
+patch_filename = htslib-1.10.2-1-wrap.zip
+patch_hash = 7e8a0bfef2fb17e78ba1a8fd78e152bfbcfcb941b555d88c75b6d818a07d49d1
 
-source_url = https://github.com/samtools/htslib/archive/1.9.zip
-source_filename = htslib-1.9.zip
-source_hash = c4d3ae84014f8a80f5011521f391e917bc3b4f6ebd78e97f238472e95849ec14
+[provide]
+htslib = htslib_dep
 
-patch_url = https://wrapdb.mesonbuild.com/v1/projects/htslib/1.9/1/get_zip
-patch_filename = htslib-1.9-1-wrap.zip
-patch_hash = 02f4a3c64d668d4d09f8bb0f57eb33398e90e6901989f257be6a6716a15bdcdd

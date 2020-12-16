@@ -56,7 +56,8 @@ R"({
     "names" : ["c", "min-concordance-perc"],
     "description" : "Minimum alignment concordance in percent.",
     "type" : "double",
-    "default" : 70
+    "default" : 0,
+    "hidden" : true
 })"};
 
 const CLI_v2::Option MinPercIdentity{
@@ -64,15 +65,16 @@ R"({
     "names" : ["x", "min-id-perc"],
     "description" : "Minimum sequence identity in percent.",
     "type" : "double",
-    "default" : 0
+    "default" : 0,
+    "hidden" : true
 })"};
 
 const CLI_v2::Option MinPercIdentityGapComp{
 R"({
     "names" : ["y", "min-gap-comp-id-perc"],
-    "description" : "Minimum gap compressed sequence identity in percent.",
+    "description" : "Minimum gap-compressed sequence identity in percent.",
     "type" : "double",
-    "default" : 0
+    "default" : 70
 })"};
 
 const CLI_v2::Option MinAlignmentLength{
