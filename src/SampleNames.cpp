@@ -78,8 +78,7 @@ MovieToSampleToInfix SampleNames::DetermineMovieToSampleToInfix(const UserIO& ui
                     ++namedSampleCount;
                 } else {
                     movieNameToSampleAndInfix.emplace(
-                        movie, std::make_pair(SanitizeSampleName("UnnamedSample"),
-                                              SanitizeFileInfix("UnnamedSample")));
+                        movie, std::make_pair(fallbackSampleName, fallbackSampleName));
                 }
             }
         }
@@ -91,8 +90,8 @@ MovieToSampleToInfix SampleNames::DetermineMovieToSampleToInfix(const UserIO& ui
         if (biosampleCount > 0) {
             if (biosampleCount > 1 && namedSampleCount == 0) {
                 PBLOG_INFO << "Found more than 1 biosample, but read groups lack the SM tag - "
-                              "using 'UnnamedSample'!";
-                nameFromMetadata = "UnnamedSample";
+                           << "using '" << fallbackSampleName << "'!";
+                nameFromMetadata = fallbackSampleName;
             } else {
                 nameFromMetadata = biosamples[0].Name();
             }
