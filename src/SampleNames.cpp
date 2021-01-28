@@ -127,9 +127,19 @@ MovieToSampleToInfix SampleNames::DetermineMovieToSampleToInfix(const UserIO& ui
                     finalName = bioSampleName;
                 else if (!wellSampleName.empty())
                     finalName = wellSampleName;
-                finalName = SanitizeSampleName(finalName);
+                const std::string sampleName = SanitizeSampleName(finalName);
 
-                movieNameToSampleAndInfix[movieName] = {finalName, SanitizeFileInfix(finalName)};
+                if (movieNameToSampleAndInfix.find(movieName) != movieNameToSampleAndInfix.cend() &&
+                    movieNameToSampleAndInfix[movieName].first != fallbackSampleName &&
+                    movieNameToSampleAndInfix[movieName].first != sampleName) {
+                    PBLOG_WARN << "Offending bio sample names. BAM contains \'"
+                               << movieNameToSampleAndInfix[movieName].first
+                               << "\' and XML contains \'" << sampleName
+                               << "\'. Will ignore XML bio sample name.";
+                } else {
+                    movieNameToSampleAndInfix[movieName] = {sampleName,
+                                                            SanitizeFileInfix(finalName)};
+                }
             }
         }
     };
