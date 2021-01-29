@@ -3,8 +3,6 @@
   $ NO_SM_BIOSAMPLES=$TESTDIR/data/no_sm_biosamples.subreadset.xml
 
   $ $__PBTEST_PBMM2_EXE align $MERGED $REF $CRAMTMP/split.bam --split-by-sample
-  *Sample name '  UCLA 1023 ' contains a space character* (glob)
-  *Sample name 'test test ' contains a space character* (glob)
   $ ls -l $CRAMTMP/split.*.bam | wc -l | tr -d ' '
   3
 
@@ -27,8 +25,6 @@
   10
 
   $ $__PBTEST_PBMM2_EXE align $MERGED $REF $CRAMTMP/split_dataset.alignmentset.xml --split-by-sample
-  *Sample name '  UCLA 1023 ' contains a space character* (glob)
-  *Sample name 'test test ' contains a space character* (glob)
 
   $ [[ -f $CRAMTMP/split_dataset.3260208_188nM-GTAC_2xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494.alignmentset.xml ]] || echo "File does not exist!"
   $ [[ -f $CRAMTMP/split_dataset.test_test.alignmentset.xml ]] || echo "File does not exist!"
@@ -58,9 +54,6 @@ When both --split-by-sample and --sample were set, expect to see only one bam fi
   $ IN=$TESTDIR/data/merged.consensusreadset.xml
   $ $__PBTEST_PBMM2_EXE align $REF $IN $CRAMTMP/splitsampleoverride.consensusalignmentset.xml --sort -j 8 --split-by-sample --sample "MySample"  2>&1 | fgrep -v 'Requested more threads'
   *Options --split-by-sample and --sample are mutually exclusive. Option --sample will be applied and --split-by-sample is ignored! (glob)
-  *Sample name 'test test' contains a space character* (glob)
-  *Sample name 'test test' contains a space character* (glob)
-  *Sample name 'test test' contains a space character* (glob)
   $ [[ -f $CRAMTMP/splitsampleoverride.bam ]] || echo "File does not exist!"
   $ samtools view -H $CRAMTMP/splitsampleoverride.bam | grep "@RG" | grep -v "@PG	ID:samtools" | cut -f 6 | sort | uniq
   SM:MySample
