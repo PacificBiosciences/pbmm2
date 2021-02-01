@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<pbds:ConsensusReadSet CreatedAt="2018-09-28T08:38:45" MetaType="PacBio.DataSet.ConsensusReadSet" Name="3260208_188nM-GTAC_2xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494-Cell1 (CCS) AND 3260208_188nM-GTAC_3xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494-Cell1 (CCS) AND 3260208_188nM-GTAC_4xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494-Cell1 (CCS)" Tags="subreadset,CCS" TimeStampedName="pacbio_dataset_consensusreadset-180928_083845009" UniqueId="f5b66713-1f30-d08c-9f92-c2ae40cc281f" Version="3.0.1" 
-	xmlns:pbbase="http://pacificbiosciences.com/PacBioBaseDataModel.xsd" 
-	xmlns:pbds="http://pacificbiosciences.com/PacBioDatasets.xsd" 
-	xmlns:pbmeta="http://pacificbiosciences.com/PacBioCollectionMetadata.xsd" 
-	xmlns:pbsample="http://pacificbiosciences.com/PacBioSampleInfo.xsd" 
-	xmlns:pbrk="http://pacificbiosciences.com/PacBioReagentKit.xsd" 
+<pbds:ConsensusReadSet CreatedAt="2018-09-28T08:38:45" MetaType="PacBio.DataSet.ConsensusReadSet" Name="3260208_188nM-GTAC_2xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494-Cell1 (CCS) AND 3260208_188nM-GTAC_3xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494-Cell1 (CCS) AND 3260208_188nM-GTAC_4xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494-Cell1 (CCS)" Tags="subreadset,CCS" TimeStampedName="pacbio_dataset_consensusreadset-180928_083845009" UniqueId="f5b66713-1f30-d08c-9f92-c2ae40cc281f" Version="3.0.1"
+	xmlns:pbbase="http://pacificbiosciences.com/PacBioBaseDataModel.xsd"
+	xmlns:pbds="http://pacificbiosciences.com/PacBioDatasets.xsd"
+	xmlns:pbmeta="http://pacificbiosciences.com/PacBioCollectionMetadata.xsd"
+	xmlns:pbsample="http://pacificbiosciences.com/PacBioSampleInfo.xsd"
+	xmlns:pbrk="http://pacificbiosciences.com/PacBioReagentKit.xsd"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pacificbiosciences.com/PacBioDatasets.xsd">
 	<pbbase:ExternalResources>
 		<pbbase:ExternalResource MetaType="PacBio.ConsensusReadFile.ConsensusReadBamFile" ResourceId="m54075_180905_221350.ccs.bam" TimeStampedName="pacbio_consensusreadfile_consensusreadbamfile-180928_082814184" UniqueId="c1281369-6a6b-427f-8c25-0f0a4dd49127" Version="3.0.1">
@@ -403,9 +403,6 @@
 	<pbds:DataSetMetadata>
 		<pbds:TotalLength>0</pbds:TotalLength>
 		<pbds:NumRecords>36</pbds:NumRecords>
-		<pbsample:BioSamples>
-			<pbsample:BioSample Name="test test"/>
-		</pbsample:BioSamples>
 		<pbmeta:Collections>
 			<pbmeta:CollectionMetadata Context="m54075_180905_221350" CreatedAt="0001-01-01T00:00:00" InstrumentId="60001" InstrumentName="Inst60001" MetaType="CollectionMetadata" ModifiedAt="0001-01-01T00:00:00" Status="Ready" TimeStampedName="60001-CollectionMetadata-2015-07-09T09:30:47.833Z" UniqueId="ab0a16df-1bd5-4f09-aa98-35cbedde995d">
 				<pbmeta:InstCtrlVer>6.0.0.SNAPSHOT39495</pbmeta:InstCtrlVer>

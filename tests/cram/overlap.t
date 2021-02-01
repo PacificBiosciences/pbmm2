@@ -1,8 +1,8 @@
-  $ $__PBTEST_PBMM2_EXE align $TESTDIR/data/overlap_ref.fasta $TESTDIR/data/overlap.fasta $CRAMTMP/overlap.bam
+  $ "$PBMM2" align "$TESTDIR"/data/overlap_ref.fasta "$TESTDIR"/data/overlap.fasta "$CRAMTMP"/overlap.bam
   *Input is FASTA. Output BAM file cannot be used for polishing with GenomicConsensus* (glob)
-  $ $__PBTEST_PBMM2_EXE align $TESTDIR/data/synth.ref.fasta $TESTDIR/data/synth5k.fasta.gz $CRAMTMP/synth.bam
+  $ "$PBMM2" align "$TESTDIR"/data/synth.ref.fasta "$TESTDIR"/data/synth5k.fasta.gz "$CRAMTMP"/synth.bam
   *Input is FASTA. Output BAM file cannot be used for polishing with GenomicConsensus* (glob)
-  $ samtools view $CRAMTMP/synth.bam | cut -f 1,6 | tr '\t' ' '
+  $ "$SAMTOOLS" view "$CRAMTMP"/synth.bam | cut -f 1,6 | tr '\t' ' '
   TestMovie/0/0_2000 2000=
   TestMovie/1/0_2000 2000=
   TestMovie/2/0_2000 1024=976S
