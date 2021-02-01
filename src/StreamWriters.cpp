@@ -19,6 +19,7 @@
 #include <boost/uuid/uuid_io.hpp>
 
 #include "AbortException.h"
+#include "SampleNames.h"
 #include "Timer.h"
 #include "bam_sort.h"
 
@@ -131,8 +132,11 @@ StreamWriter::StreamWriter(BAM::BamHeader header, const std::string& outPrefix, 
     if (!sample_.empty()) {
         auto rgs = header_.ReadGroups();
         header_.ClearReadGroups();
-        for (auto& rg : rgs)
-            if (rg.Sample() == sample_) header_.AddReadGroup(rg);
+        for (auto& rg : rgs) {
+            if (SampleNames::SanitizeSampleName(rg.Sample()) == sample_) {
+                header_.AddReadGroup(rg);
+            }
+        }
     }
 
     BAM::BamWriter::Config bamWriterConfig;
