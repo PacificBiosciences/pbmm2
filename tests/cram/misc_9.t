@@ -17,67 +17,67 @@
   $ gzip "$CRAMTMP"/median_compressed.fasta
   $ FASTAGZ="$CRAMTMP"/median_compressed.fasta.gz
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/warn_bai.bam --no-bai
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/warn_bai.bam --no-bai
   *Option --no-bai has no effect without option --sort!* (glob)
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/fail.bam -o -2
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/fail.bam -o -2
   *Gap options have to be strictly positive.* (glob)
   [1]
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/fail.bam -O -2
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/fail.bam -O -2
   *Gap options have to be strictly positive.* (glob)
   [1]
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/fail.bam -e -2
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/fail.bam -e -2
   *Gap options have to be strictly positive.* (glob)
   [1]
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/fail.bam -E -2
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/fail.bam -E -2
   *Gap options have to be strictly positive.* (glob)
   [1]
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/fail.bam -k 0
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/fail.bam -k 0
   *Index parameter -k and -w must be positive.* (glob)
   [1]
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/fail.bam -k -2
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/fail.bam -k -2
   *Index parameter -k and -w must be positive.* (glob)
   [1]
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/fail.bam -w 0
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/fail.bam -w 0
   *Index parameter -k and -w must be positive.* (glob)
   [1]
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/fail.bam -w -2
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/fail.bam -w -2
   *Index parameter -k and -w must be positive.* (glob)
   [1]
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/fail.bam -o 150
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/fail.bam -o 150
   *Violation of dual gap penalties, E1>E2 and O1+E1<O2+E2* (glob)
   [1]
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/fail.bam -z 100 -Z 200
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/fail.bam -z 100 -Z 200
   *Z-drop should not be less than inversion-Z-drop* (glob)
   [1]
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/fail.bam -o 20 -O 5 -e 1 -E 2
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/fail.bam -o 20 -O 5 -e 1 -E 2
   *Violation of dual gap penalties, E1>E2 and O1+E1<O2+E2* (glob)
   [1]
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/fail.bam --best-n -1
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/fail.bam --best-n -1
   *Parameter --best-n, -N must be positive.* (glob)
   [1]
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/fail.bam -N -2
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/fail.bam -N -2
   *Parameter --best-n, -N must be positive.* (glob)
   [1]
 
-  $ "$PBMM2" align "$REF" $BAM $BAM "$CRAMTMP"/fail.bam
+  $ "$PBMM2" align -j 1 "$REF" $BAM $BAM "$CRAMTMP"/fail.bam
   *Incorrect number of arguments. Accepted are at most three!* (glob)
   [1]
 
   $ FOFN="$CRAMTMP"/fa_not_exist.fofn
   $ echo "FastaNotExist.fasta" > $FOFN
-  $ "$PBMM2" align "$REF" $FOFN  "$CRAMTMP"/fa_not_exist.bam --preset CCS --rg '@RG\tID:myid\tSM:mysample'
+  $ "$PBMM2" align -j 1 "$REF" $FOFN  "$CRAMTMP"/fa_not_exist.bam --preset CCS --rg '@RG\tID:myid\tSM:mysample'
   *Input fofn contains non-existing file: FastaNotExist.fasta* (glob)
   [1]

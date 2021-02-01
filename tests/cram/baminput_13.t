@@ -1,7 +1,7 @@
   $ IN="$TESTDIR"/data/median.bam
   $ REF="$TESTDIR"/data/ecoliK12_pbi_March2013.fasta
 
-  $ "$PBMM2" align "$IN" "$REF" > "$CRAMTMP"/unsortedoutstream.bam
+  $ "$PBMM2" align -j 1 "$IN" "$REF" > "$CRAMTMP"/unsortedoutstream.bam
   $ "$SAMTOOLS" view -H "$CRAMTMP"/unsortedoutstream.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
   1
   $ ls -alh "$CRAMTMP"/unsortedoutstream.bam.pbi 2> /dev/null | wc -l | tr -d ' '

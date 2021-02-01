@@ -12,7 +12,7 @@
   $ gzip "$CRAMTMP"/median_compressed.fasta
   $ FASTAGZ="$CRAMTMP"/median_compressed.fasta.gz
 
-  $ "$PBMM2" align "$REF" "$FASTA" "$CRAMTMP"/fasta_sorted_csi.bam --sort --bam-index CSI
+  $ "$PBMM2" align -j 1 "$REF" "$FASTA" "$CRAMTMP"/fasta_sorted_csi.bam --sort --bam-index CSI
   *Input is FASTA.* (glob)
   $ "$SAMTOOLS" view -H "$CRAMTMP"/fasta_sorted_csi.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
   1

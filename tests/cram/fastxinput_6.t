@@ -12,17 +12,17 @@
   $ gzip "$CRAMTMP"/median_compressed.fasta
   $ FASTAGZ="$CRAMTMP"/median_compressed.fasta.gz
 
-  $ "$PBMM2" align "$REF" "$FASTA" "$CRAMTMP"/fasta_unsortedjs.json
+  $ "$PBMM2" align -j 1 "$REF" "$FASTA" "$CRAMTMP"/fasta_unsortedjs.json
   *Input is FASTA.* (glob)
   *Unsupported input type* (glob)
   [1]
 
-  $ "$PBMM2" align "$REF" "$FASTA" "$CRAMTMP"/fasta_sortedjs.json --sort
+  $ "$PBMM2" align -j 1 "$REF" "$FASTA" "$CRAMTMP"/fasta_sortedjs.json --sort
   *Input is FASTA.* (glob)
   *Unsupported input type* (glob)
   [1]
 
-  $ "$PBMM2" align "$REF" "$FASTA" > "$CRAMTMP"/fasta_unsortedoutstream.bam
+  $ "$PBMM2" align -j 1 "$REF" "$FASTA" > "$CRAMTMP"/fasta_unsortedoutstream.bam
   *Input is FASTA.* (glob)
   $ "$SAMTOOLS" view -H "$CRAMTMP"/fasta_unsortedoutstream.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
   1

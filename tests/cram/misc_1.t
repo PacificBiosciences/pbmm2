@@ -17,22 +17,22 @@
   $ gzip "$CRAMTMP"/median_compressed.fasta
   $ FASTAGZ="$CRAMTMP"/median_compressed.fasta.gz
 
-  $ "$PBMM2" align "$REF" "$IN" "$CRAMTMP"/global.alignmentset.xml --log-level FATAL
+  $ "$PBMM2" align -j 1 "$REF" "$IN" "$CRAMTMP"/global.alignmentset.xml --log-level FATAL
   $ grep PacBio.AlignmentFile.AlignmentBamFile "$CRAMTMP"/global.alignmentset.xml
   */global.bam* (glob)
 
-  $ "$PBMM2" align "$REF" "$IN" local.alignmentset.xml --log-level FATAL
+  $ "$PBMM2" align -j 1 "$REF" "$IN" local.alignmentset.xml --log-level FATAL
   $ grep PacBio.AlignmentFile.AlignmentBamFile local.alignmentset.xml
   */local.bam* (glob)
 
   $ mkdir -p "$CRAMTMP"/sub/dir/foo
-  $ "$PBMM2" align "$REF" "$IN" "$CRAMTMP"/sub/dir/foo/test.alignmentset.xml --log-level FATAL
+  $ "$PBMM2" align -j 1 "$REF" "$IN" "$CRAMTMP"/sub/dir/foo/test.alignmentset.xml --log-level FATAL
   $ grep PacBio.AlignmentFile.AlignmentBamFile "$CRAMTMP"/sub/dir/foo/test.alignmentset.xml
   */sub/dir/foo/test.bam* (glob)
 
   $ mkdir -p "$CRAMTMP"/bla/other/bar
   $ cd "$CRAMTMP"/sub/dir/foo
-  $ "$PBMM2" align "$REF" "$IN" ../../../bla/other/bar/test.alignmentset.xml --log-level FATAL
+  $ "$PBMM2" align -j 1 "$REF" "$IN" ../../../bla/other/bar/test.alignmentset.xml --log-level FATAL
   $ grep PacBio.AlignmentFile.AlignmentBamFile "$CRAMTMP"/bla/other/bar/test.alignmentset.xml
   */bla/other/bar/test.bam* (glob)
 

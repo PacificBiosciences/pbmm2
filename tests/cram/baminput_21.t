@@ -1,9 +1,9 @@
   $ IN="$TESTDIR"/data/median.bam
   $ REF="$TESTDIR"/data/ecoliK12_pbi_March2013.fasta
 
-  $ "$PBMM2" align "$TESTDIR"/data/median.transcriptset.xml "$REF" "$CRAMTMP"/out_trans_upper.TranscriptAlignmentSet.XmL || echo $?
-  $ "$PBMM2" align "$TESTDIR"/data/median.transcriptset.xml "$REF" "$CRAMTMP"/out_json_upper.JsON || echo $?
-  $ "$PBMM2" align "$TESTDIR"/data/median.transcriptset.xml "$REF" "$CRAMTMP"/out_xml_upper.XML 2> "$CRAMTMP"/out_xml_upper.err  || echo $?
+  $ "$PBMM2" align -j 1 "$TESTDIR"/data/median.transcriptset.xml "$REF" "$CRAMTMP"/out_trans_upper.TranscriptAlignmentSet.XmL || echo $?
+  $ "$PBMM2" align -j 1 "$TESTDIR"/data/median.transcriptset.xml "$REF" "$CRAMTMP"/out_json_upper.JsON || echo $?
+  $ "$PBMM2" align -j 1 "$TESTDIR"/data/median.transcriptset.xml "$REF" "$CRAMTMP"/out_xml_upper.XML 2> "$CRAMTMP"/out_xml_upper.err  || echo $?
   1
   $ cut -f 8 -d '|' < "$CRAMTMP"/out_xml_upper.err
   *Output is XML, but of unknown type! Please use alignmentset.xml, consensusalignmentset.xml, or transcriptalignmentset.xml* (glob)

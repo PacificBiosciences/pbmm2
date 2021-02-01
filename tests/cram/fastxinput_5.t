@@ -12,7 +12,7 @@
   $ gzip "$CRAMTMP"/median_compressed.fasta
   $ FASTAGZ="$CRAMTMP"/median_compressed.fasta.gz
 
-  $ "$PBMM2" align "$REF" "$FASTA" "$CRAMTMP"/fasta_sortedds.alignmentset.xml --sort 2> "$CRAMTMP"/fasta_sortedds.err || echo $?
+  $ "$PBMM2" align -j 1 "$REF" "$FASTA" "$CRAMTMP"/fasta_sortedds.alignmentset.xml --sort 2> "$CRAMTMP"/fasta_sortedds.err || echo $?
   $ cut -f 8 -d '|' < "$CRAMTMP"/fasta_sortedds.err
   *Input is FASTA.* (glob)
   - Input is not a dataset, but output is. Please use dataset input for full SMRT Link compatibility!

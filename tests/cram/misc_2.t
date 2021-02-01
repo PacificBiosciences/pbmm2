@@ -17,40 +17,40 @@
   $ gzip "$CRAMTMP"/median_compressed.fasta
   $ FASTAGZ="$CRAMTMP"/median_compressed.fasta.gz
 
-  $ "$PBMM2" align "$IN" 2>&1
+  $ "$PBMM2" align -j 1 "$IN" 2>&1
   *Please provide at least the input arguments: reference input output!* (glob)
   *EXAMPLE: pbmm2 reference.fasta input.subreads.bam output.bam* (glob)
   [1]
 
-  $ "$PBMM2" align "$IN".bam "$REF" "$CRAMTMP"/fail.bam 2>&1; rm -rf "$CRAMTMP"/fail.bam
+  $ "$PBMM2" align -j 1 "$IN".bam "$REF" "$CRAMTMP"/fail.bam 2>&1; rm -rf "$CRAMTMP"/fail.bam
   *Input data file does not exist* (glob)
 
-  $ "$PBMM2" align "$IN" "$REF".fasta "$CRAMTMP"/fail.bam 2>&1; rm -rf "$CRAMTMP"/fail.bam
+  $ "$PBMM2" align -j 1 "$IN" "$REF".fasta "$CRAMTMP"/fail.bam 2>&1; rm -rf "$CRAMTMP"/fail.bam
   *file does not exist* (glob)
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/fail.bumms 2>&1
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/fail.bumms 2>&1
   *Unknown file extension for output* (glob)
   [1]
 
-  $ "$PBMM2" align "$IN" "$IN" "$CRAMTMP"/fail.bam 2>&1; rm -rf "$CRAMTMP"/fail.bam
+  $ "$PBMM2" align -j 1 "$IN" "$IN" "$CRAMTMP"/fail.bam 2>&1; rm -rf "$CRAMTMP"/fail.bam
   *Both input files are of type BAM. Please check your inputs.* (glob)
 
-  $ "$PBMM2" align "$REF" "$REF" "$CRAMTMP"/fail.bam 2>&1; rm -rf "$CRAMTMP"/fail.bam
+  $ "$PBMM2" align -j 1 "$REF" "$REF" "$CRAMTMP"/fail.bam 2>&1; rm -rf "$CRAMTMP"/fail.bam
   *Input is FASTA.* (glob)
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/fail.bam -L 1.1
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/fail.bam -L 1.1
   *Option -L,--lj-min-ratio has to be between a ratio betweem 0 and 1.* (glob)
   [1]
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/fail.bam --zmw
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/fail.bam --zmw
   *Option --zmw can only be used with a subreadset.xml containing subread + scraps BAM files.* (glob)
   [1]
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/fail.bam --hqregion
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/fail.bam --hqregion
   *Option --hqregion can only be used with a subreadset.xml containing subread + scraps BAM files.* (glob)
   [1]
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/fail.bam --zmw --hqregion 2>&1; rm -rf "$CRAMTMP"/fail.bam
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/fail.bam --zmw --hqregion 2>&1; rm -rf "$CRAMTMP"/fail.bam
   *Options --zmw, --hqregion and --median-filter are mutually exclusive.* (glob)
 
   $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/fail.bam --sort -J 1 -m 1000P 2>&1; rm -rf "$CRAMTMP"/fail.bam

@@ -1,18 +1,18 @@
   $ IN="$TESTDIR"/data/median.bam
   $ REF="$TESTDIR"/data/ecoliK12_pbi_March2013.fasta
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/fail.bam -j 500 2>&1| grep WARN
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/fail.bam -j 500 2>&1| grep WARN
   *Requested more threads for alignment (500) than system-wide available* (glob)
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/fail.bam -J 500 --sort 2>&1| grep AlignSettings | grep Requested
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/fail.bam -J 500 --sort 2>&1| grep AlignSettings | grep Requested
   *Requested more threads for sorting (500) and alignment (1) than system-wide available* (glob)
   *Requested more threads for sorting (500) than system-wide available* (glob)
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/pass2.bam -j 1 -J 500 -m 500G
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/pass2.bam -j 1 -J 500 -m 500G
   *Requested 500 threads for sorting, without specifying --sort. Please check your input. (glob)
   *Requested 500G memory for sorting, without specifying --sort. Please check your input. (glob)
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/fail3.bam -j 1 -J 500 --sort --sort 2>&1| grep Requested
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/fail3.bam -j 1 -J 500 --sort --sort 2>&1| grep Requested
   *Requested more threads for sorting* (glob)
   *Requested more threads for sorting* (glob)
 

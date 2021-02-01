@@ -1,7 +1,7 @@
   $ IN="$TESTDIR"/data/median.bam
   $ REF="$TESTDIR"/data/ecoliK12_pbi_March2013.fasta
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/ccs_parameters.bam --log-level DEBUG --preset CCS 2>&1| grep DEBUG
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/ccs_parameters.bam --log-level DEBUG --preset CCS 2>&1| grep DEBUG
   *Minimap2 parameters* (glob)
   *Kmer size              : 19 (glob)
   *Minimizer window size  : 10 (glob)

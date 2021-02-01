@@ -2,7 +2,7 @@
   $ MERGED=merged.json
   $ REF=ecoliK12_pbi_March2013.fasta
 
-  $ "$PBMM2" align "$MERGED" "$REF" "$CRAMTMP"/split_dataset_sorted_json.alignmentset.xml --split-by-sample
+  $ "$PBMM2" align -j 1 "$MERGED" "$REF" "$CRAMTMP"/split_dataset_sorted_json.alignmentset.xml --split-by-sample
 
   $ [[ -f "$CRAMTMP"/split_dataset_sorted_json.3260208_188nM-GTAC_2xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494.alignmentset.xml ]] || echo "File does not exist!"
   $ [[ -f "$CRAMTMP"/split_dataset_sorted_json.test_test.alignmentset.xml ]] || echo "File does not exist!"

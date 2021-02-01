@@ -1,7 +1,7 @@
   $ IN="$TESTDIR"/data/median.bam
   $ REF="$TESTDIR"/data/ecoliK12_pbi_March2013.fasta
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/sorted_nobai.bam --sort --no-bai
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/sorted_nobai.bam --sort --no-bai
   *Overriding --bam-index with --no-bai! (glob)
   $ "$SAMTOOLS" view -H "$CRAMTMP"/sorted_nobai.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
   1

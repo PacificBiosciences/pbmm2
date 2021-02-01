@@ -21,30 +21,30 @@
 
   $ echo $BAM > "$CRAMTMP"/mixed-bam-fq.fofn
   $ echo "$FASTQ" >> "$CRAMTMP"/mixed-bam-fq.fofn
-  $ "$PBMM2" align "$CRAMTMP"/mixed-bam-fq.fofn "$REF" "$CRAMTMP"/mixed-bam-fq.bam
+  $ "$PBMM2" align -j 1 "$CRAMTMP"/mixed-bam-fq.fofn "$REF" "$CRAMTMP"/mixed-bam-fq.bam
   *Input fofn contains different file types. This is not supported.* (glob)
   [1]
 
   $ echo $BAM > "$CRAMTMP"/mixed-bam-fa.fofn
   $ echo "$FASTA" >> "$CRAMTMP"/mixed-bam-fa.fofn
-  $ "$PBMM2" align "$CRAMTMP"/mixed-bam-fa.fofn "$REF" "$CRAMTMP"/mixed-bam-fq.bam
+  $ "$PBMM2" align -j 1 "$CRAMTMP"/mixed-bam-fa.fofn "$REF" "$CRAMTMP"/mixed-bam-fq.bam
   *Input fofn contains different file types. This is not supported.* (glob)
   [1]
 
   $ echo "$FASTQ" > "$CRAMTMP"/mixed-fq-fa.fofn
   $ echo "$FASTA" >> "$CRAMTMP"/mixed-fq-fa.fofn
-  $ "$PBMM2" align "$CRAMTMP"/mixed-fq-fa.fofn "$REF" "$CRAMTMP"/mixed-fq-fa.bam
+  $ "$PBMM2" align -j 1 "$CRAMTMP"/mixed-fq-fa.fofn "$REF" "$CRAMTMP"/mixed-fq-fa.bam
   *Input fofn contains different file types. This is not supported.* (glob)
   [1]
 
   $ echo "$FASTQGZ" > "$CRAMTMP"/mixed-fqgz-fa.fofn
   $ echo "$FASTA" >> "$CRAMTMP"/mixed-fqgz-fa.fofn
-  $ "$PBMM2" align "$CRAMTMP"/mixed-fqgz-fa.fofn "$REF" "$CRAMTMP"/mixed-fq-fa.bam
+  $ "$PBMM2" align -j 1 "$CRAMTMP"/mixed-fqgz-fa.fofn "$REF" "$CRAMTMP"/mixed-fq-fa.bam
   *Input fofn contains different file types. This is not supported.* (glob)
   [1]
 
   $ echo "$FASTQ" > "$CRAMTMP"/mixed-fq-fagz.fofn
   $ echo "$FASTAGZ" >> "$CRAMTMP"/mixed-fq-fagz.fofn
-  $ "$PBMM2" align "$CRAMTMP"/mixed-fq-fagz.fofn "$REF" "$CRAMTMP"/mixed-fq-fa.bam
+  $ "$PBMM2" align -j 1 "$CRAMTMP"/mixed-fq-fagz.fofn "$REF" "$CRAMTMP"/mixed-fq-fa.bam
   *Input fofn contains different file types. This is not supported.* (glob)
   [1]

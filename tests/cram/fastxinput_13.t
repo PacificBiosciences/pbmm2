@@ -12,7 +12,7 @@
   $ gzip "$CRAMTMP"/median_compressed.fasta
   $ FASTAGZ="$CRAMTMP"/median_compressed.fasta.gz
 
-  $ "$PBMM2" align "$REF" "$FASTQGZ" "$CRAMTMP"/fastq_compressed_unsorted.bam 2>&1
+  $ "$PBMM2" align -j 1 "$REF" "$FASTQGZ" "$CRAMTMP"/fastq_compressed_unsorted.bam 2>&1
   *Input is FASTQ.* (glob)
   $ "$SAMTOOLS" view -H "$CRAMTMP"/fastq_compressed_unsorted.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
   1

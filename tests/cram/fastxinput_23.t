@@ -22,7 +22,7 @@
   $ "$SAMTOOLS" view "$BAM" | awk '{ print ">"$1"\n"$10 }' > "$CRAMTMP"/m54075_180905_225130.fasta
   $ FASTA="$CRAMTMP"/m54075_180905_225130.fasta
 
-  $ "$PBMM2" align "$REF" "$FASTQ" "$CRAMTMP"/fastq_unsorted.bam 2>&1
+  $ "$PBMM2" align -j 1 "$REF" "$FASTQ" "$CRAMTMP"/fastq_unsorted.bam 2>&1
   *Input is FASTQ.* (glob)
   $ "$SAMTOOLS" view -H "$CRAMTMP"/fastq_unsorted.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
   1
@@ -37,7 +37,7 @@
   $ ls -alh "$CRAMTMP"/fastq_unsorted.json 2> /dev/null | wc -l | tr -d ' '
   0
 
-  $ "$PBMM2" align "$REF" "$FASTQ" "$CRAMTMP"/fastq_sorted.bam --sort
+  $ "$PBMM2" align -j 1 "$REF" "$FASTQ" "$CRAMTMP"/fastq_sorted.bam --sort
   *Input is FASTQ.* (glob)
   $ "$SAMTOOLS" view -H "$CRAMTMP"/fastq_sorted.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
   1
@@ -52,7 +52,7 @@
   $ ls -alh "$CRAMTMP"/fastq_sorted.json 2> /dev/null | wc -l | tr -d ' '
   0
 
-  $ "$PBMM2" align "$REF" "$FASTQ" "$CRAMTMP"/fastq_unsortedds.alignmentset.xml 2> "$CRAMTMP"/fastq_unsortedds.err || echo $?
+  $ "$PBMM2" align -j 1 "$REF" "$FASTQ" "$CRAMTMP"/fastq_unsortedds.alignmentset.xml 2> "$CRAMTMP"/fastq_unsortedds.err || echo $?
   $ cut -f 8 -d '|' < "$CRAMTMP"/fastq_unsortedds.err
   *Input is FASTQ.* (glob)
   - Input is not a dataset, but output is. Please use dataset input for full SMRT Link compatibility!
@@ -69,7 +69,7 @@
   $ ls -alh "$CRAMTMP"/fastq_unsortedds.json 2> /dev/null | wc -l | tr -d ' '
   0
 
-  $ "$PBMM2" align "$REF" "$FASTQ" "$CRAMTMP"/fastq_sortedds.alignmentset.xml --sort 2> "$CRAMTMP"/fastq_sortedds.err || echo $?
+  $ "$PBMM2" align -j 1 "$REF" "$FASTQ" "$CRAMTMP"/fastq_sortedds.alignmentset.xml --sort 2> "$CRAMTMP"/fastq_sortedds.err || echo $?
   $ cut -f 8 -d '|' < "$CRAMTMP"/fastq_sortedds.err
   *Input is FASTQ.* (glob)
   - Input is not a dataset, but output is. Please use dataset input for full SMRT Link compatibility!
@@ -86,17 +86,17 @@
   $ ls -alh "$CRAMTMP"/fastq_sortedds.json 2> /dev/null | wc -l | tr -d ' '
   0
 
-  $ "$PBMM2" align "$REF" "$FASTQ" "$CRAMTMP"/fastq_unsortedjs.json
+  $ "$PBMM2" align -j 1 "$REF" "$FASTQ" "$CRAMTMP"/fastq_unsortedjs.json
   *Input is FASTQ.* (glob)
   *Unsupported input type* (glob)
   [1]
 
-  $ "$PBMM2" align "$REF" "$FASTQ" "$CRAMTMP"/fastq_sortedjs.json --sort
+  $ "$PBMM2" align -j 1 "$REF" "$FASTQ" "$CRAMTMP"/fastq_sortedjs.json --sort
   *Input is FASTQ.* (glob)
   *Unsupported input type* (glob)
   [1]
 
-  $ "$PBMM2" align "$REF" "$FASTQ" > "$CRAMTMP"/fastq_unsortedoutstream.bam
+  $ "$PBMM2" align -j 1 "$REF" "$FASTQ" > "$CRAMTMP"/fastq_unsortedoutstream.bam
   *Input is FASTQ.* (glob)
   $ "$SAMTOOLS" view -H "$CRAMTMP"/fastq_unsortedoutstream.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
   1
@@ -111,7 +111,7 @@
   $ ls -alh "$CRAMTMP"/fastq_unsortedoutstream.json 2> /dev/null | wc -l | tr -d ' '
   0
 
-  $ "$PBMM2" align "$REF" "$FASTQ" > "$CRAMTMP"/fastq_sortedoutstream.bam --sort
+  $ "$PBMM2" align -j 1 "$REF" "$FASTQ" > "$CRAMTMP"/fastq_sortedoutstream.bam --sort
   *Input is FASTQ.* (glob)
   $ "$SAMTOOLS" view -H "$CRAMTMP"/fastq_sortedoutstream.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
   1
@@ -126,7 +126,7 @@
   $ ls -alh "$CRAMTMP"/fastq_sortedoutstream.json 2> /dev/null | wc -l | tr -d ' '
   0
 
-  $ "$PBMM2" align "$REF" "$FASTQ" "$CRAMTMP"/fastq_unsortedccs.consensusalignmentset.xml 2> "$CRAMTMP"/fastq_unsortedccs.err || echo $?
+  $ "$PBMM2" align -j 1 "$REF" "$FASTQ" "$CRAMTMP"/fastq_unsortedccs.consensusalignmentset.xml 2> "$CRAMTMP"/fastq_unsortedccs.err || echo $?
   $ cut -f 8 -d '|' < "$CRAMTMP"/fastq_unsortedccs.err
   *Input is FASTQ.* (glob)
   - Input is not a dataset, but output is. Please use dataset input for full SMRT Link compatibility!
@@ -143,7 +143,7 @@
   $ ls -alh "$CRAMTMP"/fastq_unsortedccs.json 2> /dev/null | wc -l | tr -d ' '
   0
 
-  $ "$PBMM2" align "$REF" "$FASTQ" "$CRAMTMP"/fastq_unsortedts.transcriptalignmentset.xml 2> "$CRAMTMP"/fastq_unsortedts.err || echo $?
+  $ "$PBMM2" align -j 1 "$REF" "$FASTQ" "$CRAMTMP"/fastq_unsortedts.transcriptalignmentset.xml 2> "$CRAMTMP"/fastq_unsortedts.err || echo $?
   $ cut -f 8 -d '|' < "$CRAMTMP"/fastq_unsortedts.err
   *Input is FASTQ.* (glob)
   - Input is not a dataset, but output is. Please use dataset input for full SMRT Link compatibility!

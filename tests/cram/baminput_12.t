@@ -1,7 +1,7 @@
   $ IN="$TESTDIR"/data/median.bam
   $ REF="$TESTDIR"/data/ecoliK12_pbi_March2013.fasta
 
-  $ "$PBMM2" align "$IN" "$REF" "$CRAMTMP"/sortedjs.json --sort
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/sortedjs.json --sort
   $ "$SAMTOOLS" view -H "$CRAMTMP"/sortedjs.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
   1
   $ ls -alh "$CRAMTMP"/sortedjs.bam.pbi 2> /dev/null | wc -l | tr -d ' '

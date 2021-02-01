@@ -12,7 +12,7 @@
   $ gzip "$CRAMTMP"/median_compressed.fasta
   $ FASTAGZ="$CRAMTMP"/median_compressed.fasta.gz
 
-  $ "$PBMM2" align "$REF" "$FASTAGZ" > "$CRAMTMP"/fasta_compressed_unsortedoutstream.bam
+  $ "$PBMM2" align -j 1 "$REF" "$FASTAGZ" > "$CRAMTMP"/fasta_compressed_unsortedoutstream.bam
   *Input is FASTA.* (glob)
   $ "$SAMTOOLS" view -H "$CRAMTMP"/fasta_compressed_unsortedoutstream.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
   1
