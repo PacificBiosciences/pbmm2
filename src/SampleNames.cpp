@@ -38,11 +38,19 @@ std::string SampleNames::SanitizeSampleName(const std::string& in)
 
 std::string SampleNames::SanitizeFileInfix(const std::string& in)
 {
+    if (in.empty()) return fallbackSampleName;
+
+    auto trimmed = boost::algorithm::trim_copy(in);
+    if (trimmed.empty()) return fallbackSampleName;
+
     std::string sanitizedName;
-    for (const char& c : in) {
+    for (const char& c : trimmed) {
         if (c == '_' || c == '-' || c == '.' || (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') ||
-            (c >= 'a' && c <= 'z'))
+            (c >= 'a' && c <= 'z')) {
             sanitizedName += c;
+        } else if (c == ' ') {
+            sanitizedName += '_';
+        }
     }
     return sanitizedName;
 }
