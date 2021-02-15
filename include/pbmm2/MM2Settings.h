@@ -32,6 +32,7 @@ struct MM2Settings
     bool NoSpliceFlank = false;
     bool DisableHPC = false;
     bool NoTrimming = false;
+    bool ShortSACigar = false;
     float LongJoinFlankRatio = -1;
     std::string EnforcedMapping;
 };
