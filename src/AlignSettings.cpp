@@ -391,6 +391,14 @@ R"({
     "hidden" : true
 })"};
 
+const CLI_v2::Option ShortSACigar{
+R"({
+    "names" : ["short-sa-cigar"],
+    "description" : "Populate SA tag with short cigar representation.",
+    "type" : "bool"
+})"};
+
+
 const CLI_v2::PositionalArgument Reference {
 R"({
     "name" : "ref.fa|xml|mmi",
@@ -455,6 +463,7 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
     MM2Settings::EnforcedMapping = std::string(options[OptionNames::EnforcedMapping]);
     if (!MM2Settings::EnforcedMapping.empty()) MM2Settings::NoTrimming = true;
     MM2Settings::MaxSecondaryAlns = options[OptionNames::MaxSecondaryAlns];
+    MM2Settings::ShortSACigar = options[OptionNames::ShortSACigar];
 
     const bool noBai = options[OptionNames::NoBAI];
     const std::string bamIdx = options[OptionNames::BamIndexInput];
@@ -705,6 +714,7 @@ PacBio::CLI_v2::Interface AlignSettings::CreateCLI()
         OptionNames::OutputUnmapped,
         OptionNames::BamIndexInput,
         OptionNames::NoBAI,
+        OptionNames::ShortSACigar,
     });
 
     i.AddOptionGroup("Input Manipulation Options (mutually exclusive)", {

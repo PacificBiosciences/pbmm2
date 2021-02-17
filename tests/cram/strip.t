@@ -1,12 +1,12 @@
   $ IN="$TESTDIR"/data/median.bam
   $ REF="$TESTDIR"/data/ecoliK12_pbi_March2013.fasta
 
-  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/full.bam --sort
-  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/strip.bam --sort --strip
-  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/gapcomp_full.bam --sort --min-gap-comp-id-perc 10 --min-id-perc 0 --min-concordance-perc 0
-  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/id_full.bam --sort --min-gap-comp-id-perc 0 --min-id-perc 10 --min-concordance-perc 0
-  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/all_full.bam --sort --min-gap-comp-id-perc 10 --min-id-perc 10 --min-concordance-perc 10
-  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/gapcomp_strip.bam --sort --min-gap-comp-id-perc 10 --min-id-perc 0 --min-concordance-perc 0 --strip
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/full.bam --sort --short-sa-cigar
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/strip.bam --sort --strip --short-sa-cigar
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/gapcomp_full.bam --sort --min-gap-comp-id-perc 10 --min-id-perc 0 --min-concordance-perc 0 --short-sa-cigar
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/id_full.bam --sort --min-gap-comp-id-perc 0 --min-id-perc 10 --min-concordance-perc 0 --short-sa-cigar
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/all_full.bam --sort --min-gap-comp-id-perc 10 --min-id-perc 10 --min-concordance-perc 10 --short-sa-cigar
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/gapcomp_strip.bam --sort --min-gap-comp-id-perc 10 --min-id-perc 0 --min-concordance-perc 0 --strip --short-sa-cigar
 
   $ "$SAMTOOLS" view "$CRAMTMP"/full.bam| head -n 1 | cut -f 12- | tr '\t' '\n' | sort
   RG:Z:de99ee6d

@@ -415,7 +415,10 @@ before alignment. This mode cannot be combined with `.mmi` input.
 
 ## Full Changelog
 
- * **1.5.0**:
+ * **1.6.0**:
+   * `SA` tag contains full cigar; use `--short-sa-cigar` to use legacy version
+
+ * 1.5.0:
    * Hide `--min-concordance-perc` and `--min-id-perc`
    * Change default identity filter to `--min-gap-comp-id-perc`
 

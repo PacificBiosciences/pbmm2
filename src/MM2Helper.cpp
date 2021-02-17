@@ -116,6 +116,7 @@ MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
     , alnMode_(settings.AlignMode)
     , trimRepeatedMatches_(!settings.NoTrimming)
     , maxNumAlns_(settings.MaxNumAlns)
+    , shortSACigar_(settings.ShortSACigar)
 {
     std::string preset;
     PreInit(settings, &preset);
@@ -128,6 +129,7 @@ MM2Helper::MM2Helper(const std::vector<BAM::FastaSequence>& refs, const MM2Setti
     , alnMode_(settings.AlignMode)
     , trimRepeatedMatches_(!settings.NoTrimming)
     , maxNumAlns_(settings.MaxNumAlns)
+    , shortSACigar_(settings.ShortSACigar)
 {
     std::string preset;
     PreInit(settings, &preset);
@@ -140,6 +142,7 @@ MM2Helper::MM2Helper(std::vector<BAM::FastaSequence>&& refs, const MM2Settings& 
     , alnMode_(settings.AlignMode)
     , trimRepeatedMatches_(!settings.NoTrimming)
     , maxNumAlns_(settings.MaxNumAlns)
+    , shortSACigar_(settings.ShortSACigar)
 {
     std::string preset;
     PreInit(settings, &preset);
@@ -786,7 +789,24 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
             else
                 spans.emplace_back(clip5, qlen - clip3);
         }
-        if (trimRepeatedMatches_)
+        if (!shortSACigar_) {
+            sas.clear();
+            for (size_t j = 0; j < numAlignments; ++j) {
+                std::ostringstream sa;
+                const auto& rec = localResults.at(j).Record;
+                const auto qrs = rec.ReferenceStart();
+                const bool qrev = rec.AlignedStrand() == Data::Strand::REVERSE;
+                sa << Idx->idx_->seq[rec.ReferenceId()].name << ',' << qrs + 1 << ',' << "+-"[qrev]
+                   << ',';
+
+                sa << rec.CigarData().ToStdString();
+
+                sa << ',' << static_cast<int>(rec.MapQuality()) << ',' << rec.NumMismatches()
+                   << ';';
+                sas.emplace_back(sa.str());
+            }
+        }
+        if (trimRepeatedMatches_) {
             for (size_t i = 0; i < numAlignments; ++i) {
                 int32_t fixedBegin = spans[i].first;
                 int32_t fixedEnd = spans[i].second;
@@ -801,6 +821,7 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
                     }
                 }
             }
+        }
         for (size_t i = 0; i < numAlignments; ++i) {
             std::ostringstream sa;
             for (size_t j = 0; j < numAlignments; ++j) {

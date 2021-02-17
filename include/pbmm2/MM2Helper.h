@@ -129,6 +129,7 @@ private:
     const bool trimRepeatedMatches_;
     const int32_t maxNumAlns_;
     bool enforcedMapping_ = false;
+    bool shortSACigar_;
     std::vector<std::string> refNames_;
     std::unordered_map<std::string, std::vector<std::string>> readToRefsEnforcedMapping_;
 };
