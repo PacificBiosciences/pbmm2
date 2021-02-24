@@ -417,6 +417,7 @@ before alignment. This mode cannot be combined with `.mmi` input.
 
  * **1.6.0**:
    * `SA` tag contains full cigar; use `--short-sa-cigar` to use legacy version
+   * Set `TLEN`, for information only
 
  * 1.5.0:
    * Hide `--min-concordance-perc` and `--min-id-perc`
