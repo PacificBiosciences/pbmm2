@@ -183,6 +183,7 @@ struct CompatMappedRead : public Data::MappedRead
     const Data::Cigar& CigarData() const;
     void SetSupplementaryAlignment(bool supplAlnArg);
     bool IsSupplementaryAlignment() const;
+    void InsertSize(int32_t iSize);
 
     bool HasTag(const char*) const { return false; }
     void RemoveTag(const char*) const {}
