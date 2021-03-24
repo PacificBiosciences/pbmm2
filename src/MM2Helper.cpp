@@ -688,9 +688,11 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
         else
             cigar = RenderCigar(&aln, qlen, MapOpts.flag);
         const Data::Position refStart = aln.rs + refStartOffset;
+        const auto tlen = aln.re - aln.rs;  // assuming 0-based
 
         auto mapped = Mapped(unalignedCopy ? *unalignedCopy : record, refId, refStart, strand,
                              std::move(cigar), aln.mapq);
+        mapped.Impl().InsertSize(tlen);
         mapped.Impl().RemoveTag("rm");
         mapped.Impl().SetSupplementaryAlignment(aln.sam_pri == 0);
         Out alnRec{std::move(mapped)};
@@ -1051,6 +1053,8 @@ const Data::Cigar& CompatMappedRead::CigarData() const { return this->Cigar; }
 void CompatMappedRead::SetSupplementaryAlignment(bool supplAlnArg) { supplAln = supplAlnArg; }
 
 bool CompatMappedRead::IsSupplementaryAlignment() const { return supplAln; }
+
+void CompatMappedRead::InsertSize(int32_t /* iSize */) {}
 
 CompatMappedRead& CompatMappedRead::Impl() { return *this; }
 
