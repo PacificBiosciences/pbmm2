@@ -110,6 +110,80 @@ Data::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const int opt_
 }
 }  // namespace
 
+void TrimCigarFlanks(Data::Cigar* cigar, int32_t* refStartOffset)
+{
+    const int32_t cigarLength = cigar->size();
+    if (cigarLength == 0) {
+        return;
+    }
+    bool trimmed = false;
+    std::vector<int32_t> skippedOps;
+    for (int32_t i = 0; i < cigarLength; ++i) {
+        Data::CigarOperation& op = (*cigar)[i];
+        const char cigarChar = op.Char();
+        const uint32_t cigarLength = op.Length();
+        if (cigarChar == 'D') {
+            *refStartOffset += cigarLength;
+            op = Data::CigarOperation('N', cigarLength);
+            skippedOps.emplace_back(i);
+            trimmed = true;
+        } else if (cigarChar == 'X') {
+            *refStartOffset += cigarLength;
+            op = Data::CigarOperation('S', cigarLength);
+            trimmed = true;
+        } else if (cigarChar == 'I') {
+            op = Data::CigarOperation('S', cigarLength);
+            trimmed = true;
+        } else if (cigarChar != 'S') {
+            break;
+        }
+    }
+    for (int32_t i = cigarLength - 1; i >= 0; --i) {
+        Data::CigarOperation& op = (*cigar)[i];
+        const char cigarChar = op.Char();
+        const uint32_t cigarLength = op.Length();
+        if (cigarChar == 'D') {
+            op = Data::CigarOperation('N', cigarLength);
+            skippedOps.emplace_back(i);
+            trimmed = true;
+        } else if ((cigarChar == 'X') || (cigarChar == 'I')) {
+            op = Data::CigarOperation('S', cigarLength);
+            trimmed = true;
+        } else if (cigarChar != 'S') {
+            break;
+        }
+    }
+
+    if (trimmed) {
+        Data::Cigar newCigar;
+        Data::CigarOperation prevOp;
+        int32_t i = 0;
+        for (; i < cigarLength; ++i) {
+            if (std::find(skippedOps.cbegin(), skippedOps.cend(), i) != skippedOps.cend()) {
+                continue;
+            } else {
+                prevOp = (*cigar)[i];
+                break;
+            }
+        }
+        ++i;
+        for (; i < cigarLength; ++i) {
+            Data::CigarOperation& op = (*cigar)[i];
+            if (std::find(skippedOps.cbegin(), skippedOps.cend(), i) != skippedOps.cend()) {
+                continue;
+            }
+            if (op.Char() == prevOp.Char()) {
+                prevOp = Data::CigarOperation{prevOp.Char(), prevOp.Length() + op.Length()};
+            } else {
+                newCigar.emplace_back(prevOp);
+                prevOp = op;
+            }
+        }
+        newCigar.emplace_back(prevOp);
+        *cigar = std::move(newCigar);
+    }
+}
+
 MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
                      const std::string& outputMmi)
     : NumThreads{settings.NumThreads}
@@ -687,6 +761,14 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
             cigar = RenderCigar(&aln, qlen, MapOpts.flag, begin, end, &refStartOffset);
         else
             cigar = RenderCigar(&aln, qlen, MapOpts.flag);
+
+        TrimCigarFlanks(&cigar, &refStartOffset);
+        if (cigar.empty()) {
+            return;
+        } else if (cigar.size() == 1 && cigar[0].Type() == Data::CigarOperationType::SOFT_CLIP) {
+            return;
+        }
+
         const Data::Position refStart = aln.rs + refStartOffset;
         const auto tlen = aln.re - aln.rs;  // assuming 0-based
 
