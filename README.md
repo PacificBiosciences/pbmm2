@@ -415,9 +415,13 @@ before alignment. This mode cannot be combined with `.mmi` input.
 
 ## Full Changelog
 
+ * **1.6.99**:
+   * Set `TLEN`, for information only
+   * Trim insertions, deletions, and mismatches from the alignment flanks
+
  * **1.6.0**:
    * `SA` tag contains full cigar; use `--short-sa-cigar` to use legacy version
-   * Set `TLEN`, for information only
+   * Sanitize bio sample names
 
  * 1.5.0:
    * Hide `--min-concordance-perc` and `--min-id-perc`
