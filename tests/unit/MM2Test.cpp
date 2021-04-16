@@ -412,5 +412,63 @@ TEST(MM2Test, FastaRefAlignMoveRead)
     }
 }
 
+void TestTrimCigarFlanks(std::string given, std::string expected, int expectedOffset)
+{
+    Data::Cigar c(given);
+    int offset = 0;
+    TrimCigarFlanks(&c, &offset);
+    EXPECT_EQ(expected, c.ToStdString()) << " where cigar was " << given;
+    EXPECT_EQ(offset, expectedOffset) << " where cigar was " << given;
+}
+
+TEST(MM2Test, TrimCigarFlanks)
+{
+    TestTrimCigarFlanks("3I4=", "3S4=", 0);
+    TestTrimCigarFlanks("3D4=", "4=", 3);
+    TestTrimCigarFlanks("3I4=5I", "3S4=5S", 0);
+    TestTrimCigarFlanks("3D4=5D", "4=", 3);
+    TestTrimCigarFlanks("2S3I4=", "5S4=", 0);
+    TestTrimCigarFlanks("2S3D4=", "2S4=", 3);
+    TestTrimCigarFlanks("2S3I4=5I6S", "5S4=11S", 0);
+    TestTrimCigarFlanks("2S3D4=5D6S", "2S4=6S", 3);
+    TestTrimCigarFlanks("2D3I", "3S", 2);
+    TestTrimCigarFlanks("3I2D", "3S", 2);
+    TestTrimCigarFlanks("1=2D3I", "1=3S", 0);
+    TestTrimCigarFlanks("1=3I2D", "1=3S", 0);
+
+    TestTrimCigarFlanks("2X4=", "2S4=", 2);
+    TestTrimCigarFlanks("2X1D4=", "2S4=", 3);
+    TestTrimCigarFlanks("2X1I4=", "3S4=", 2);
+    TestTrimCigarFlanks("2X1D3I4=", "5S4=", 3);
+
+    TestTrimCigarFlanks("3I2X4=", "5S4=", 2);
+    TestTrimCigarFlanks("3I1D2X4=", "5S4=", 3);
+    TestTrimCigarFlanks("3I2X1D4=", "5S4=", 3);
+
+    TestTrimCigarFlanks("3I2X1D4=3X", "5S4=3S", 3);
+    TestTrimCigarFlanks("3I2X1D4=3X2D", "5S4=3S", 3);
+    TestTrimCigarFlanks("3I2X1D4=3X2D1I", "5S4=4S", 3);
+
+    TestTrimCigarFlanks("3I2X1D4=3I", "5S4=3S", 3);
+    TestTrimCigarFlanks("3I2X1D4=3I2X", "5S4=5S", 3);
+    TestTrimCigarFlanks("3I2X1D4=3I2X1D", "5S4=5S", 3);
+
+    TestTrimCigarFlanks("3I2X1D4=3D", "5S4=", 3);
+    TestTrimCigarFlanks("3I2X1D4=3D1X", "5S4=1S", 3);
+    TestTrimCigarFlanks("3I2X1D4=3D1X2I", "5S4=3S", 3);
+    TestTrimCigarFlanks("3I2X1D4=3D1X2I1X", "5S4=4S", 3);
+
+    TestTrimCigarFlanks("3I2X1D4D1X2I1X", "9S", 9);
+
+    TestTrimCigarFlanks("10S1D1X1I1D1X1I10=1D1X1I1D1X1I10S", "14S10=14S", 4);
+
+    // clang-format off
+    TestTrimCigarFlanks(
+        "913=1X437=1I159=1X105=1X308=1X57=2I131=1X25=2X84=1X46=20I215=1X248=1X136=1X152=1X21=1X9=1X13=1X32=436I8090S",
+        "913=1X437=1I159=1X105=1X308=1X57=2I131=1X25=2X84=1X46=20I215=1X248=1X136=1X152=1X21=1X9=1X13=1X32=8526S",
+        0);
+    // clang-format on
+}
+
 }  // namespace MM2Tests
 }  // namespace PacBio
