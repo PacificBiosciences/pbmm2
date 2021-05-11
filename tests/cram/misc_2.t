@@ -88,7 +88,7 @@
   *Output file must end with .mmi:* (glob)
   [1]
 
-  $ "$PBMM2"
+  $ "$PBMM2" | head -n 32
   pbmm2 - minimap2 with native PacBio BAM support
   * (glob)
   Usage:
