@@ -45,8 +45,7 @@ R"(Typical workflows:
      $ pbmm2 align hg38.mmi movie1.subreadset.xml | samtools sort > hg38.movie1.sorted.bam
 
   E. Align CCS fastq input and sort on-the-fly
-     $ pbmm2 align ref.fasta movie.Q20.fastq ref.movie.bam --preset CCS --sort --rg '@RG\tID:myid\tSM:mysample'
-)");
+     $ pbmm2 align ref.fasta movie.Q20.fastq ref.movie.bam --preset CCS --sort --rg '@RG\tID:myid\tSM:mysample')");
 
     // clang-format on
     return mi;
