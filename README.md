@@ -415,7 +415,7 @@ before alignment. This mode cannot be combined with `.mmi` input.
 
 ## Full Changelog
 
- * **1.6.99**:
+ * **1.7.0**:
    * Set `TLEN`, for information only
    * Trim insertions, deletions, and mismatches from the alignment flanks
 
