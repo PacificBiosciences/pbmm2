@@ -114,8 +114,7 @@ PacBio::CLI_v2::Interface IndexSettings::CreateCLI()
     SUBREAD     : -k 19 -w 10
     CCS or HiFi : -k 19 -w 10 -u
     ISOSEQ      : -k 15 -w 5  -u
-    UNROLLED    : -k 15 -w 15
-    )");
+    UNROLLED    : -k 15 -w 15)");
 
     // clang-format on
     return i;

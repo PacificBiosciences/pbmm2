@@ -14,6 +14,7 @@
 #include <pbbam/FastaSequence.h>
 #include <pbbam/MD5.h>
 #include <pbbam/SequenceInfo.h>
+#include <pbcopper/data/Cigar.h>
 #include <pbcopper/data/MappedRead.h>
 #include <pbcopper/data/Read.h>
 #include <pbcopper/logging/Logging.h>
@@ -129,6 +130,7 @@ private:
     const bool trimRepeatedMatches_;
     const int32_t maxNumAlns_;
     bool enforcedMapping_ = false;
+    bool shortSACigar_;
     std::vector<std::string> refNames_;
     std::unordered_map<std::string, std::vector<std::string>> readToRefsEnforcedMapping_;
 };
@@ -182,6 +184,7 @@ struct CompatMappedRead : public Data::MappedRead
     const Data::Cigar& CigarData() const;
     void SetSupplementaryAlignment(bool supplAlnArg);
     bool IsSupplementaryAlignment() const;
+    void InsertSize(int32_t iSize);
 
     bool HasTag(const char*) const { return false; }
     void RemoveTag(const char*) const {}
@@ -201,6 +204,8 @@ public:
     static CompatMappedRead Mapped(Data::Read record, int32_t refId, Data::Position refStart,
                                    Data::Strand strand, Data::Cigar cigar, uint8_t MapQ);
 };
+
+void TrimCigarFlanks(Data::Cigar* cigar, int32_t* refStartOffset);
 
 }  // namespace minimap2
 }  // namespace PacBio

@@ -110,12 +110,87 @@ Data::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const int opt_
 }
 }  // namespace
 
+void TrimCigarFlanks(Data::Cigar* cigar, int32_t* refStartOffset)
+{
+    const int32_t cigarLength = cigar->size();
+    if (cigarLength == 0) {
+        return;
+    }
+    bool trimmed = false;
+    std::vector<int32_t> skippedOps;
+    for (int32_t i = 0; i < cigarLength; ++i) {
+        Data::CigarOperation& op = (*cigar)[i];
+        const char cigarChar = op.Char();
+        const uint32_t cigarLength = op.Length();
+        if (cigarChar == 'D') {
+            *refStartOffset += cigarLength;
+            op = Data::CigarOperation('N', cigarLength);
+            skippedOps.emplace_back(i);
+            trimmed = true;
+        } else if (cigarChar == 'X') {
+            *refStartOffset += cigarLength;
+            op = Data::CigarOperation('S', cigarLength);
+            trimmed = true;
+        } else if (cigarChar == 'I') {
+            op = Data::CigarOperation('S', cigarLength);
+            trimmed = true;
+        } else if (cigarChar != 'S') {
+            break;
+        }
+    }
+    for (int32_t i = cigarLength - 1; i >= 0; --i) {
+        Data::CigarOperation& op = (*cigar)[i];
+        const char cigarChar = op.Char();
+        const uint32_t cigarLength = op.Length();
+        if (cigarChar == 'D') {
+            op = Data::CigarOperation('N', cigarLength);
+            skippedOps.emplace_back(i);
+            trimmed = true;
+        } else if ((cigarChar == 'X') || (cigarChar == 'I')) {
+            op = Data::CigarOperation('S', cigarLength);
+            trimmed = true;
+        } else if (cigarChar != 'S') {
+            break;
+        }
+    }
+
+    if (trimmed) {
+        Data::Cigar newCigar;
+        Data::CigarOperation prevOp;
+        int32_t i = 0;
+        for (; i < cigarLength; ++i) {
+            if (std::find(skippedOps.cbegin(), skippedOps.cend(), i) != skippedOps.cend()) {
+                continue;
+            } else {
+                prevOp = (*cigar)[i];
+                break;
+            }
+        }
+        ++i;
+        for (; i < cigarLength; ++i) {
+            Data::CigarOperation& op = (*cigar)[i];
+            if (std::find(skippedOps.cbegin(), skippedOps.cend(), i) != skippedOps.cend()) {
+                continue;
+            }
+            if (op.Char() == prevOp.Char()) {
+                prevOp = Data::CigarOperation{prevOp.Char(), prevOp.Length() + op.Length()};
+            } else {
+                newCigar.emplace_back(prevOp);
+                prevOp = op;
+            }
+        }
+        newCigar.emplace_back(prevOp);
+        *cigar = std::move(newCigar);
+    }
+}
+
 MM2Helper::MM2Helper(const std::string& refs, const MM2Settings& settings,
                      const std::string& outputMmi)
     : NumThreads{settings.NumThreads}
     , alnMode_(settings.AlignMode)
     , trimRepeatedMatches_(!settings.NoTrimming)
     , maxNumAlns_(settings.MaxNumAlns)
+    , shortSACigar_(settings.ShortSACigar)
 {
     std::string preset;
     PreInit(settings, &preset);
@@ -128,6 +203,7 @@ MM2Helper::MM2Helper(const std::vector<BAM::FastaSequence>& refs, const MM2Setti
     , alnMode_(settings.AlignMode)
     , trimRepeatedMatches_(!settings.NoTrimming)
     , maxNumAlns_(settings.MaxNumAlns)
+    , shortSACigar_(settings.ShortSACigar)
 {
     std::string preset;
     PreInit(settings, &preset);
@@ -140,6 +216,7 @@ MM2Helper::MM2Helper(std::vector<BAM::FastaSequence>&& refs, const MM2Settings& 
     , alnMode_(settings.AlignMode)
     , trimRepeatedMatches_(!settings.NoTrimming)
     , maxNumAlns_(settings.MaxNumAlns)
+    , shortSACigar_(settings.ShortSACigar)
 {
     std::string preset;
     PreInit(settings, &preset);
@@ -684,10 +761,20 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
             cigar = RenderCigar(&aln, qlen, MapOpts.flag, begin, end, &refStartOffset);
         else
             cigar = RenderCigar(&aln, qlen, MapOpts.flag);
+
+        TrimCigarFlanks(&cigar, &refStartOffset);
+        if (cigar.empty()) {
+            return;
+        } else if (cigar.size() == 1 && cigar[0].Type() == Data::CigarOperationType::SOFT_CLIP) {
+            return;
+        }
+
         const Data::Position refStart = aln.rs + refStartOffset;
+        const auto tlen = aln.re - aln.rs;  // assuming 0-based
 
         auto mapped = Mapped(unalignedCopy ? *unalignedCopy : record, refId, refStart, strand,
                              std::move(cigar), aln.mapq);
+        mapped.Impl().InsertSize(tlen);
         mapped.Impl().RemoveTag("rm");
         mapped.Impl().SetSupplementaryAlignment(aln.sam_pri == 0);
         Out alnRec{std::move(mapped)};
@@ -786,7 +873,24 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
             else
                 spans.emplace_back(clip5, qlen - clip3);
         }
-        if (trimRepeatedMatches_)
+        if (!shortSACigar_) {
+            sas.clear();
+            for (size_t j = 0; j < numAlignments; ++j) {
+                std::ostringstream sa;
+                const auto& rec = localResults.at(j).Record;
+                const auto qrs = rec.ReferenceStart();
+                const bool qrev = rec.AlignedStrand() == Data::Strand::REVERSE;
+                sa << Idx->idx_->seq[rec.ReferenceId()].name << ',' << qrs + 1 << ',' << "+-"[qrev]
+                   << ',';
+
+                sa << rec.CigarData().ToStdString();
+
+                sa << ',' << static_cast<int>(rec.MapQuality()) << ',' << rec.NumMismatches()
+                   << ';';
+                sas.emplace_back(sa.str());
+            }
+        }
+        if (trimRepeatedMatches_) {
             for (size_t i = 0; i < numAlignments; ++i) {
                 int32_t fixedBegin = spans[i].first;
                 int32_t fixedEnd = spans[i].second;
@@ -801,6 +905,7 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
                     }
                 }
             }
+        }
         for (size_t i = 0; i < numAlignments; ++i) {
             std::ostringstream sa;
             for (size_t j = 0; j < numAlignments; ++j) {
@@ -1030,6 +1135,8 @@ const Data::Cigar& CompatMappedRead::CigarData() const { return this->Cigar; }
 void CompatMappedRead::SetSupplementaryAlignment(bool supplAlnArg) { supplAln = supplAlnArg; }
 
 bool CompatMappedRead::IsSupplementaryAlignment() const { return supplAln; }
+
+void CompatMappedRead::InsertSize(int32_t /* iSize */) {}
 
 CompatMappedRead& CompatMappedRead::Impl() { return *this; }
 

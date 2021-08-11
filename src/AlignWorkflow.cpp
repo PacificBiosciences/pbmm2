@@ -425,7 +425,13 @@ int AlignWorkflow::Runner(const CLI_v2::Results& options)
                         } else if (hqs.size() > 1) {
                             PBLOG_WARN << "ZMW record " << r.FullName()
                                        << " has more than one HQ region, will use first";
+                        } else if (hqs.at(0).beginPos == hqs.at(0).endPos) {
+                            PBLOG_WARN << "ZMW record " << r.FullName()
+                                       << " has a zero-length HQ region";
+                            continue;
                         }
+                        PBLOG_DEBUG << "clipping " << r.FullName() << " from " << hqs.at(0).beginPos
+                                    << " to " << hqs.at(0).endPos;
                         r.Clip(BAM::ClipType::CLIP_TO_QUERY, hqs.at(0).beginPos, hqs.at(0).endPos);
                     }
                     (*records)[i++] = std::move(r);

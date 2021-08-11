@@ -30,12 +30,6 @@ std::string SampleNames::SanitizeSampleName(const std::string& in)
     for (const char& c : trimmed) {
         if (c < '!' || c > '~') {
             sanitizedName += '_';
-            if (c == ' ') {
-                std::ostringstream msg;
-                msg << "Sample name '" << in << "' contains a space character. "
-                    << "This may interfere with matching read groups and samples later.";
-                PBLOG_WARN << msg.str();
-            }
         } else
             sanitizedName += c;
     }
@@ -44,11 +38,19 @@ std::string SampleNames::SanitizeSampleName(const std::string& in)
 
 std::string SampleNames::SanitizeFileInfix(const std::string& in)
 {
+    if (in.empty()) return fallbackSampleName;
+
+    auto trimmed = boost::algorithm::trim_copy(in);
+    if (trimmed.empty()) return fallbackSampleName;
+
     std::string sanitizedName;
-    for (const char& c : in) {
+    for (const char& c : trimmed) {
         if (c == '_' || c == '-' || c == '.' || (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') ||
-            (c >= 'a' && c <= 'z'))
+            (c >= 'a' && c <= 'z')) {
             sanitizedName += c;
+        } else if (c == ' ') {
+            sanitizedName += '_';
+        }
     }
     return sanitizedName;
 }
@@ -78,8 +80,7 @@ MovieToSampleToInfix SampleNames::DetermineMovieToSampleToInfix(const UserIO& ui
                     ++namedSampleCount;
                 } else {
                     movieNameToSampleAndInfix.emplace(
-                        movie, std::make_pair(SanitizeSampleName("UnnamedSample"),
-                                              SanitizeFileInfix("UnnamedSample")));
+                        movie, std::make_pair(fallbackSampleName, fallbackSampleName));
                 }
             }
         }
@@ -91,8 +92,8 @@ MovieToSampleToInfix SampleNames::DetermineMovieToSampleToInfix(const UserIO& ui
         if (biosampleCount > 0) {
             if (biosampleCount > 1 && namedSampleCount == 0) {
                 PBLOG_INFO << "Found more than 1 biosample, but read groups lack the SM tag - "
-                              "using 'UnnamedSample'!";
-                nameFromMetadata = "UnnamedSample";
+                           << "using '" << fallbackSampleName << "'!";
+                nameFromMetadata = fallbackSampleName;
             } else {
                 nameFromMetadata = biosamples[0].Name();
             }
@@ -128,9 +129,19 @@ MovieToSampleToInfix SampleNames::DetermineMovieToSampleToInfix(const UserIO& ui
                     finalName = bioSampleName;
                 else if (!wellSampleName.empty())
                     finalName = wellSampleName;
-                finalName = SanitizeSampleName(finalName);
+                const std::string sampleName = SanitizeSampleName(finalName);
 
-                movieNameToSampleAndInfix[movieName] = {finalName, SanitizeFileInfix(finalName)};
+                if (movieNameToSampleAndInfix.find(movieName) != movieNameToSampleAndInfix.cend() &&
+                    movieNameToSampleAndInfix[movieName].first != fallbackSampleName &&
+                    movieNameToSampleAndInfix[movieName].first != sampleName) {
+                    PBLOG_WARN << "Offending bio sample names. BAM contains \'"
+                               << movieNameToSampleAndInfix[movieName].first
+                               << "\' and XML contains \'" << sampleName
+                               << "\'. Will ignore XML bio sample name.";
+                } else {
+                    movieNameToSampleAndInfix[movieName] = {sampleName,
+                                                            SanitizeFileInfix(finalName)};
+                }
             }
         }
     };
