@@ -83,6 +83,7 @@ pbmm2_cram_test = [
   'fastxinput_22',
   'fastxinput_23',
   'fastxinput_24',
+  'fsa_ref',
   'idempotence_1',
   'idempotence_2',
   'idempotence_3',
