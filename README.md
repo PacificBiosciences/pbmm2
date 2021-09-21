@@ -415,11 +415,14 @@ before alignment. This mode cannot be combined with `.mmi` input.
 
 ## Full Changelog
 
- * **1.7.0**:
+ * **1.8.0**:
+   * Add support for *.fsa files
+
+ * 1.7.0:
    * Set `TLEN`, for information only
    * Trim insertions, deletions, and mismatches from the alignment flanks
 
- * **1.6.0**:
+ * 1.6.0:
    * `SA` tag contains full cigar; use `--short-sa-cigar` to use legacy version
    * Sanitize bio sample names
 
