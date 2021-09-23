@@ -30,7 +30,8 @@ InputType DetermineInputFileSuffix(const std::string& inputFile)
         return InputType::FASTQ;
 
     if (boost::iends_with(inputFile, "fa") || boost::iends_with(inputFile, "fasta") ||
-        boost::iends_with(inputFile, "fa.gz") || boost::iends_with(inputFile, "fasta.gz"))
+        boost::iends_with(inputFile, "fa.gz") || boost::iends_with(inputFile, "fasta.gz") ||
+        boost::iends_with(inputFile, "fsa"))
         return InputType::FASTA;
 
     if (boost::iends_with(inputFile, "bam")) return InputType::BAM;
