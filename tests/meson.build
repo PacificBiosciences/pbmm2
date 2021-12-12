@@ -135,7 +135,7 @@ foreach t : pbmm2_cram_test
     'pbmm2 cram test - ' + t,
     pbmm2_cram_script,
     args : [
-      '--xunit-file=' + join_paths(meson.build_root(), 'pbmm2-cram-' + t.underscorify() + '-test.xml'),
+      '--xunit-file=' + join_paths(meson.project_build_root(), 'pbmm2-cram-' + t.underscorify() + '-test.xml'),
       '--verbose'] + files('cram/' + t + '.t'),
     env : [
       'MINIMAP2=' + pbmm2_test_minimap2_path,
