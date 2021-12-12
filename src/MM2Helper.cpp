@@ -10,7 +10,6 @@
 
 #include <boost/algorithm/clamp.hpp>
 #include <boost/assert.hpp>
-#include <boost/optional.hpp>
 
 #include <pbcopper/data/Cigar.h>
 #include <pbcopper/data/Position.h>
