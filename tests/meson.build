@@ -3,7 +3,7 @@ test(
   pbmm2_clang_formatter,
   args : [
     '--all'],
-  workdir : meson.source_root())
+  workdir : meson.project_source_root())
 
 subdir('unit')
 
