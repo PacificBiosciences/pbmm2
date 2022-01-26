@@ -30,7 +30,7 @@ test(
   'pbmm2 gtest unittests',
   pbmm2_test,
   args : [
-    '--gtest_output=xml:' + join_paths(meson.build_root(), 'pbmm2-gtest-unittests.xml')],
+    '--gtest_output=xml:' + join_paths(meson.project_build_root(), 'pbmm2-gtest-unittests.xml')],
   env : [
     'ARGS=-V',
     'VERBOSE=1'],
