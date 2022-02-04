@@ -69,7 +69,7 @@ Usage: pbmm2 align [options] <ref.fa|xml|mmi> <in.bam|xml|fa|fq> [out.aligned.ba
 ```
 
 #### Alignment Parallelization
-The number of alignment threads can be specified with `-j,--alignment-threads`.
+The number of alignment threads can be specified with `-j,--num-threads`.
 If not specified, the maximum number of threads will be used, minus one thread for BAM IO
 and minus the number of threads specified for sorting.
 
