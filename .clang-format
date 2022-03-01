@@ -12,3 +12,6 @@ TabWidth: 4
 
 ReflowComments: false  # protect ASCII art in comments
 KeepEmptyLinesAtTheStartOfBlocks: true
+
+IncludeBlocks: Preserve
+IndentExternBlock: NoIndent
