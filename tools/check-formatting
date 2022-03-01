@@ -6,16 +6,25 @@ CLANGFORMAT="${TOOLSPATH}/${PLATFORM}/clang-format -style=file"
 
 if [ "$1" == "--all" ]
 then
-    find include src tests/unit \( -name '*.cpp' -o -name '*.h' \) -print0 \
+    pushd "$TOOLSPATH/.." > /dev/null
+    CHECK_DIRS=()
+    for DIR in "include" "src" "tests/src" "tests/unit" "tools"; do [ -d "$TOOLSPATH/../$DIR" ] && CHECK_DIRS+=("$DIR") ; done
+    find ${CHECK_DIRS[@]} \
+       \( -name '*.cpp' -o -name '*.h' -o -name '*.cu' -o -name '*.cuh' -o -name '*.hpp' \) \
+       -not -name pugi* -not -name json.hpp -not -path '*/third-party/*' \
+       -print0 \
     | xargs -n1 -0 ${CLANGFORMAT} -output-replacements-xml \
     | grep -c "<replacement " > /dev/null
     grepCode=$?
+    popd > /dev/null
 elif [ "$1" == "--staged" ]
 then
-    git diff --cached --name-only --diff-filter=ACMRT | grep -e '.*\.h$' -e '.*\.cpp' -v '**third-party/*' \
+    pushd "$TOOLSPATH/.." > /dev/null
+    git diff --cached --name-only --diff-filter=ACMRT | grep -e '.*\.h$' -e '.*\.cpp$' -e '.*\.hpp$' -e '.*\.cu$' -e '.*\.cuh$' -v '**third-party/*' \
     | xargs -n1 ${CLANGFORMAT} -output-replacements-xml \
     | grep -c "<replacement " >/dev/null
     grepCode=$?
+    popd > /dev/null
 else
     echo "Please specify --all or --staged"
     exit 1

@@ -76,7 +76,7 @@ Data::Cigar RenderCigar(const mm_reg1_t* const r, const int qlen, const int opt_
     for (k = 0; k < r->p->n_cigar; ++k) {
         const char cigarChar = "MIDNSHP=XB"[r->p->cigar[k] & 0xf];
         int used = 0;
-        for (size_t l = 0; l<r->p->cigar[k]>> 4; ++l) {
+        for (size_t l = 0; l < r->p->cigar[k] >> 4; ++l) {
             switch (cigarChar) {
                 case 'M':
                 case '=':
