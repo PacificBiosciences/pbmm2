@@ -125,7 +125,7 @@ if not pbmm2_test_minimap2.found()
   endif
 endif
 
-pbmm2_test_samtools = find_program('samtools', required : true)
+pbmm2_test_samtools = find_program('samtools')
 
 foreach t : pbmm2_cram_test
   test(

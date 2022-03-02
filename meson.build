@@ -53,13 +53,13 @@ endif
 # dependencies
 
 ## threads
-pbmm2_thread_dep = dependency('threads', required : true)
+pbmm2_thread_dep = dependency('threads')
 
 ## boost
-pbmm2_boost_dep = dependency('boost', include_type : 'system', required : true)
+pbmm2_boost_dep = dependency('boost', include_type : 'system')
 
 ## zlib
-pbmm2_zlib_dep = dependency('zlib', required : true, fallback : ['zlib', 'zlib_dep'])
+pbmm2_zlib_dep = dependency('zlib', include_type : 'system', fallback : ['zlib', 'zlib_dep'])
 
 ## pbbam
 pbmm2_pbbam_dep = dependency('pbbam', fallback : ['pbbam', 'pbbam_dep'])
@@ -75,7 +75,7 @@ if not pbmm2_minimap2_dep.found()
 endif
 
 # htslib
-pbmm2_htslib_dep = dependency('htslib', required : true, version : '>=1.4', fallback : ['htslib', 'htslib_dep'])
+pbmm2_htslib_dep = dependency('htslib', include_type : 'system', version : '>=1.4', fallback : ['htslib', 'htslib_dep'])
 
 pbmm2_lib_deps = [
   pbmm2_thread_dep,
@@ -96,7 +96,7 @@ subdir('src')
 if not meson.is_subproject()
   if get_option('tests')
     pbmm2_clang_formatter = find_program('tools/check-formatting')
-    pbmm2_cram_script = find_program('cram', required : true)
+    pbmm2_cram_script = find_program('cram')
     subdir('tests')
   endif
 endif
