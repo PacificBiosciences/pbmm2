@@ -224,6 +224,8 @@ int AlignWorkflow::Runner(const CLI_v2::Results& options)
                             if (settings.MinPercIdentityGapComp <= 0)
                                 aln.Record.Impl().RemoveTag("mg");
                             if (settings.MinPercIdentity <= 0) aln.Record.Impl().RemoveTag("mi");
+                        } else {
+                            aln.Record.Impl().MapQuality(0);
                         }
                         const std::string movieName = aln.Record.MovieName();
                         const auto& sampleInfix = mtsti[movieName];
