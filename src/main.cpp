@@ -5,7 +5,8 @@
 
 #include <pbcopper/cli2/CLI.h>
 
-#include <pbmm2/Pbmm2Version.h>
+#include <pbmm2/LibraryInfo.h>
+#include "Pbmm2GlobalVersion.h"
 
 #include "AbortException.h"
 #include "AlignSettings.h"
@@ -16,7 +17,7 @@
 PacBio::CLI_v2::MultiToolInterface CreateMultiInterface()
 {
     PacBio::CLI_v2::MultiToolInterface mi{"pbmm2", "minimap2 with native PacBio BAM support",
-                                          PacBio::Pbmm2FormattedVersion()};
+                                          PacBio::Pbmm2::LibraryInfo().Release};
 
     // clang-format off
     mi.AddTools(
@@ -46,6 +47,8 @@ R"(Typical workflows:
 
   E. Align CCS fastq input and sort on-the-fly
      $ pbmm2 align ref.fasta movie.Q20.fastq ref.movie.bam --preset CCS --sort --rg '@RG\tID:myid\tSM:mysample')");
+
+    mi.RegisterVersionPrinter(PacBio::Pbmm2::PrintPbmm2VersionMulti);
 
     // clang-format on
     return mi;

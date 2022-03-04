@@ -14,9 +14,10 @@
 #include <pbcopper/cli2/internal/BuiltinOptions.h>
 #include <boost/algorithm/string.hpp>
 
-#include <pbmm2/Pbmm2Version.h>
+#include <pbmm2/LibraryInfo.h>
 
 #include "AbortException.h"
+#include "Pbmm2GlobalVersion.h"
 
 namespace PacBio {
 namespace minimap2 {
@@ -636,7 +637,7 @@ int32_t AlignSettings::ThreadCount(int32_t n)
 PacBio::CLI_v2::Interface AlignSettings::CreateCLI()
 {
     PacBio::CLI_v2::Interface i{"pbmm2 align", "Align PacBio reads to reference sequences",
-                                PacBio::Pbmm2FormattedVersion()};
+                                Pbmm2::LibraryInfo().Release};
 
     i.Example("pbmm2 align ref.referenceset.xml movie.subreadset.xml ref.movie.alignmentset.xml");
 
@@ -732,6 +733,8 @@ PacBio::CLI_v2::Interface AlignSettings::CreateCLI()
     CCS or HiFi : -k 19 -w 10 -u -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50  -r 2000   -L 0.5 -g 5000
     ISOSEQ      : -k 15 -w 5  -u -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 200000 -L 0.5 -g 2000 -C 5 -G 200000
     UNROLLED    : -k 15 -w 15    -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 2000   -L 0.5 -g 10000)");
+
+    i.RegisterVersionPrinter(Pbmm2::PrintPbmm2VersionSingle);
 
     // clang-format on
     return i;
