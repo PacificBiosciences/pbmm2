@@ -1,21 +1,18 @@
-// Author: Armin Töpfer
-
 #pragma once
+
+#include "BamIndex.h"
+#include "InputOutputUX.h"
+
+#include <pbbam/BamHeader.h>
+#include <pbbam/BamRecord.h>
+#include <pbbam/BamWriter.h>
 
 #include <map>
 #include <memory>
 #include <string>
 #include <tuple>
 
-#include "BamIndex.h"
-#include "InputOutputUX.h"
-
 namespace PacBio {
-namespace BAM {
-class BamWriter;
-class BamHeader;
-class DataSet;
-}  // namespace BAM
 namespace minimap2 {
 struct Summary
 {

@@ -1,14 +1,13 @@
-// Author: Armin Töpfer
-
 #pragma once
 
-#include <string>
-#include <vector>
-
-#include <BamIndex.h>
+#include "AlignSettings.h"
+#include "BamIndex.h"
 
 #include <pbbam/DataSet.h>
 #include <pbcopper/json/JSON.h>
+
+#include <string>
+#include <vector>
 
 namespace PacBio {
 namespace minimap2 {
@@ -17,8 +16,6 @@ static const std::string UNKNOWN_FILE_TYPES =
     "Could not determine read input type(s). Please do not mix data types, such as BAM+FASTQ. File "
     "of files may only contain BAMs or datasets.";
 }
-
-struct AlignSettings;
 
 enum class InputType : int
 {

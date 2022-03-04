@@ -1,39 +1,4 @@
-// Author: Armin Töpfer
-
 #include "AlignWorkflow.h"
-
-#include <sys/stat.h>
-
-#include <cstdio>
-
-#include <atomic>
-#include <chrono>
-#include <functional>
-#include <iostream>
-#include <mutex>
-#include <sstream>
-#include <thread>
-#include <tuple>
-#include <vector>
-
-#include <pbbam/BamWriter.h>
-#include <pbbam/DataSet.h>
-#include <pbbam/EntireFileQuery.h>
-#include <pbbam/FastaReader.h>
-#include <pbbam/FastqReader.h>
-#include <pbbam/PbiFilter.h>
-#include <pbbam/PbiFilterQuery.h>
-#include <pbbam/virtual/ZmwReadStitcher.h>
-
-#include <pbcopper/data/LocalContextFlags.h>
-#include <pbcopper/json/JSON.h>
-#include <pbcopper/logging/Logging.h>
-#include <pbcopper/parallel/FireAndForget.h>
-#include <pbcopper/utility/FileUtils.h>
-
-#include <pbmm2/MM2Helper.h>
-
-#include <mmpriv.h>
 
 #include "AbortException.h"
 #include "AlignSettings.h"
@@ -43,6 +8,35 @@
 #include "StreamWriters.h"
 #include "Timer.h"
 #include "bam_sort.h"
+
+#include <pbbam/BamWriter.h>
+#include <pbbam/DataSet.h>
+#include <pbbam/EntireFileQuery.h>
+#include <pbbam/FastaReader.h>
+#include <pbbam/FastqReader.h>
+#include <pbbam/PbiFilter.h>
+#include <pbbam/PbiFilterQuery.h>
+#include <pbbam/virtual/ZmwReadStitcher.h>
+#include <pbcopper/data/LocalContextFlags.h>
+#include <pbcopper/json/JSON.h>
+#include <pbcopper/logging/Logging.h>
+#include <pbcopper/parallel/FireAndForget.h>
+#include <pbcopper/utility/FileUtils.h>
+#include <pbcopper/utility/MemoryConsumption.h>
+#include <pbcopper/utility/Stopwatch.h>
+#include <pbmm2/MM2Helper.h>
+
+#include <sys/stat.h>
+#include <atomic>
+#include <chrono>
+#include <cstdio>
+#include <functional>
+#include <iostream>
+#include <mutex>
+#include <sstream>
+#include <thread>
+#include <tuple>
+#include <vector>
 
 namespace PacBio {
 namespace minimap2 {
@@ -548,9 +542,11 @@ int AlignWorkflow::Runner(const CLI_v2::Results& options)
     if (!pbiTiming.empty()) PBLOG_INFO << "PBI Generation Time: " << pbiTiming;
     PBLOG_INFO << "Run Time: " << startTime.ElapsedTime();
     PBLOG_INFO << "CPU Time: "
-               << Timer::ElapsedTimeFromSeconds(
-                      static_cast<int64_t>(cputime() * 1000 * 1000 * 1000));
-    PBLOG_INFO << "Peak RSS: " << (peakrss() / 1024.0 / 1024.0 / 1024.0) << " GB";
+               << Utility::Stopwatch::PrettyPrintNanoseconds(
+                      static_cast<int64_t>(Utility::Stopwatch::CpuTime() * 1000 * 1000 * 1000));
+    int64_t const peakRss = PacBio::Utility::MemoryConsumption::PeakRss();
+    double const peakRssGb = peakRss / 1024.0 / 1024.0 / 1024.0;
+    PBLOG_INFO << "Peak RSS: " << std::fixed << std::setprecision(3) << peakRssGb << " GB";
 
     return EXIT_SUCCESS;
 }

@@ -1,9 +1,9 @@
+#include "LibraryGitHash.h"
+#include "LibraryVersion.h"
+
 #include <pbmm2/LibraryInfo.h>
 
 #include <pbbam/LibraryInfo.h>
-
-#include "LibraryGitHash.h"
-#include "LibraryVersion.h"
 
 namespace PacBio {
 namespace Pbmm2 {

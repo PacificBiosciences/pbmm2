@@ -1,5 +1,3 @@
-// Author: Armin Töpfer
-
 #include <pbmm2/Pbmm2Version.h>
 
 namespace PacBio {

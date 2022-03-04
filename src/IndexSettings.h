@@ -1,12 +1,11 @@
-// Author: Armin Töpfer
-
 #pragma once
+
+#include <pbmm2/MM2Settings.h>
+
+#include <pbcopper/cli2/CLI.h>
 
 #include <string>
 #include <vector>
-
-#include <pbcopper/cli2/CLI.h>
-#include <pbmm2/MM2Settings.h>
 
 namespace PacBio {
 namespace minimap2 {

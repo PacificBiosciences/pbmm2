@@ -1,22 +1,19 @@
-// Author: Armin Töpfer
-
 #include <pbmm2/MM2Helper.h>
+
+#include "AbortException.h"
+
+#include <pbcopper/data/Cigar.h>
+#include <pbcopper/data/Position.h>
+#include <pbcopper/data/Strand.h>
+#include <pbcopper/utility/FileUtils.h>
+#include <boost/algorithm/clamp.hpp>
+#include <boost/assert.hpp>
 
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
-
-#include <boost/algorithm/clamp.hpp>
-#include <boost/assert.hpp>
-
-#include <pbcopper/data/Cigar.h>
-#include <pbcopper/data/Position.h>
-#include <pbcopper/data/Strand.h>
-#include <pbcopper/utility/FileUtils.h>
-
-#include "AbortException.h"
 
 using namespace std::literals::string_literals;
 

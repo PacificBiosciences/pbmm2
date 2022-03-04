@@ -1,5 +1,3 @@
-// Author: Armin Töpfer
-
 #pragma once
 
 #include <string>
@@ -7,9 +5,8 @@
 
 #include <pbcopper/cli2/CLI.h>
 
-#include "BamIndex.h"
-
 #include <pbmm2/MM2Settings.h>
+#include "BamIndex.h"
 
 namespace PacBio {
 namespace minimap2 {

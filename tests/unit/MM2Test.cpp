@@ -1,5 +1,3 @@
-// Author: Armin Töpfer
-
 #include <string>
 #include <vector>
 

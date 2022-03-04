@@ -1,5 +1,3 @@
-// Author: Derek Barnett
-
 #pragma once
 
 namespace PacBio {

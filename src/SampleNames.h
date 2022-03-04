@@ -1,20 +1,21 @@
-// Author: Armin Töpfer
-
 #pragma once
+
+#include <pbmm2/AlignmentMode.h>
+#include "AlignSettings.h"
+#include "InputOutputUX.h"
+
+#include <pbbam/BamHeader.h>
+#include <pbbam/BamRecord.h>
 
 #include <map>
 #include <string>
 #include <vector>
 
 namespace PacBio {
-namespace BAM {
-class DataSet;
-class BamHeader;
-}  // namespace BAM
 namespace minimap2 {
-struct AlignSettings;
-struct UserIO;
+
 using MovieToSampleToInfix = std::map<std::string, std::pair<std::string, std::string>>;
+
 class SampleNames
 {
 public:

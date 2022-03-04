@@ -1,16 +1,14 @@
-// Author: Armin Töpfer
+#include "InputOutputUX.h"
 
-#include <fstream>
-#include <sstream>
+#include "AbortException.h"
+#include "AlignSettings.h"
 
 #include <pbbam/DataSet.h>
 #include <pbcopper/utility/FileUtils.h>
 #include <boost/algorithm/string.hpp>
 
-#include "AbortException.h"
-#include "AlignSettings.h"
-
-#include "InputOutputUX.h"
+#include <fstream>
+#include <sstream>
 
 namespace PacBio {
 namespace minimap2 {

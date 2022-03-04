@@ -1,15 +1,11 @@
-// Author: Armin Töpfer
+#include "StreamWriters.h"
 
-#include <limits.h>
-#include <unistd.h>
-#include <cstdlib>
-#include <memory>
-#include <sstream>
-#include <thread>
+#include "AbortException.h"
+#include "SampleNames.h"
+#include "Timer.h"
+#include "bam_sort.h"
 
 #include <htslib/sam.h>
-#include <pbbam/BamRecord.h>
-#include <pbbam/BamWriter.h>
 #include <pbbam/PbiFile.h>
 #include <pbcopper/logging/Logging.h>
 #include <pbcopper/utility/FileUtils.h>
@@ -18,12 +14,12 @@
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
-#include "AbortException.h"
-#include "SampleNames.h"
-#include "Timer.h"
-#include "bam_sort.h"
-
-#include "StreamWriters.h"
+#include <limits.h>
+#include <unistd.h>
+#include <cstdlib>
+#include <memory>
+#include <sstream>
+#include <thread>
 
 namespace PacBio {
 namespace minimap2 {

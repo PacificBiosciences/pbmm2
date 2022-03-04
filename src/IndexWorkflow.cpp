@@ -1,22 +1,18 @@
-// Author: Armin Töpfer
-
 #include "IndexWorkflow.h"
 
-#include <string>
-#include <vector>
-
-#include <boost/algorithm/string/predicate.hpp>
+#include <pbmm2/MM2Helper.h>
+#include <pbmm2/Pbmm2Version.h>
+#include "AbortException.h"
+#include "IndexSettings.h"
 
 #include <pbbam/DataSet.h>
 #include <pbbam/DataSetTypes.h>
 #include <pbcopper/logging/Logging.h>
 #include <pbcopper/utility/FileUtils.h>
+#include <boost/algorithm/string/predicate.hpp>
 
-#include <pbmm2/MM2Helper.h>
-#include <pbmm2/Pbmm2Version.h>
-
-#include "AbortException.h"
-#include "IndexSettings.h"
+#include <string>
+#include <vector>
 
 namespace PacBio {
 namespace minimap2 {

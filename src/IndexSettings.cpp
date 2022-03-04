@@ -1,14 +1,12 @@
-// Author: Armin Töpfer
 #include "IndexSettings.h"
 
-#include <map>
+#include <pbmm2/LibraryInfo.h>
+#include "AbortException.h"
+#include "Pbmm2GlobalVersion.h"
 
 #include <boost/algorithm/string.hpp>
 
-#include <pbmm2/LibraryInfo.h>
-
-#include "AbortException.h"
-#include "Pbmm2GlobalVersion.h"
+#include <map>
 
 namespace PacBio {
 namespace minimap2 {

@@ -1,11 +1,9 @@
-// Author: Armin Töpfer
-
 #pragma once
+
+#include <pbmm2/AlignmentMode.h>
 
 #include <cstdint>
 #include <string>
-
-#include <pbmm2/AlignmentMode.h>
 
 namespace PacBio {
 namespace minimap2 {

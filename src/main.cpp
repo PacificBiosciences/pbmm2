@@ -1,18 +1,15 @@
-// Author: Armin Töpfer
-
-#include <iostream>
-#include <stdexcept>
-
-#include <pbcopper/cli2/CLI.h>
-
 #include <pbmm2/LibraryInfo.h>
-#include "Pbmm2GlobalVersion.h"
-
 #include "AbortException.h"
 #include "AlignSettings.h"
 #include "AlignWorkflow.h"
 #include "IndexSettings.h"
 #include "IndexWorkflow.h"
+#include "Pbmm2GlobalVersion.h"
+
+#include <pbcopper/cli2/CLI.h>
+
+#include <iostream>
+#include <stdexcept>
 
 PacBio::CLI_v2::MultiToolInterface CreateMultiInterface()
 {

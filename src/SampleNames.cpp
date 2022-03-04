@@ -1,7 +1,9 @@
-// Author: Armin Töpfer
 #include "SampleNames.h"
 
-#include <fstream>
+#include <pbmm2/Pbmm2Version.h>
+#include "AbortException.h"
+#include "AlignSettings.h"
+#include "InputOutputUX.h"
 
 #include <pbbam/BamHeader.h>
 #include <pbbam/DataSet.h>
@@ -9,11 +11,7 @@
 #include <pbcopper/logging/Logging.h>
 #include <boost/algorithm/string.hpp>
 
-#include <pbmm2/Pbmm2Version.h>
-
-#include "AbortException.h"
-#include "AlignSettings.h"
-#include "InputOutputUX.h"
+#include <fstream>
 
 namespace PacBio {
 namespace minimap2 {

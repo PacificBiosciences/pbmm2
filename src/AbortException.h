@@ -1,5 +1,3 @@
-// Author: Armin Töpfer
-
 #pragma once
 
 #include <pbcopper/utility/Alarm.h>

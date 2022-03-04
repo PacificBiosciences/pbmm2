@@ -1,14 +1,6 @@
-// Author: Armin Töpfer
-
 #pragma once
 
-#include <functional>
-#include <map>
-#include <memory>
-#include <unordered_map>
-#include <vector>
-
-#include <boost/algorithm/string.hpp>
+#include <pbmm2/MM2Settings.h>
 
 #include <pbbam/BamRecord.h>
 #include <pbbam/FastaSequence.h>
@@ -18,8 +10,7 @@
 #include <pbcopper/data/MappedRead.h>
 #include <pbcopper/data/Read.h>
 #include <pbcopper/logging/Logging.h>
-
-#include <pbmm2/MM2Settings.h>
+#include <boost/algorithm/string.hpp>
 
 // In file included from ../include/pbmm2/MM2Helper.h:20,
 //                  from ../src/MM2Helper.cpp:3:
@@ -30,6 +21,12 @@
 #pragma GCC diagnostic ignored "-Wpedantic"
 #include <minimap.h>
 #pragma GCC diagnostic pop
+
+#include <functional>
+#include <map>
+#include <memory>
+#include <unordered_map>
+#include <vector>
 
 extern "C" void mm_idxopt_init(mm_idxopt_t*);
 

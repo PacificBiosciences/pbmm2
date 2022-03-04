@@ -1,23 +1,19 @@
-// Author: Armin Töpfer
-
 #include "AlignSettings.h"
 
-#include <unistd.h>
+#include <pbmm2/LibraryInfo.h>
+#include "AbortException.h"
+#include "Pbmm2GlobalVersion.h"
 
+#include <pbcopper/cli2/internal/BuiltinOptions.h>
+#include <boost/algorithm/string.hpp>
+
+#include <unistd.h>
 #include <cmath>
 #include <iterator>
 #include <map>
 #include <sstream>
 #include <string>
 #include <vector>
-
-#include <pbcopper/cli2/internal/BuiltinOptions.h>
-#include <boost/algorithm/string.hpp>
-
-#include <pbmm2/LibraryInfo.h>
-
-#include "AbortException.h"
-#include "Pbmm2GlobalVersion.h"
 
 namespace PacBio {
 namespace minimap2 {

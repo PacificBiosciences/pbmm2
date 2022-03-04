@@ -1,8 +1,6 @@
-// Author: Armin Töpfer
+#include "Timer.h"
 
 #include <sstream>
-
-#include "Timer.h"
 
 namespace PacBio {
 Timer::Timer() { Restart(); }
