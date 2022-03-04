@@ -5,9 +5,10 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include <pbmm2/Pbmm2Version.h>
+#include <pbmm2/LibraryInfo.h>
 
 #include "AbortException.h"
+#include "Pbmm2GlobalVersion.h"
 
 namespace PacBio {
 namespace minimap2 {
@@ -90,7 +91,7 @@ IndexSettings::IndexSettings(const PacBio::CLI_v2::Results& options)
 PacBio::CLI_v2::Interface IndexSettings::CreateCLI()
 {
     PacBio::CLI_v2::Interface i{"pbmm2 index", "Index reference and store as .mmi file",
-                                PacBio::Pbmm2FormattedVersion()};
+                                Pbmm2::LibraryInfo().Release};
 
     i.Example("pbmm2 index ref.referenceset.xml ref.mmi");
 
@@ -115,6 +116,8 @@ PacBio::CLI_v2::Interface IndexSettings::CreateCLI()
     CCS or HiFi : -k 19 -w 10 -u
     ISOSEQ      : -k 15 -w 5  -u
     UNROLLED    : -k 15 -w 15)");
+
+    i.RegisterVersionPrinter(Pbmm2::PrintPbmm2VersionSingle);
 
     // clang-format on
     return i;

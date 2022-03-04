@@ -139,8 +139,37 @@
     pbmm2 index [options] <ref.fa|xml> <out.mmi>* (glob)
 
   $ "$PBMM2" --version
-  pbmm2 *.*.* (*) (glob)
+  pbmm2 * (glob)
+  * (glob)
+  Using:
+    pbmm2    : * (glob)
+    pbbam    : * (glob)
+    pbcopper : * (glob)
+    boost    : * (glob)
+    htslib   : * (glob)
+    minimap2 : * (glob)
+    zlib     : * (glob)
+
   $ "$PBMM2" align --version
-  pbmm2 *.*.* (*) (glob)
+  pbmm2 align * (glob)
+  * (glob)
+  Using:
+    pbmm2    : * (glob)
+    pbbam    : * (glob)
+    pbcopper : * (glob)
+    boost    : * (glob)
+    htslib   : * (glob)
+    minimap2 : * (glob)
+    zlib     : * (glob)
+
   $ "$PBMM2" index --version
-  pbmm2 *.*.* (*) (glob)
+  pbmm2 index * (glob)
+  * (glob)
+  Using:
+    pbmm2    : * (glob)
+    pbbam    : * (glob)
+    pbcopper : * (glob)
+    boost    : * (glob)
+    htslib   : * (glob)
+    minimap2 : * (glob)
+    zlib     : * (glob)
