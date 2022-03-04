@@ -71,7 +71,7 @@ pbmm2_cpp_sources = files([
   'Pbmm2GlobalVersion.cpp',
   'SampleNames.cpp',
   'StreamWriters.cpp',
-  'Timer.cpp'])
+  ])
 
 pbmm2_cpp_sources += pbmm2_gen_headers
 

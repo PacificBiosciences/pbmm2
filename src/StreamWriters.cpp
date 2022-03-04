@@ -2,7 +2,6 @@
 
 #include "AbortException.h"
 #include "SampleNames.h"
-#include "Timer.h"
 #include "bam_sort.h"
 
 #include <htslib/sam.h>
@@ -254,10 +253,10 @@ std::pair<int64_t, int64_t> StreamWriter::Close()
                         throw AbortException(os.str());
                     }
                 }
-                idxMs = time.ElapsedMilliseconds();
+                idxMs = time.ElapsedNanoseconds();
             }
         }
-        return {sortTime.ElapsedMilliseconds(), idxMs};
+        return {sortTime.ElapsedNanoseconds(), idxMs};
     } else {
         return {0, 0};
     }
@@ -313,7 +312,7 @@ std::string StreamWriters::WriteDatasetsJson(const UserIO& uio, const Summary& s
         throw AbortException(e.what());
     }
     std::string pbiTiming;
-    Timer pbiTimer;
+    Utility::Stopwatch pbiTimer;
     std::vector<std::string> xmlNames;
     std::vector<std::string> ids;
     for (auto& sample_sw : sampleNameToStreamWriter) {
@@ -377,7 +376,7 @@ std::string StreamWriters::WriteDatasetsJson(const UserIO& uio, const Summary& s
 
 std::string StreamWriters::ForcePbiOutput()
 {
-    Timer pbiTimer;
+    Utility::Stopwatch pbiTimer;
     for (auto& sample_sw : sampleNameToStreamWriter) {
         BAM::BamFile validationBam(sample_sw.second->FinalOutputName());
         BAM::PbiFile::CreateFrom(validationBam);
@@ -401,8 +400,8 @@ std::pair<std::string, std::string> StreamWriters::Close()
     if (!sort_)
         return {"", ""};
     else
-        return {Timer::ElapsedTimeFromSeconds(sortMs * 1e6),
-                Timer::ElapsedTimeFromSeconds(idxMs * 1e6)};
+        return {Utility::Stopwatch::PrettyPrintNanoseconds(sortMs),
+                Utility::Stopwatch::PrettyPrintNanoseconds(idxMs)};
 }
 
 void StreamWriters::CreateEmptyIfNoOutput()

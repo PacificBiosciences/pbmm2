@@ -6,7 +6,6 @@
 #include "InputOutputUX.h"
 #include "SampleNames.h"
 #include "StreamWriters.h"
-#include "Timer.h"
 #include "bam_sort.h"
 
 #include <pbbam/BamWriter.h>
@@ -43,7 +42,7 @@ namespace minimap2 {
 
 int AlignWorkflow::Runner(const CLI_v2::Results& options)
 {
-    const Timer startTime;
+    Utility::Stopwatch startTime;
     AlignSettings settings(options);
 
     UserIO uio = InputOutputUX::CheckPositionalArgs(options.PositionalArguments(), settings);
@@ -92,7 +91,7 @@ int AlignWorkflow::Runner(const CLI_v2::Results& options)
         return compressed;
     };
 
-    Timer indexTime;
+    Utility::Stopwatch indexTime;
     std::unique_ptr<MM2Helper> mm2helper;
     if (settings.CompressSequenceHomopolymers) {
         std::vector<BAM::FastaSequence> refs = BAM::FastaReader::ReadAll(uio.refFile);
@@ -107,7 +106,7 @@ int AlignWorkflow::Runner(const CLI_v2::Results& options)
         mm2helper = std::make_unique<MM2Helper>(uio.refFile, settings);
     }
     indexTime.Freeze();
-    Timer alignmentTime;
+    Utility::Stopwatch alignmentTime;
 
     Summary s;
     int64_t alignedReads = 0;
