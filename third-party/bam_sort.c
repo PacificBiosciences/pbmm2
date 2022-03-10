@@ -38,6 +38,8 @@ DEALINGS IN THE SOFTWARE.  */
 #pragma GCC diagnostic ignored "-Wstringop-truncation"
 #endif
 
+#include <stdatomic.h>
+
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
@@ -140,7 +142,7 @@ KHASH_MAP_INIT_STR(c2i, int)
 #define hdrln_free_char(p)
 KLIST_INIT(hdrln, char *, hdrln_free_char)
 
-static int g_is_by_qname = 0;
+static atomic_int g_is_by_qname = 0;
 static int g_is_by_tag = 0;
 static char g_sort_tag[2] = {0, 0};
 
