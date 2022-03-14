@@ -36,17 +36,19 @@ foreach cflag: [
     endif
 endforeach
 
-if get_option('sse41')
-  if cpp.has_argument('-msse4.1')
-    pbmm2_flags += '-msse4.1'
-  else
-    error('Requested SSE4.1, but the C++ compiler does not support -msse4.1')
-  endif
+if host_machine.cpu_family() == 'x86_64'
+  if get_option('sse41')
+    if cpp.has_argument('-msse4.1')
+      pbmm2_flags += '-msse4.1'
+    else
+      error('Requested SSE4.1, but the C++ compiler does not support -msse4.1')
+    endif
 
-  if c.has_argument('-msse4.1')
-    pbmm2_c_flags += '-msse4.1'
-  else
-    error('Requested SSE4.1, but the C compiler does not support -msse4.1')
+    if c.has_argument('-msse4.1')
+      pbmm2_c_flags += '-msse4.1'
+    else
+      error('Requested SSE4.1, but the C compiler does not support -msse4.1')
+    endif
   endif
 endif
 
