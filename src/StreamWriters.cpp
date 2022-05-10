@@ -199,7 +199,7 @@ std::pair<int64_t, int64_t> StreamWriter::Close()
 {
     bamWriter_.reset();
     if (sort_) {
-        int idxMs = 0;
+        int64_t idxMs = 0;
         Utility::Stopwatch sortTime;
         unlink(pipeName_.c_str());
         if (sortThread_) {
