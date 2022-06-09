@@ -20,6 +20,7 @@
 #include <pbcopper/json/JSON.h>
 #include <pbcopper/logging/Logging.h>
 #include <pbcopper/parallel/FireAndForget.h>
+#include <pbcopper/reports/Report.h>
 #include <pbcopper/utility/FileUtils.h>
 #include <pbcopper/utility/MemoryConsumption.h>
 #include <pbcopper/utility/Stopwatch.h>
@@ -512,6 +513,7 @@ int AlignWorkflow::Runner(const CLI_v2::Results& options)
     double meanMappedConcordance = 1.0 * s.Concordance / DenomNumAlns;
     double meanIdentity = 1.0 * s.Identity / DenomNumAlns;
     double meanIdentityGapComp = 1.0 * s.IdentityGapComp / DenomNumAlns;
+    double meanMappedReadLength = (1.0 * s.Bases / DenomNumAlns);
 
     std::string pbiTiming;
     if (uio.isToXML || uio.isToJson)
@@ -529,7 +531,7 @@ int AlignWorkflow::Runner(const CLI_v2::Results& options)
     if (settings.MinPercIdentityGapComp > 0)
         PBLOG_INFO << "Mean Gap-Compressed Sequence Identity: " << meanIdentityGapComp << "%";
     PBLOG_INFO << "Max Mapped Read Length: " << maxMappedLength;
-    PBLOG_INFO << "Mean Mapped Read Length: " << (1.0 * s.Bases / DenomNumAlns);
+    PBLOG_INFO << "Mean Mapped Read Length: " << meanMappedReadLength;
 
     PBLOG_INFO << "Index Build/Read Time: " << indexTime.ElapsedTime();
     PBLOG_INFO << "Alignment Time: " << alignmentTime.ElapsedTime();
@@ -546,6 +548,29 @@ int AlignWorkflow::Runner(const CLI_v2::Results& options)
     int64_t const peakRss = PacBio::Utility::MemoryConsumption::PeakRss();
     double const peakRssGb = peakRss / 1024.0 / 1024.0 / 1024.0;
     PBLOG_INFO << "Peak RSS: " << std::fixed << std::setprecision(3) << peakRssGb << " GB";
+
+    if (!settings.ReportFileJson.empty()) {
+        Reports::Report jsonReport{"mapping_stats", "Mapping Statistics"};
+        jsonReport.AddAttribute(
+            {"mapped_reads_n", Reports::ReportValue{alignedReads}, "Mapped Reads"});
+        jsonReport.AddAttribute(
+            {"mapped_alignments_n", Reports::ReportValue{s.NumAlns}, "Alignments"});
+        jsonReport.AddAttribute({"mapped_bases_n", Reports::ReportValue{s.Bases}, "Mapped Bases"});
+        jsonReport.AddAttribute(
+            {"blast_identity", Reports::ReportValue{meanIdentity}, "Mean Sequence Identity"});
+        jsonReport.AddAttribute({"pb_identity", Reports::ReportValue{meanMappedConcordance},
+                                 "Mean Mapped Concordance"});
+        jsonReport.AddAttribute({"gap_compressed_identity",
+                                 Reports::ReportValue{meanIdentityGapComp},
+                                 "Mean Gap-Compressed Sequence Identity"});
+        jsonReport.AddAttribute({"mapped_readlength_mean",
+                                 Reports::ReportValue{meanMappedReadLength},
+                                 "Mean Mapped Read Length"});
+        jsonReport.AddAttribute({"mapped_readlength_max", Reports::ReportValue{maxMappedLength},
+                                 "Max Mapped Read Length"});
+        PBLOG_INFO << "Writing mapping stats report JSON to " << settings.ReportFileJson;
+        jsonReport.Print(settings.ReportFileJson);
+    }
 
     return EXIT_SUCCESS;
 }

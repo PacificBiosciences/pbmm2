@@ -23,6 +23,7 @@ struct AlignSettings : MM2Settings
     int32_t MinAlignmentLength;
 
     const std::string SampleName;
+    const std::string ReportFileJson;
     int32_t ChunkSize;
 
     bool MedianFilter;

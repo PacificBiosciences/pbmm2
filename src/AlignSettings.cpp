@@ -388,6 +388,16 @@ R"({
     "hidden" : true
 })"};
 
+const CLI_v2::Option ReportFileJson{
+R"({
+    "names" : ["report-json"],
+    "description" : [
+        "Write a mapping stats report JSON to this filename."
+    ],
+    "type" : "string",
+    "hidden": true
+})"};
+
 const CLI_v2::Option ShortSACigar{
 R"({
     "names" : ["short-sa-cigar"],
@@ -426,6 +436,7 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
     , MinPercIdentityGapComp(options[OptionNames::MinPercIdentityGapComp])
     , MinAlignmentLength(options[OptionNames::MinAlignmentLength])
     , SampleName(options[OptionNames::SampleName])
+    , ReportFileJson(options[OptionNames::ReportFileJson])
     , ChunkSize(options[OptionNames::ChunkSize])
     , MedianFilter(options[OptionNames::MedianFilter])
     , Sort(options[OptionNames::Sort])
@@ -712,6 +723,7 @@ PacBio::CLI_v2::Interface AlignSettings::CreateCLI()
         OptionNames::BamIndexInput,
         OptionNames::NoBAI,
         OptionNames::ShortSACigar,
+        OptionNames::ReportFileJson
     });
 
     i.AddOptionGroup("Input Manipulation Options (mutually exclusive)", {
