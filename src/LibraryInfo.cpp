@@ -8,7 +8,7 @@
 namespace PacBio {
 namespace Pbmm2 {
 
-Library::Info Minimap2LibraryInfo() { return {"minimap2", Pbmm2::Minimap2ReleaseVersion, ""}; }
+Library::Info Minimap2LibraryInfo() { return {"minimap2", Pbmm2::MINIMAP2_RELEASE_VERSION, ""}; }
 
 Library::Bundle LibraryBundle()
 {
@@ -18,7 +18,7 @@ Library::Bundle LibraryBundle()
     return bundle;
 }
 
-Library::Info LibraryInfo() { return {"pbmm2", Pbmm2::ReleaseVersion, Pbmm2::LibraryGitSha1}; }
+Library::Info LibraryInfo() { return {"pbmm2", Pbmm2::RELEASE_VERSION, Pbmm2::LIBRARY_GIT_SHA1}; }
 
 }  // namespace Pbmm2
 }  // namespace PacBio

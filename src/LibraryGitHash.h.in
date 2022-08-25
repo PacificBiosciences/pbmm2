@@ -3,7 +3,7 @@
 namespace PacBio {
 namespace Pbmm2 {
 
-constexpr const char LibraryGitSha1[] = "@PBMM2_GIT_SHA1@";
+constexpr char LIBRARY_GIT_SHA1[] = "@PBMM2_GIT_SHA1@";
 
 }  // namespace Pbmm2
 }  // namespace PacBio

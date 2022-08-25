@@ -3,8 +3,8 @@
 namespace PacBio {
 namespace Pbmm2 {
 
-constexpr const char ReleaseVersion[] = "@PBMM2_VERSION@";
-constexpr const char Minimap2ReleaseVersion[] = "@MINIMAP2_VERSION@";
+constexpr char RELEASE_VERSION[] = "@PBMM2_VERSION@";
+constexpr char MINIMAP2_RELEASE_VERSION[] = "@MINIMAP2_VERSION@";
 
 }  // namespace Pbmm2
 }  // namespace PacBio

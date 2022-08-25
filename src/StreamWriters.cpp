@@ -394,9 +394,9 @@ std::pair<std::string, std::string> StreamWriters::Close()
         sortMs += sort_bai.first - sort_bai.second;
         idxMs += sort_bai.second;
     }
-    constexpr int64_t i641 = 1;
-    sortMs = std::max(sortMs, i641);
-    idxMs = std::max(idxMs, i641);
+    constexpr int64_t I641 = 1;
+    sortMs = std::max(sortMs, I641);
+    idxMs = std::max(idxMs, I641);
     if (!sort_)
         return {"", ""};
     else

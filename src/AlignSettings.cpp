@@ -545,15 +545,15 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
         std::string suffix;
         const auto MemoryToHumanReadable = [](int64_t memInBytes, float* roundedMemory,
                                               std::string* suffix) {
-            static constexpr int64_t ninek = 1000;
+            constexpr int64_t NINEK = 1000;
             *roundedMemory = memInBytes;
-            if (memInBytes >> 10 < ninek) {
+            if (memInBytes >> 10 < NINEK) {
                 *roundedMemory /= 1000;
                 *suffix = "K";
-            } else if (memInBytes >> 20 < ninek) {
+            } else if (memInBytes >> 20 < NINEK) {
                 *roundedMemory = (memInBytes >> 10) / 1024.0;
                 *suffix = "M";
-            } else if (memInBytes >> 30 < ninek) {
+            } else if (memInBytes >> 30 < NINEK) {
                 *roundedMemory = (memInBytes >> 20) / 1024.0;
                 *suffix = "G";
             }

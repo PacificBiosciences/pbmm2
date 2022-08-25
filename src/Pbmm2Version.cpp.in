@@ -1,17 +1,12 @@
 #include <pbmm2/Pbmm2Version.h>
 
 namespace PacBio {
-namespace {
 
-constexpr char pbmm2Version[]    = "@PBMM2_VERSION@";
-constexpr char minimap2Version[] = "@MINIMAP2_VERSION@";
+constexpr char PBMM2_VERSION[] = "@PBMM2_VERSION@";
+constexpr char MINIMAP2_VERSION[] = "@MINIMAP2_VERSION@";
 
-}
+std::string Pbmm2Version() { return PBMM2_VERSION; }
 
-std::string Pbmm2Version()
-{ return pbmm2Version; }
+std::string Minimap2Version() { return MINIMAP2_VERSION; }
 
-std::string Minimap2Version()
-{ return minimap2Version; }
-
-} // ::PacBio
+}  // namespace PacBio

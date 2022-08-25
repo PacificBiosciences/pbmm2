@@ -1,11 +1,9 @@
 #include <pbmm2/Pbmm2Version.h>
 
 namespace PacBio {
-namespace {
-static constexpr char pbmm2GitSha1[] = "@PBMM2_GIT_SHA1@";
-}
 
-std::string Pbmm2GitSha1()
-{ return pbmm2GitSha1; }
+constexpr char PBMM2_GIT_SHA1[] = "@PBMM2_GIT_SHA1@";
 
-} // ::PacBio
+std::string Pbmm2GitSha1() { return PBMM2_GIT_SHA1; }
+
+}  // namespace PacBio
