@@ -7,7 +7,6 @@
 #include <pbcopper/data/Strand.h>
 #include <pbcopper/utility/FileUtils.h>
 #include <boost/algorithm/clamp.hpp>
-#include <boost/assert.hpp>
 
 #include <fstream>
 #include <iostream>
