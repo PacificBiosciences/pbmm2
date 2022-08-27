@@ -429,7 +429,7 @@ bool checkIsSupplementaryAlignment(const Data::Read&) { return false; }
 
 std::string getNativeOrientationSequence(const BAM::BamRecord& record)
 {
-    return record.Sequence(BAM::Orientation::NATIVE);
+    return record.Sequence(Data::Orientation::NATIVE);
 }
 
 const std::string& getNativeOrientationSequence(const Data::Read& record)
@@ -445,7 +445,7 @@ std::unique_ptr<BAM::BamRecord> createUnalignedCopy(const BAM::BamRecord& record
     if (record.IsMapped()) {
         unalignedCopy = std::make_unique<BAM::BamRecord>(record.Header());
         unalignedCopy->Impl().SetSequenceAndQualities(
-            seq, record.Qualities(BAM::Orientation::NATIVE).Fastq());
+            seq, record.Qualities(Data::Orientation::NATIVE).Fastq());
         unalignedCopy->Impl().SetReverseStrand(false);
         unalignedCopy->Impl().SetMapped(false);
         unalignedCopy->Impl().CigarData(Data::Cigar{});
