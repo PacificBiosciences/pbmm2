@@ -52,7 +52,7 @@
 
 When both --split-by-sample and --sample were set, expect to see only one bam file with SM overridden.
   $ IN="$TESTDIR"/data/merged.consensusreadset.xml
-  $ "$PBMM2" align -j 1 "$REF" "$IN" "$CRAMTMP"/splitsampleoverride.consensusalignmentset.xml --sort -j 8 --split-by-sample --sample "MySample"  2>&1 | fgrep -v 'Requested more threads'
+  $ "$PBMM2" align -j 1 "$REF" "$IN" "$CRAMTMP"/splitsampleoverride.consensusalignmentset.xml --sort -j 8 --split-by-sample --sample "MySample"  2>&1 | grep -F -v 'Requested more threads'
   *Options --split-by-sample and --sample are mutually exclusive. Option --sample will be applied and --split-by-sample is ignored! (glob)
   *Offending bio sample names. BAM contains 'bamSample' and XML contains 'UCLA_1023'. Will ignore XML bio sample name.* (glob)
   $ [[ -f "$CRAMTMP"/splitsampleoverride.bam ]] || echo "File does not exist!"
