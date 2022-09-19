@@ -1,12 +1,12 @@
   $ BAM="$TESTDIR"/data/median.bam
   $ REF="$TESTDIR"/data/ecoliK12_pbi_March2013.fasta
 
-  $ "$SAMTOOLS" view "$BAM" | awk '{ print "@"$1"\n"$10"\n+\n"$11 }' > "$CRAMTMP"/median.fastq
+  $ samtools view "$BAM" | awk '{ print "@"$1"\n"$10"\n+\n"$11 }' > "$CRAMTMP"/median.fastq
   $ FASTQ="$CRAMTMP"/median.fastq
   $ cp "$CRAMTMP"/median.fastq "$CRAMTMP"/median_compressed.fastq
   $ gzip "$CRAMTMP"/median_compressed.fastq
   $ FASTQGZ="$CRAMTMP"/median_compressed.fastq.gz
-  $ "$SAMTOOLS" view "$BAM" | awk '{ print ">"$1"\n"$10 }' > "$CRAMTMP"/median.fasta
+  $ samtools view "$BAM" | awk '{ print ">"$1"\n"$10 }' > "$CRAMTMP"/median.fasta
   $ FASTA="$CRAMTMP"/median.fasta
   $ cp "$CRAMTMP"/median.fasta "$CRAMTMP"/median_compressed.fasta
   $ gzip "$CRAMTMP"/median_compressed.fasta
@@ -17,14 +17,14 @@
   $ BAM="$TESTDIR"/data/m54075_180905_225130.ccs.bam
   $ REF="$TESTDIR"/data/ecoliK12_pbi_March2013.fasta
 
-  $ "$SAMTOOLS" view "$BAM" | awk '{ print "@"$1"\n"$10"\n+\n"$11 }' > "$CRAMTMP"/m54075_180905_225130.fastq
+  $ samtools view "$BAM" | awk '{ print "@"$1"\n"$10"\n+\n"$11 }' > "$CRAMTMP"/m54075_180905_225130.fastq
   $ FASTQ="$CRAMTMP"/m54075_180905_225130.fastq
-  $ "$SAMTOOLS" view "$BAM" | awk '{ print ">"$1"\n"$10 }' > "$CRAMTMP"/m54075_180905_225130.fasta
+  $ samtools view "$BAM" | awk '{ print ">"$1"\n"$10 }' > "$CRAMTMP"/m54075_180905_225130.fasta
   $ FASTA="$CRAMTMP"/m54075_180905_225130.fasta
 
   $ "$PBMM2" align -j 1 "$REF" "$FASTA" "$CRAMTMP"/fasta_unsorted.bam 2>&1
   *Input is FASTA.* (glob)
-  $ "$SAMTOOLS" view -H "$CRAMTMP"/fasta_unsorted.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
+  $ samtools view -H "$CRAMTMP"/fasta_unsorted.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
   1
   $ ls -alh "$CRAMTMP"/fasta_unsorted.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
@@ -39,7 +39,7 @@
 
   $ "$PBMM2" align -j 1 "$REF" "$FASTA" "$CRAMTMP"/fasta_sorted.bam --sort
   *Input is FASTA.* (glob)
-  $ "$SAMTOOLS" view -H "$CRAMTMP"/fasta_sorted.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
+  $ samtools view -H "$CRAMTMP"/fasta_sorted.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
   1
   $ ls -alh "$CRAMTMP"/fasta_sorted.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
@@ -56,7 +56,7 @@
   $ cut -f 8 -d '|' < "$CRAMTMP"/fasta_unsortedds.err
   *Input is FASTA.* (glob)
   - Input is not a dataset, but output is. Please use dataset input for full SMRT Link compatibility!
-  $ "$SAMTOOLS" view -H "$CRAMTMP"/fasta_unsortedds.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
+  $ samtools view -H "$CRAMTMP"/fasta_unsortedds.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
   1
   $ ls -alh "$CRAMTMP"/fasta_unsortedds.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
@@ -73,7 +73,7 @@
   $ cut -f 8 -d '|' < "$CRAMTMP"/fasta_sortedds.err
   *Input is FASTA.* (glob)
   - Input is not a dataset, but output is. Please use dataset input for full SMRT Link compatibility!
-  $ "$SAMTOOLS" view -H "$CRAMTMP"/fasta_sortedds.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
+  $ samtools view -H "$CRAMTMP"/fasta_sortedds.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
   1
   $ ls -alh "$CRAMTMP"/fasta_sortedds.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
@@ -98,7 +98,7 @@
 
   $ "$PBMM2" align -j 1 "$REF" "$FASTA" > "$CRAMTMP"/fasta_unsortedoutstream.bam
   *Input is FASTA.* (glob)
-  $ "$SAMTOOLS" view -H "$CRAMTMP"/fasta_unsortedoutstream.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
+  $ samtools view -H "$CRAMTMP"/fasta_unsortedoutstream.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
   1
   $ ls -alh "$CRAMTMP"/fasta_unsortedoutstream.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
@@ -113,7 +113,7 @@
 
   $ "$PBMM2" align -j 1 "$REF" "$FASTA" > "$CRAMTMP"/fasta_sortedoutstream.bam --sort
   *Input is FASTA.* (glob)
-  $ "$SAMTOOLS" view -H "$CRAMTMP"/fasta_sortedoutstream.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
+  $ samtools view -H "$CRAMTMP"/fasta_sortedoutstream.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
   1
   $ ls -alh "$CRAMTMP"/fasta_sortedoutstream.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0
@@ -130,7 +130,7 @@
   $ cut -f 8 -d '|' < "$CRAMTMP"/fasta_unsortedccs.err
   *Input is FASTA.* (glob)
   - Input is not a dataset, but output is. Please use dataset input for full SMRT Link compatibility!
-  $ "$SAMTOOLS" view -H "$CRAMTMP"/fasta_unsortedccs.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
+  $ samtools view -H "$CRAMTMP"/fasta_unsortedccs.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
   1
   $ ls -alh "$CRAMTMP"/fasta_unsortedccs.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1
@@ -147,7 +147,7 @@
   $ cut -f 8 -d '|' < "$CRAMTMP"/fasta_unsortedts.err
   *Input is FASTA.* (glob)
   - Input is not a dataset, but output is. Please use dataset input for full SMRT Link compatibility!
-  $ "$SAMTOOLS" view -H "$CRAMTMP"/fasta_unsortedts.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
+  $ samtools view -H "$CRAMTMP"/fasta_unsortedts.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
   1
   $ ls -alh "$CRAMTMP"/fasta_unsortedts.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1

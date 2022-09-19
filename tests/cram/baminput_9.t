@@ -4,7 +4,7 @@
   $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/sorteddscsi.alignmentset.xml --sort --bam-index CSI 2> "$CRAMTMP"/sorteddscsi.err || echo $?
   $ cut -f 8 -d '|' < "$CRAMTMP"/sorteddscsi.err
   - Input is not a dataset, but output is. Please use dataset input for full SMRT Link compatibility!
-  $ "$SAMTOOLS" view -H "$CRAMTMP"/sorteddscsi.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
+  $ samtools view -H "$CRAMTMP"/sorteddscsi.bam | grep "@HD" | grep "coordinate" | wc -l | tr -d ' '
   1
   $ ls -alh "$CRAMTMP"/sorteddscsi.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   1

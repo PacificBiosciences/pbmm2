@@ -8,7 +8,7 @@
   $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/all_full.bam --sort --min-gap-comp-id-perc 10 --min-id-perc 10 --min-concordance-perc 10 --short-sa-cigar
   $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/gapcomp_strip.bam --sort --min-gap-comp-id-perc 10 --min-id-perc 0 --min-concordance-perc 0 --strip --short-sa-cigar
 
-  $ "$SAMTOOLS" view "$CRAMTMP"/full.bam| head -n 1 | cut -f 12- | tr '\t' '\n' | sort
+  $ samtools view "$CRAMTMP"/full.bam| head -n 1 | cut -f 12- | tr '\t' '\n' | sort
   RG:Z:de99ee6d
   SA:Z:ecoliK12_pbi_March2013,150084,-,1599S1574M50I,60,35;
   cx:i:3
@@ -23,7 +23,7 @@
   sn:B:f,6.46811,12.0871,5.60402,10.0011
   zm:i:4915325
 
-  $ "$SAMTOOLS" view "$CRAMTMP"/strip.bam| head -n 1 | cut -f 12- | tr '\t' '\n' | sort
+  $ samtools view "$CRAMTMP"/strip.bam| head -n 1 | cut -f 12- | tr '\t' '\n' | sort
   RG:Z:de99ee6d
   SA:Z:ecoliK12_pbi_March2013,150084,-,1599S1574M50I,60,35;
   cx* (glob)
@@ -36,7 +36,7 @@
   sn* (glob)
   zm* (glob)
 
-  $ "$SAMTOOLS" view "$CRAMTMP"/gapcomp_full.bam| head -n 1 | cut -f 12- | tr '\t' '\n' | sort
+  $ samtools view "$CRAMTMP"/gapcomp_full.bam| head -n 1 | cut -f 12- | tr '\t' '\n' | sort
   RG:Z:de99ee6d
   SA:Z:ecoliK12_pbi_March2013,150084,-,1599S1574M50I,60,35;
   cx* (glob)
@@ -51,7 +51,7 @@
   sn* (glob)
   zm* (glob)
 
-  $ "$SAMTOOLS" view "$CRAMTMP"/id_full.bam| head -n 1 | cut -f 12- | tr '\t' '\n' | sort
+  $ samtools view "$CRAMTMP"/id_full.bam| head -n 1 | cut -f 12- | tr '\t' '\n' | sort
   RG:Z:de99ee6d
   SA:Z:ecoliK12_pbi_March2013,150084,-,1599S1574M50I,60,35;
   cx* (glob)
@@ -66,7 +66,7 @@
   sn* (glob)
   zm* (glob)
 
-  $ "$SAMTOOLS" view "$CRAMTMP"/all_full.bam| head -n 1 | cut -f 12- | tr '\t' '\n' | sort
+  $ samtools view "$CRAMTMP"/all_full.bam| head -n 1 | cut -f 12- | tr '\t' '\n' | sort
   RG:Z:de99ee6d
   SA:Z:ecoliK12_pbi_March2013,150084,-,1599S1574M50I,60,35;
   cx* (glob)
@@ -83,7 +83,7 @@
   sn* (glob)
   zm* (glob)
 
-  $ "$SAMTOOLS" view "$CRAMTMP"/gapcomp_strip.bam| head -n 1 | cut -f 12- | tr '\t' '\n' | sort
+  $ samtools view "$CRAMTMP"/gapcomp_strip.bam| head -n 1 | cut -f 12- | tr '\t' '\n' | sort
   RG:Z:de99ee6d
   SA:Z:ecoliK12_pbi_March2013,150084,-,1599S1574M50I,60,35;
   cx* (glob)
@@ -103,7 +103,7 @@ Internal BAM
   $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/full_int.bam --sort
   $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/strip_int.bam --sort --strip
 
-  $ "$SAMTOOLS" view "$CRAMTMP"/full_int.bam| head -n 1 | cut -f 12- | tr '\t' '\n' | sort
+  $ samtools view "$CRAMTMP"/full_int.bam| head -n 1 | cut -f 12- | tr '\t' '\n' | sort
   RG:Z:5993bbcc
   cx:i:0
   dq:Z:!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -133,7 +133,7 @@ Internal BAM
   st:Z:NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
   zm:i:4325908
 
-  $ "$SAMTOOLS" view "$CRAMTMP"/strip_int.bam| head -n 1 | cut -f 12- | tr '\t' '\n' | sort
+  $ samtools view "$CRAMTMP"/strip_int.bam| head -n 1 | cut -f 12- | tr '\t' '\n' | sort
   RG:Z:5993bbcc
   cx:i:0
   mg* (glob)

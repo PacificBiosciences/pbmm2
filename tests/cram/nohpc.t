@@ -18,9 +18,9 @@
   $ "$PBMM2" align -j 1 "$IN" "$CRAMTMP"/index_default.mmi "$CRAMTMP"/out_hpc.bam --log-level=DEBUG --preset CCS 2>&1 | grep "Homopolymer compressed"
   *Homopolymer compressed : false (glob)
 
-  $ "$SAMTOOLS" view -H "$TESTDIR"/data/median.bam > "$CRAMTMP"/single_subread.sam
-  $ "$SAMTOOLS" view -h "$TESTDIR"/data/median.bam | head -n 1 >> "$CRAMTMP"/single_subread.sam
-  $ "$SAMTOOLS" view -bS "$CRAMTMP"/single_subread.sam > "$CRAMTMP"/single_subread.bam
+  $ samtools view -H "$TESTDIR"/data/median.bam > "$CRAMTMP"/single_subread.sam
+  $ samtools view -h "$TESTDIR"/data/median.bam | head -n 1 >> "$CRAMTMP"/single_subread.sam
+  $ samtools view -bS "$CRAMTMP"/single_subread.sam > "$CRAMTMP"/single_subread.bam
   $ IN="$CRAMTMP"/single_subread.bam
 
   $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/out_hpc.bam --log-level=DEBUG 2>&1 | grep "Homopolymer compressed"

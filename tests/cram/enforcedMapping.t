@@ -18,10 +18,10 @@
   $ MAPPING="$TESTDIR"/data/enforced_mapping-read_to_contig.csv
 
   $ "$PBMM2" align -j 1 "$REF" "$READS" "$CRAMTMP"/enforced0.bam -j 1 --log-level FATAL --enforced-mapping "$MAPPING" --preset CCS
-  $ "$SAMTOOLS" view "$CRAMTMP"/enforced0.bam | cut -f 1,3 | tr '\t' " " | sort > "$CRAMTMP"/enforced0.csv
+  $ samtools view "$CRAMTMP"/enforced0.bam | cut -f 1,3 | tr '\t' " " | sort > "$CRAMTMP"/enforced0.csv
   $ diff "$CRAMTMP"/enforced0.csv "$EXPECTED"
 
   $ "$PBMM2" index "$REF" "$CRAMTMP"/enforced1.mmi --log-level FATAL --preset CCS
   $ "$PBMM2" align -j 1 "$CRAMTMP"/enforced1.mmi "$READS" "$CRAMTMP"/enforced1.bam -j 1 --log-level FATAL --enforced-mapping "$MAPPING" --preset CCS
-  $ "$SAMTOOLS" view "$CRAMTMP"/enforced1.bam | cut -f 1,3 | tr '\t' " " | sort > "$CRAMTMP"/enforced1.csv
+  $ samtools view "$CRAMTMP"/enforced1.bam | cut -f 1,3 | tr '\t' " " | sort > "$CRAMTMP"/enforced1.csv
   $ diff "$CRAMTMP"/enforced1.csv "$EXPECTED"

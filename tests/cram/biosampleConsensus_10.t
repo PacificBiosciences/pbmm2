@@ -3,7 +3,7 @@
 
   $ "$PBMM2" align -j 1 "$MERGED" "$REF" "$CRAMTMP"/biosample_consensus_10.bam --sample testSample
   *Offending bio sample names. BAM contains 'bamSample' and XML contains 'UCLA_1023'. Will ignore XML bio sample name.* (glob)
-  $ "$SAMTOOLS" view -H "$CRAMTMP"/biosample_consensus_10.bam | grep "@RG"
+  $ samtools view -H "$CRAMTMP"/biosample_consensus_10.bam | grep "@RG"
   *\tSM:testSample\t* (glob)
   *\tSM:testSample\t* (glob)
   *\tSM:testSample\t* (glob)

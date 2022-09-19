@@ -1,12 +1,12 @@
   $ BAM="$TESTDIR"/data/median.bam
   $ REF="$TESTDIR"/data/ecoliK12_pbi_March2013.fasta
 
-  $ "$SAMTOOLS" view "$BAM" | awk '{ print "@"$1"\n"$10"\n+\n"$11 }' > "$CRAMTMP"/median.fastq
+  $ samtools view "$BAM" | awk '{ print "@"$1"\n"$10"\n+\n"$11 }' > "$CRAMTMP"/median.fastq
   $ FASTQ="$CRAMTMP"/median.fastq
   $ cp "$CRAMTMP"/median.fastq "$CRAMTMP"/median_compressed.fastq
   $ gzip "$CRAMTMP"/median_compressed.fastq
   $ FASTQGZ="$CRAMTMP"/median_compressed.fastq.gz
-  $ "$SAMTOOLS" view "$BAM" | awk '{ print ">"$1"\n"$10 }' > "$CRAMTMP"/median.fasta
+  $ samtools view "$BAM" | awk '{ print ">"$1"\n"$10 }' > "$CRAMTMP"/median.fasta
   $ FASTA="$CRAMTMP"/median.fasta
   $ cp "$CRAMTMP"/median.fasta "$CRAMTMP"/median_compressed.fasta
   $ gzip "$CRAMTMP"/median_compressed.fasta

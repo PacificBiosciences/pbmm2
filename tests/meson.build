@@ -138,7 +138,6 @@ foreach t : pbmm2_cram_test
       'MINIMAP2=' + pbmm2_test_minimap2.full_path(),
       'PBMM2=' + pbmm2_main.full_path(),
       'TESTDIR=' + meson.current_source_dir(),
-      'SAMTOOLS=' + pbmm2_test_samtools.full_path(),
     ],
     timeout : 36000) # with '-O0 -g' tests can be *very* slow
 endforeach

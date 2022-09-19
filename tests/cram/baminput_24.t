@@ -80,11 +80,11 @@ Test that median filter does not fail
   $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/median_output.bam --median-filter
 
   $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/bestn1.bam --best-n 1
-  $ "$SAMTOOLS" view "$CRAMTMP"/bestn1.bam | wc -l | tr -d ' '
+  $ samtools view "$CRAMTMP"/bestn1.bam | wc -l | tr -d ' '
   52
 
   $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/rle.bam --collapse-homopolymers
-  $ "$SAMTOOLS" view -H "$CRAMTMP"/rle.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
+  $ samtools view -H "$CRAMTMP"/rle.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
   1
   $ ls -alh "$CRAMTMP"/rle.bam.pbi 2> /dev/null | wc -l | tr -d ' '
   0

@@ -6,22 +6,22 @@
   $ ls -l "$CRAMTMP"/splitname.*.bam | wc -l | tr -d ' '
   3
 
-  $ ID=$("$SAMTOOLS" view -F 4 -H "$CRAMTMP"/splitname.3260208_188nM-GTAC_2xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494.bam | grep 3260208_188nM-GTAC_2xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494 | grep -v "@PG	ID:samtools" | cut -f 2 | cut -f 2 -d ':')
-  $ "$SAMTOOLS" view -F 4 "$CRAMTMP"/splitname.3260208_188nM-GTAC_2xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494.bam | grep -vc ${ID} | grep -v "@PG	ID:samtools" | tr -d ' '
+  $ ID=$(samtools view -F 4 -H "$CRAMTMP"/splitname.3260208_188nM-GTAC_2xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494.bam | grep 3260208_188nM-GTAC_2xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494 | grep -v "@PG	ID:samtools" | cut -f 2 | cut -f 2 -d ':')
+  $ samtools view -F 4 "$CRAMTMP"/splitname.3260208_188nM-GTAC_2xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494.bam | grep -vc ${ID} | grep -v "@PG	ID:samtools" | tr -d ' '
   0
-  $ "$SAMTOOLS" view -F 4 "$CRAMTMP"/splitname.3260208_188nM-GTAC_2xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494.bam | grep -v "@PG	ID:samtools" | wc -l | tr -d ' '
+  $ samtools view -F 4 "$CRAMTMP"/splitname.3260208_188nM-GTAC_2xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494.bam | grep -v "@PG	ID:samtools" | wc -l | tr -d ' '
   9
 
-  $ ID=$("$SAMTOOLS" view -F 4 -H "$CRAMTMP"/splitname.test-0.bam | grep "test(" | grep -v "@PG	ID:samtools" | cut -f 2 | cut -f 2 -d ':')
-  $ "$SAMTOOLS" view -F 4 "$CRAMTMP"/splitname.test-0.bam | grep -vc ${ID} | grep -v "@PG	ID:samtools" | tr -d ' '
+  $ ID=$(samtools view -F 4 -H "$CRAMTMP"/splitname.test-0.bam | grep "test(" | grep -v "@PG	ID:samtools" | cut -f 2 | cut -f 2 -d ':')
+  $ samtools view -F 4 "$CRAMTMP"/splitname.test-0.bam | grep -vc ${ID} | grep -v "@PG	ID:samtools" | tr -d ' '
   0
-  $ "$SAMTOOLS" view -F 4 "$CRAMTMP"/splitname.test-0.bam | grep -v "@PG	ID:samtools" | wc -l | tr -d ' '
+  $ samtools view -F 4 "$CRAMTMP"/splitname.test-0.bam | grep -v "@PG	ID:samtools" | wc -l | tr -d ' '
   10
 
-  $ ID=$("$SAMTOOLS" view -F 4 -H "$CRAMTMP"/splitname.test-1.bam | grep "test)" | grep -v "@PG	ID:samtools" | cut -f 2 | cut -f 2 -d ':')
-  $ "$SAMTOOLS" view -F 4 "$CRAMTMP"/splitname.test-1.bam | grep -vc ${ID} | grep -v "@PG	ID:samtools" | tr -d ' '
+  $ ID=$(samtools view -F 4 -H "$CRAMTMP"/splitname.test-1.bam | grep "test)" | grep -v "@PG	ID:samtools" | cut -f 2 | cut -f 2 -d ':')
+  $ samtools view -F 4 "$CRAMTMP"/splitname.test-1.bam | grep -vc ${ID} | grep -v "@PG	ID:samtools" | tr -d ' '
   0
-  $ "$SAMTOOLS" view -F 4 "$CRAMTMP"/splitname.test-1.bam | grep -v "@PG	ID:samtools" | wc -l | tr -d ' '
+  $ samtools view -F 4 "$CRAMTMP"/splitname.test-1.bam | grep -v "@PG	ID:samtools" | wc -l | tr -d ' '
   11
 
   $ "$PBMM2" align -j 1 "$MERGED" "$REF" "$CRAMTMP"/split_dataset.alignmentset.xml --split-by-sample
