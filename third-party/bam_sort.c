@@ -351,7 +351,7 @@ static void trans_tbl_destroy(trans_tbl_t *tbl)
  *  Create a merged_header_t struct.
  */
 
-static merged_header_t *init_merged_header()
+static merged_header_t *init_merged_header(void)
 {
     merged_header_t *merged_hdr;
 
