@@ -166,8 +166,9 @@ struct CompatMappedRead : public Data::MappedRead
         : Data::MappedRead{std::move(mr)}, refId{refIdArg}
     {}
 
-    int32_t refId;
-    bool supplAln;
+    int32_t refId = 0;
+    bool primaryAln = true;
+    bool supplAln = false;
 
     const std::string& Sequence(...) const;
     uint8_t MapQuality() const;
@@ -179,6 +180,8 @@ struct CompatMappedRead : public Data::MappedRead
     CompatMappedRead& Impl();
     const CompatMappedRead& Impl() const;
     const Data::Cigar& CigarData() const;
+    void SetPrimaryAlignment(bool val);
+    bool IsPrimaryAlignment() const;
     void SetSupplementaryAlignment(bool supplAlnArg);
     bool IsSupplementaryAlignment() const;
     void InsertSize(int32_t iSize);

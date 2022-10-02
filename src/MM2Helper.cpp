@@ -525,6 +525,22 @@ void MM2Helper::SetEnforcedMapping(const std::string& filePath)
     PBLOG_DEBUG << "Finished parsing --enforced-mapping";
 }
 
+void PrintMinimap2Aln(std::ostream& os, const mm_reg1_t& aln)
+{
+    const mm_reg1_t* r = &aln;
+    const bool isSuppl = (aln.sam_pri == 0);
+    const bool isSecondary = (aln.id != aln.parent);
+    os << "Minimap2 result:\n";
+    os << "r->qs = " << r->qs << ", r->qe = " << r->qe << ", qspan = " << (r->qe - r->qs)
+       << ", r->rs = " << r->rs << ", r->re = " << r->re << ", rspan = " << (r->re - r->rs)
+       << ",  r->mlen << " << r->mlen << ", r->blen = " << r->blen << ", r->mapq = " << r->mapq
+       << ", isSuppl = " << isSuppl << ", isSecondary = " << isSecondary << ", CIGAR = ";
+    for (uint32_t ii = 0; ii < r->p->n_cigar; ++ii) {
+        os << (r->p->cigar[ii] >> 4) << ("MIDNSHX="[r->p->cigar[ii] & 0xf]);
+    }
+    os << "\n";
+}
+
 template <typename In, typename Out>
 std::vector<Out> MM2Helper::AlignImpl(const In& record,
                                       const std::function<bool(const Out&)>& filter,
@@ -743,19 +759,25 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
     };
 
     const auto AlignAndTrim = [&](const int idx, const bool trim) {
-        if (maxNumAlns_ > 0 && static_cast<int32_t>(localResults.size()) >= maxNumAlns_) return;
+        if ((maxNumAlns_ > 0) && (static_cast<int32_t>(localResults.size()) >= maxNumAlns_)) {
+            return;
+        }
         auto& aln = alns[idx];
         int begin = trim ? 0 : aln.qs;
         int end = trim ? 0 : aln.qe;
-        if (trim && !SetQryHits(aln, &begin, &end)) return;
+        if (trim && !SetQryHits(aln, &begin, &end)) {
+            return;
+        }
         const int32_t refId = aln.rid;
         const Data::Strand strand = aln.rev ? Data::Strand::REVERSE : Data::Strand::FORWARD;
         int refStartOffset = 0;
+
         Data::Cigar cigar;
-        if (trim)
+        if (trim) {
             cigar = RenderCigar(&aln, qlen, MapOpts.flag, begin, end, &refStartOffset);
-        else
+        } else {
             cigar = RenderCigar(&aln, qlen, MapOpts.flag);
+        }
 
         TrimCigarFlanks(&cigar, &refStartOffset);
         if (cigar.empty()) {
@@ -772,8 +794,12 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
         mapped.Impl().InsertSize(tlen);
         mapped.Impl().RemoveTag("rm");
         mapped.Impl().SetSupplementaryAlignment(aln.sam_pri == 0);
+        mapped.Impl().SetPrimaryAlignment(aln.id == aln.parent);
+
         Out alnRec{std::move(mapped)};
-        if (filter(alnRec)) localResults.emplace_back(std::move(alnRec));
+        if (filter(alnRec)) {
+            localResults.emplace_back(std::move(alnRec));
+        }
     };
 
     if (!trimRepeatedMatches_ || used.size() <= 1) {
@@ -834,6 +860,34 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
             }
         }
     }
+
+    bool foundPrimary = false;
+    for (const auto& result : localResults) {
+        const auto& impl = result.Record.Impl();
+        if (impl.IsPrimaryAlignment() && !impl.IsSupplementaryAlignment()) {
+            foundPrimary = true;
+            break;
+        }
+    }
+    if (!foundPrimary) {
+        // Relabel one of the supplementary alignments to be the new primary.
+        bool foundNewPrimary = false;
+        for (auto& result : localResults) {
+            auto& impl = result.Record.Impl();
+            if (impl.IsPrimaryAlignment()) {
+                impl.SetSupplementaryAlignment(false);
+                foundNewPrimary = true;
+                break;
+            }
+        }
+        // In case relabelling wasn't successful, just fail the entire query.
+        // Do not fail in case of enforced mapping, because here we output potentially secondary alignments
+        // if those were specified in the input CSV file.
+        if (!foundNewPrimary && !enforcedMapping) {
+            localResults.clear();
+        }
+    }
+
     const auto numAlignments = localResults.size();
     if (numAlignments > 1) {
         std::vector<std::string> sas;
@@ -1130,6 +1184,10 @@ const Data::Cigar& CompatMappedRead::CigarData() const { return this->Cigar; }
 void CompatMappedRead::SetSupplementaryAlignment(bool supplAlnArg) { supplAln = supplAlnArg; }
 
 bool CompatMappedRead::IsSupplementaryAlignment() const { return supplAln; }
+
+void CompatMappedRead::SetPrimaryAlignment(const bool val) { primaryAln = val; }
+
+bool CompatMappedRead::IsPrimaryAlignment() const { return true; }
 
 void CompatMappedRead::InsertSize(int32_t /* iSize */) {}
 

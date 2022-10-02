@@ -374,7 +374,7 @@ R"({
 const CLI_v2::Option EnforcedMapping{
 R"({
     "names" : ["enforced-mapping"],
-    "description" : "Enforce mapping of reads to reference.",
+    "description" : "Enforce mapping of reads to specific references specified in an input CSV file.",
     "type" : "string",
     "hidden" : true
 })"};
