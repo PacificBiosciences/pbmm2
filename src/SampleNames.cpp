@@ -26,7 +26,7 @@ std::string SampleNames::SanitizeSampleName(const std::string& in)
     if (trimmed.empty()) return fallbackSampleName;
     std::string sanitizedName;
     for (const char& c : trimmed) {
-        if (c < '!' || c > '~') {
+        if (c < ' ' || c > '~') {
             sanitizedName += '_';
         } else
             sanitizedName += c;
