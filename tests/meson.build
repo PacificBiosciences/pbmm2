@@ -101,6 +101,7 @@ pbmm2_cram_test = [
   'nohpc',
   'overlap',
   'rc_ubam',
+  'rc_ubam_ml',
   'readgroup',
   'refxml',
   'sa_1',
