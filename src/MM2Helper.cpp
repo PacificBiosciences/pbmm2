@@ -438,24 +438,17 @@ const std::string& getNativeOrientationSequence(const Data::Read& record)
     return record.Seq;
 }
 
-bool inputOrientationIsFwdStrand(const BAM::BamRecord& record)
-{
-    // If the input is mapped, pbmm2 will create an unaligned record, which is always fwd strand.
-    // Otherwise, return if the unaligned record does not have flag 0x0010 set.
-    return record.IsMapped() || (!record.IsMapped() && !record.Impl().IsReverseStrand());
-}
-
-bool inputOrientationIsFwdStrand(const Data::Read&)
-{
-    // Data::Read's Seq has no strandness
-    return true;
-}
-
 std::unique_ptr<BAM::BamRecord> createUnalignedCopy(const BAM::BamRecord& record,
                                                     const std::string& seq)
 {
+    // Why create an unaligned copy in the first place?
+    // Modulo some pbbam implementation bugs, mm2 is very likely not idempotent
+    // with respect to orientation. Said differently, aligning query or
+    // reverse-complement(query) is not guaranteed to yield the same alignment.
+    // The only way to guarantee idempotency is to recreate the read as it was
+    // before alignment.
     std::unique_ptr<BAM::BamRecord> unalignedCopy;
-    if (record.IsMapped()) {
+    if (record.IsMapped() || (record.AlignedStrand() == Data::Strand::REVERSE)) {
         unalignedCopy = std::make_unique<BAM::BamRecord>(record.Header());
         unalignedCopy->Impl().SetSequenceAndQualities(
             seq, record.Qualities(Data::Orientation::NATIVE).Fastq());
@@ -783,16 +776,7 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
         }
         const int32_t refId = aln.rid;
 
-        // !aln.rev | inputFwd | output
-        //    FWD   |   FWD    |  FWD
-        //    FWD   |   REV    |  REV
-        //    REV   |   FWD    |  REV
-        //    REV   |   REV    |  FWD
-        // XNOR gate
-        // If one of them is reverse, the output is reverse. Otherwise, output is forward.
-        const Data::Strand strand = !(!aln.rev ^ inputOrientationIsFwdStrand(record))
-                                        ? Data::Strand::FORWARD
-                                        : Data::Strand::REVERSE;
+        const Data::Strand strand = aln.rev ? Data::Strand::REVERSE : Data::Strand::FORWARD;
 
         int refStartOffset = 0;
 
