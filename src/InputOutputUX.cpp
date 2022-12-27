@@ -470,6 +470,15 @@ UserIO InputOutputUX::CheckPositionalArgs(const std::vector<std::string>& args,
     if (settings.Sort && settings.BamIdx != BamIndex::_from_index(0)) {
         uio.bamIndex = settings.BamIdx;
     }
+
+    if (uio.inFile == uio.outFile) {
+        throw PB_CLI_ALARM("Input and output files are pointing to the same file. Aborting.");
+    }
+
+    if (uio.refFile == uio.outFile) {
+        throw PB_CLI_ALARM("Reference and output files are pointing to the same file. Aborting.");
+    }
+
     return uio;
 }
 
