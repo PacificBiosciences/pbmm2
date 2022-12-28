@@ -487,7 +487,7 @@ void postprocess(std::vector<AlignedRecord>& localResults,
     if (localResults.empty()) {
         if (record.IsMapped()) {
             const auto RemovePbmm2MappedTags = [](BAM::BamRecord& r) {
-                for (const auto& t : {"SA", "rm", "mc", "mi", "mg"})
+                for (const auto& t : {"SA", "rm", "mc", "mi", "mg", "NM"})
                     r.Impl().RemoveTag(t);
             };
             if (unalignedCopy) {
@@ -1151,15 +1151,20 @@ void AlignedRecordImpl<T>::ComputeAccuracyBases()
                          Span),
         0.0, 100.0);
 
-    const auto SetTag = [&](const char* tag, float value) {
+    const int32_t tagNM{cigarCounts.DeletionBases + cigarCounts.InsertionBases +
+                        cigarCounts.MismatchBases};
+
+    const auto SetTag = [&](const char* tag, auto value) {
         if (Record.Impl().HasTag(tag))
             Record.Impl().EditTag(tag, value);
         else
             Record.Impl().AddTag(tag, value);
     };
-    SetTag("mc", Concordance);
-    SetTag("mg", IdentityGapComp);
-    SetTag("mi", Identity);
+
+    SetTag("mc", static_cast<float>(Concordance));
+    SetTag("mg", static_cast<float>(IdentityGapComp));
+    SetTag("mi", static_cast<float>(Identity));
+    SetTag("NM", tagNM);
 }
 
 AlignedRecord::AlignedRecord(BAM::BamRecord record) : AlignedRecordImpl{std::move(record)} {}
