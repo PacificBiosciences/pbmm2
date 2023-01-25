@@ -27,6 +27,7 @@
 #include <pbmm2/MM2Helper.h>
 
 #include <sys/stat.h>
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <cstdio>
@@ -176,10 +177,13 @@ int AlignWorkflow::Runner(const CLI_v2::Results& options)
         auto lastTime = std::chrono::steady_clock::now();
         auto Submit = [&](const std::unique_ptr<std::vector<BAM::BamRecord>>& recs) {
             const auto Strip = [](BAM::BamRecord& record) {
+                constexpr std::array<const char[3], 25> STRIP_TAGS = {
+                    "dq", "dt", "fi", "fn", "fp", "ip", "iq", "mq", "pa", "pc", "pd", "pe", "pg",
+                    "pm", "pq", "pt", "pv", "pw", "px", "ri", "rn", "rp", "sf", "sq", "st"};
                 auto& impl = record.Impl();
-                for (const auto& t : {"dq", "dt", "ip", "iq", "mq", "pa", "pc", "pd", "pe", "pg",
-                                      "pm", "pq", "pt", "pv", "pw", "px", "sf", "sq", "st"})
-                    impl.RemoveTag(t);
+                for (const auto& tag : STRIP_TAGS) {
+                    impl.RemoveTag(tag);
+                }
             };
             if (settings.Strip) {
                 for (auto& r : *recs)

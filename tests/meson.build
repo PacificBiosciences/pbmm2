@@ -112,6 +112,7 @@ pbmm2_cram_test = [
   'splitsamplesamename',
   'splitsamplesorted',
   'strip',
+  'strip_hifi',
   'unaligned',
   'unrolled',
   ]
