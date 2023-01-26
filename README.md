@@ -21,7 +21,7 @@ Please refer to our [official pbbioconda page](https://github.com/PacificBioscie
 for information on Installation, Support, License, Copyright, and Disclaimer.
 
 ## Latest Version
-Version **1.3.0**: [Full changelog here](#full-changelog)
+Version **1.10.0**: [Full changelog here](#full-changelog)
 
 ## Usage
 _pbmm2_ offers following tools
@@ -415,7 +415,17 @@ before alignment. This mode cannot be combined with `.mmi` input.
 
 ## Full Changelog
 
- * **1.8.0**:
+ * **1.10.0**:
+   * Allow reverse-complemented unaligned records as input
+   * Allow infix, but not flanking, spaces in sample name
+   * Do not allow overwriting input files
+   * Store number of mismatches, tag NM
+
+ * 1.9.0:
+   * Print dependency versions
+   * Set unaligned MAPQ to 0
+
+ * 1.8.0:
    * Add support for *.fsa files
 
  * 1.7.0:
