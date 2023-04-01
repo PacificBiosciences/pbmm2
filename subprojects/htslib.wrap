@@ -1,12 +1,13 @@
 [wrap-file]
-directory = htslib-1.15
-source_url = https://github.com/samtools/htslib/releases/download/1.15/htslib-1.15.tar.bz2
-source_filename = htslib-1.15.tar.bz2
-source_hash = 1a9f49911503a22f56817cc82ea9b87fb7e7467b5ff989ca5aa61c12e7d532d9
-patch_filename = htslib_1.15-1_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/htslib_1.15-1/get_patch
-patch_hash = c413b3aaf339314c2897786cb58155a0f6df3a7f0e00b84cd36cdfb530df1911
+directory = htslib-1.17
+source_url = https://github.com/samtools/htslib/releases/download/1.17/htslib-1.17.tar.bz2
+source_filename = htslib-1.17.tar.bz2
+source_hash = 763779288c40f07646ec7ad98b96c378c739171d162ad98398868783b721839f
+patch_filename = htslib_1.17-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/htslib_1.17-1/get_patch
+patch_hash = d2e1080483d8dd96aa6b1ac8e513b20907443213d6e4a8f4d7c0d50487879414
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/htslib_1.17-1/htslib-1.17.tar.bz2
+wrapdb_version = 1.17-1
 
 [provide]
 htslib = htslib_dep
-
