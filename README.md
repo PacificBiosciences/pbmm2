@@ -21,7 +21,7 @@ Please refer to our [official pbbioconda page](https://github.com/PacificBioscie
 for information on Installation, Support, License, Copyright, and Disclaimer.
 
 ## Latest Version
-Version **1.10.0**: [Full changelog here](#full-changelog)
+Version **1.11.0**: [Full changelog here](#full-changelog)
 
 ## Usage
 _pbmm2_ offers following tools
@@ -416,6 +416,9 @@ before alignment. This mode cannot be combined with `.mmi` input.
 ## Full Changelog
 
  * **1.10.0**:
+   * Strip HiFi kinetics tags
+
+ * 1.10.0:
    * Allow reverse-complemented unaligned records as input
    * Allow infix, but not flanking, spaces in sample name
    * Do not allow overwriting input files
