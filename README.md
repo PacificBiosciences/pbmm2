@@ -289,12 +289,11 @@ This leads to yield loss and more importantly missing SVs in the alignment.
 Papers like [this](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-015-0670-9)
 present dynamic programming approaches to find the optimal split to
 uniquely map query intervals, while maximizing alignment scores. We don't have
-per base alignment scores available, thus our approach will be much simpler.
-We align the read, find overlapping query intervals, determine one alignment to
-be maximal reference spanning, and all others get trimmed; by trimming, I mean
-that _pbmm2_ rewrites the cigar and the reference coordinates on-the-fly.
-This allows us to increase number of mapped bases, slightly reduce identity,
-but boost SV recall rate.
+per base alignment scores available, thus our approach is much simpler.
+We align the read, find overlapping query intervals, and trim non-primary alignments
+in order as provided by minimap2; trimming here means that _pbmm2_ rewrites the cigar
+and the reference coordinates on-the-fly. This allows us to increase number
+of mapped bases, slightly reduce identity, but boost SV recall rate.
 
 ### What SAM tags are added by pbmm2?
 _pbmm2_ adds following tags to each aligned record:

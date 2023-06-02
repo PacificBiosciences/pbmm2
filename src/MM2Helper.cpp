@@ -8,11 +8,13 @@
 #include <pbcopper/utility/FileUtils.h>
 #include <boost/algorithm/clamp.hpp>
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
+#include <utility>
 
 using namespace std::literals::string_literals;
 
@@ -552,11 +554,14 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
                                       const std::function<bool(const Out&)>& filter,
                                       std::unique_ptr<ThreadBuffer>& tbuf) const
 {
-    std::vector<Out> localResults;
-    if (checkIsSupplementaryAlignment(record)) return localResults;
+    if (checkIsSupplementaryAlignment(record)) {
+        return {};
+    }
 
     std::unique_ptr<ThreadBuffer> tbufLocal;
-    if (!tbuf) tbufLocal = std::make_unique<ThreadBuffer>();
+    if (!tbuf) {
+        tbufLocal = std::make_unique<ThreadBuffer>();
+    }
 
     int numAlns;
     // watch out for lifetime issues when changing from const-ref to ref
@@ -575,27 +580,41 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
     if (enforcedMapping) {
         const std::string name = record.FullName();
         auto it = readToRefsEnforcedMapping_.find(name);
-        if (it != readToRefsEnforcedMapping_.cend())
+        if (it != readToRefsEnforcedMapping_.cend()) {
             enforcedReferences = it->second;
-        else
+        } else {
             enforcedMapping = false;
-    }
-    for (int i = 0; i < numAlns; ++i) {
-        auto& aln = alns[i];
-        // if no alignment, continue
-        if (aln.p == nullptr) continue;
-        // secondary alignment and no enforced mapping
-        if (aln.id != aln.parent && !enforcedMapping) continue;
-        used.emplace_back(i);
-        if (alnMode_ == AlignmentMode::UNROLLED) break;
+        }
     }
 
     if (enforcedMapping_ && !enforcedMapping) {
         PBLOG_DEBUG << "[Enforced mapping] (" << record.FullName() << ") Not present for read";
     }
 
+    for (int i = 0; i < numAlns; ++i) {
+        auto& aln = alns[i];
+
+        // if no alignment, continue
+        if (aln.p == nullptr) {
+            continue;
+        }
+        // secondary alignment and no enforced mapping
+        if ((aln.id != aln.parent) && !enforcedMapping) {
+            continue;
+        }
+
+        used.emplace_back(i);
+
+        if (alnMode_ == AlignmentMode::UNROLLED) {
+            break;
+        }
+    }
+
     if (enforcedMapping) {
-        if (used.empty()) return localResults;
+        if (used.empty()) {
+            return {};
+        }
+
         bool hasPrimaryOnly = std::all_of(used.cbegin(), used.cend(), [&alns](const int32_t i) {
             return alns[i].id == alns[i].parent;
         });
@@ -607,22 +626,22 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
                           refNames_[primaryAln.rid]) == enforcedReferences.cend()) {
                 PBLOG_DEBUG << "[Enforced mapping] (" << record.FullName()
                             << ") Wrong mapping, primary only present";
-                return localResults;
+                return {};
             }
         } else {
             int32_t primaryOnTargetIdx = -1;
             bool secondaryOnTarget = false;
             // Store used index of primary on-target alignment and if there are
             // secondary on-target alignments.
-            for (const auto i : used) {
+            for (const int i : used) {
                 const auto& aln = alns[i];
                 // Primary alignments
-                if (aln.id == aln.parent && primaryOnTargetIdx == -1) {
+                if ((aln.id == aln.parent) && (primaryOnTargetIdx == -1)) {
                     if (std::find(enforcedReferences.cbegin(), enforcedReferences.cend(),
                                   refNames_[aln.rid]) != enforcedReferences.cend()) {
                         primaryOnTargetIdx = i;
                     }
-                } else if (aln.id != aln.parent && !secondaryOnTarget) {  // secondary
+                } else if ((aln.id != aln.parent) && !secondaryOnTarget) {  // secondary
                     secondaryOnTarget |=
                         std::find(enforcedReferences.cbegin(), enforcedReferences.cend(),
                                   refNames_[aln.rid]) != enforcedReferences.cend();
@@ -639,8 +658,8 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
             if (primaryOnTargetIdx != -1) {
                 usedOnTarget.emplace_back(primaryOnTargetIdx);
                 ++primaryAlignStatsOnTarget;
-                for (const auto i : used) {
-                    if (i != primaryOnTargetIdx && alns[i].id == alns[i].parent) {
+                for (const int i : used) {
+                    if ((i != primaryOnTargetIdx) && (alns[i].id == alns[i].parent)) {
                         usedOnTarget.emplace_back(i);
                         if (std::find(enforcedReferences.cbegin(), enforcedReferences.cend(),
                                       refNames_[alns[i].rid]) != enforcedReferences.cend()) {
@@ -651,10 +670,12 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
                     }
                 }
             } else {
-                for (const auto i : used) {
+                for (const int i : used) {
                     if (alns[i].id == alns[i].parent) {
                         ++primaryAlignStatsMissing;
-                        if (!alns[i].sam_pri) unusedOffTargetSupplementary.emplace_back(i);
+                        if (!alns[i].sam_pri) {
+                            unusedOffTargetSupplementary.emplace_back(i);
+                        }
                     }
                 }
             }
@@ -663,7 +684,7 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
             int32_t secondaryAlignStatsOffTarget = 0;
             std::vector<int32_t> usedSecondaries;
             if (secondaryOnTarget) {
-                for (const auto i : used) {
+                for (const int i : used) {
                     if (alns[i].id != alns[i].parent) {
                         if (std::find(enforcedReferences.cbegin(), enforcedReferences.cend(),
                                       refNames_[alns[i].rid]) != enforcedReferences.cend()) {
@@ -677,8 +698,7 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
                 }
             }
 
-            int32_t secondaryAlignStatRecovered = 0;
-            const auto CheckOverlap = [](const int32_t chosenLeft, const int32_t chosenRight,
+            const auto checkOverlap = [](const int32_t chosenLeft, const int32_t chosenRight,
                                          const int32_t testLeft, const int32_t testRight) {
                 const int32_t chosenLength = chosenRight - chosenLeft;
                 const int32_t testLength = testRight - testLeft;
@@ -688,25 +708,27 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
                     const int32_t right = std::min(chosenRight, testRight);
                     const int32_t overlapLength = right - left;
                     const int32_t maxLength = std::max(chosenLength, testLength);
-                    return 1.0 * overlapLength / maxLength;
-                } else {
-                    // Does not overlap
-                    return 0.0;
+                    return (1.0 * overlapLength) / maxLength;
                 }
+                // Does not overlap
+                return 0.0;
             };
+
+            int32_t secondaryAlignStatRecovered = 0;
+
             if (!usedSecondaries.empty()) {
-                for (const auto& u : unusedOffTargetSupplementary) {
+                for (const int32_t u : unusedOffTargetSupplementary) {
                     const auto& sup = alns[u];
                     const int32_t supLeft = sup.rev ? qlen - sup.qe : sup.qs;
                     const int32_t supRight = sup.rev ? qlen - sup.qs : sup.qe;
                     bool overlapsWithSecondary = false;
-                    for (const auto& s : usedSecondaries) {
+                    for (const int32_t& s : usedSecondaries) {
                         const auto& sec = alns[s];
                         const int32_t secLeft = sec.rev ? qlen - sec.qe : sec.qs;
                         const int32_t secRight = sec.rev ? qlen - sec.qs : sec.qe;
-                        if (CheckOverlap(secLeft, secRight, supLeft, supRight) >= 0.5 ||
-                            (sec.rid == sup.rid &&
-                             CheckOverlap(sec.rs, sec.re, sup.rs, sup.re) > 0.0)) {
+                        if ((checkOverlap(secLeft, secRight, supLeft, supRight) >= 0.5) ||
+                            ((sec.rid == sup.rid) &&
+                             checkOverlap(sec.rs, sec.re, sup.rs, sup.re) > 0.0)) {
                             overlapsWithSecondary = true;
                             break;
                         }
@@ -721,7 +743,7 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
             if (usedOnTarget.empty()) {
                 PBLOG_DEBUG << "[Enforced mapping] (" << record.FullName()
                             << ") Wrong mapping of both primaries and secondaries";
-                return localResults;
+                return {};
             }
 
             PBLOG_DEBUG << "[Enforced mapping] (" << record.FullName() << ") "
@@ -735,7 +757,9 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
         }
     }
 
-    const auto SetQryHits = [&](mm_reg1_t& aln, int* begin, int* end) {
+    std::vector<Out> localResults;
+
+    const auto setQryHits = [&](mm_reg1_t& aln, int* begin, int* end) {
         bool started = false;
         bool ended = false;
 
@@ -760,18 +784,21 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
                 }
             }
         }
-        if (!ended) *end = r;
+        if (!ended) {
+            *end = r;
+        }
+
         return started;
     };
 
-    const auto AlignAndTrim = [&](const int idx, const bool trim) {
+    const auto alignAndTrim = [&](const int idx, const bool trim) {
         if ((maxNumAlns_ > 0) && (static_cast<int32_t>(localResults.size()) >= maxNumAlns_)) {
             return;
         }
         auto& aln = alns[idx];
         int begin = trim ? 0 : aln.qs;
         int end = trim ? 0 : aln.qe;
-        if (trim && !SetQryHits(aln, &begin, &end)) {
+        if (trim && !setQryHits(aln, &begin, &end)) {
             return;
         }
         const int32_t refId = aln.rid;
@@ -790,7 +817,8 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
         TrimCigarFlanks(&cigar, &refStartOffset);
         if (cigar.empty()) {
             return;
-        } else if (cigar.size() == 1 && cigar[0].Type() == Data::CigarOperationType::SOFT_CLIP) {
+        }
+        if ((cigar.size() == 1) && (cigar[0].Type() == Data::CigarOperationType::SOFT_CLIP)) {
             return;
         }
 
@@ -810,67 +838,34 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
         }
     };
 
-    if (!trimRepeatedMatches_ || used.size() <= 1) {
-        for (const auto i : used) {
-            AlignAndTrim(i, false);
-        }
-    } else {
-        std::vector<std::pair<int, int>> queryIntervals;
-        std::vector<std::pair<int, int>> qryIdxOverlaps;
-        std::vector<std::pair<int, int>> refIntervals;
-        std::vector<std::pair<int, int>> refIdxOverlaps;
+    bool trim = trimRepeatedMatches_ && (std::ssize(used) > 1);
+    if (trim) {
+        bool overlap = false;
 
-        for (const auto i : used) {
-            auto& aln = alns[i];
-            int l = aln.rev ? qlen - aln.qe : aln.qs;
-            int r = aln.rev ? qlen - aln.qs : aln.qe;
-            for (size_t j = 0; j < queryIntervals.size(); ++j) {
-                const auto& s_e = queryIntervals[j];
-                if (l <= s_e.second && r >= s_e.first) qryIdxOverlaps.emplace_back(i, used[j]);
-            }
-            queryIntervals.emplace_back(l, r);
-            for (size_t j = 0; j < refIntervals.size(); ++j) {
-                const auto& s_e = refIntervals[j];
-                if (aln.rs <= s_e.second && aln.re >= s_e.first) {
-                    if (aln.rs < alns[used[j]].rs)
-                        refIdxOverlaps.emplace_back(i, used[j]);
-                    else
-                        refIdxOverlaps.emplace_back(used[j], i);
-                }
-            }
-            refIntervals.emplace_back(aln.rs, aln.re);
-        }
-        std::vector<std::pair<int, int>> primaryAlignments;
-        if (!refIdxOverlaps.empty()) {
-            for (const auto& refIdx : refIdxOverlaps) {
-                for (const auto& qryIdx : qryIdxOverlaps) {
-                    if (refIdx.first == qryIdx.first || refIdx.first == qryIdx.second ||
-                        refIdx.second == qryIdx.first || refIdx.second == qryIdx.second) {
-                        primaryAlignments.emplace_back(refIdx);
-                        break;
-                    }
-                }
+        for (const int i : used) {
+            if (std::any_of(std::cbegin(used), std::cend(used), [&alns, i](const int j) {
+                    return (i < j) && (alns[i].qs <= alns[j].qe) && (alns[i].qe >= alns[j].qs);
+                })) {
+                overlap = true;
+                break;
             }
         }
-        if (!qryIdxOverlaps.empty() && !primaryAlignments.empty()) {
-            AlignAndTrim(primaryAlignments[0].first, true);
-            AlignAndTrim(primaryAlignments[0].second, true);
-            for (const auto i : used) {
-                if (i == primaryAlignments[0].first) continue;
-                if (i == primaryAlignments[0].second) continue;
-                AlignAndTrim(i, true);
-            }
-            for (auto& l : localResults)
-                l.Record.Impl().AddTag("rm", 1);
-        } else {
-            for (const auto i : used) {
-                AlignAndTrim(i, true);
-            }
+
+        trim = trim && overlap;
+    }
+
+    for (const int i : used) {
+        alignAndTrim(i, trim);
+    }
+
+    if (trim) {
+        for (auto& result : localResults) {
+            result.Record.Impl().AddTag("rm", 1);
         }
     }
 
     bool foundPrimary = false;
-    for (const auto& result : localResults) {
+    for (const Out& result : localResults) {
         const auto& impl = result.Record.Impl();
         if (impl.IsPrimaryAlignment() && !impl.IsSupplementaryAlignment()) {
             foundPrimary = true;
@@ -880,7 +875,7 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
     if (!foundPrimary) {
         // Relabel one of the supplementary alignments to be the new primary.
         bool foundNewPrimary = false;
-        for (auto& result : localResults) {
+        for (Out& result : localResults) {
             auto& impl = result.Record.Impl();
             if (impl.IsPrimaryAlignment()) {
                 impl.SetSupplementaryAlignment(false);
@@ -896,11 +891,11 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
         }
     }
 
-    const auto numAlignments = localResults.size();
+    const int32_t numAlignments = std::ssize(localResults);
     if (numAlignments > 1) {
         std::vector<std::string> sas;
         std::vector<std::pair<int32_t, int32_t>> spans;
-        for (size_t j = 0; j < numAlignments; ++j) {
+        for (int32_t j = 0; j < numAlignments; ++j) {
             std::ostringstream sa;
             const auto& rec = localResults.at(j).Record;
             int32_t qryStart = BAM::IsCcsOrTranscript(rec.Type()) ? 0 : rec.QueryStart();
@@ -909,30 +904,46 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
             const auto qrs = rec.ReferenceStart();
             const auto qre = rec.ReferenceEnd();
             const bool qrev = rec.AlignedStrand() == Data::Strand::REVERSE;
-            int l_M, l_I = 0, l_D = 0, clip5 = 0, clip3 = 0;
-            if (qqe - qqs < qre - qrs)
+            int l_M;
+            int l_I = 0;
+            int l_D = 0;
+            int clip5 = 0;
+            int clip3 = 0;
+            if (qqe - qqs < qre - qrs) {
                 l_M = qqe - qqs, l_D = (qre - qrs) - l_M;
-            else
+            } else {
                 l_M = qre - qrs, l_I = (qqe - qqs) - l_M;
+            }
             clip5 = qrev ? qlen - qqe : qqs;
             clip3 = qrev ? qqs : qlen - qqe;
             sa << Idx->idx_->seq[rec.ReferenceId()].name << ',' << qrs + 1 << ',' << "+-"[qrev]
                << ',';
-            if (clip5) sa << clip5 << 'S';
-            if (l_M) sa << l_M << 'M';
-            if (l_I) sa << l_I << 'I';
-            if (l_D) sa << l_D << 'D';
-            if (clip3) sa << clip3 << 'S';
+            if (clip5) {
+                sa << clip5 << 'S';
+            }
+            if (l_M) {
+                sa << l_M << 'M';
+            }
+            if (l_I) {
+                sa << l_I << 'I';
+            }
+            if (l_D) {
+                sa << l_D << 'D';
+            }
+            if (clip3) {
+                sa << clip3 << 'S';
+            }
             sa << ',' << static_cast<int>(rec.MapQuality()) << ',' << rec.NumMismatches() << ';';
             sas.emplace_back(sa.str());
-            if (qrev)
+            if (qrev) {
                 spans.emplace_back(clip3, qlen - clip5);
-            else
+            } else {
                 spans.emplace_back(clip5, qlen - clip3);
+            }
         }
         if (!shortSACigar_) {
             sas.clear();
-            for (size_t j = 0; j < numAlignments; ++j) {
+            for (int32_t j = 0; j < numAlignments; ++j) {
                 std::ostringstream sa;
                 const auto& rec = localResults.at(j).Record;
                 const auto qrs = rec.ReferenceStart();
@@ -948,10 +959,10 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
             }
         }
         if (trimRepeatedMatches_) {
-            for (size_t i = 0; i < numAlignments; ++i) {
+            for (int32_t i = 0; i < numAlignments; ++i) {
                 int32_t fixedBegin = spans[i].first;
                 int32_t fixedEnd = spans[i].second;
-                for (size_t j = i + 1; j < numAlignments; ++j) {
+                for (int32_t j = i + 1; j < numAlignments; ++j) {
                     int32_t curBegin = spans[j].first;
                     int32_t curEnd = spans[j].second;
                     if (fixedEnd > curBegin && fixedBegin < curEnd) {
@@ -963,25 +974,31 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
                 }
             }
         }
-        for (size_t i = 0; i < numAlignments; ++i) {
+        for (int32_t i = 0; i < numAlignments; ++i) {
             std::ostringstream sa;
-            for (size_t j = 0; j < numAlignments; ++j) {
-                if (i == j) continue;
+            for (int32_t j = 0; j < numAlignments; ++j) {
+                if (i == j) {
+                    continue;
+                }
                 sa << sas[j];
             }
-            const auto sastr = sa.str();
+            const std::string sastr = sa.str();
             if (!sastr.empty()) {
-                if (localResults[i].Record.Impl().HasTag("SA"))
+                if (localResults[i].Record.Impl().HasTag("SA")) {
                     localResults[i].Record.Impl().EditTag("SA", sastr);
-                else
+                } else {
                     localResults[i].Record.Impl().AddTag("SA", sastr);
+                }
             }
         }
     }
 
     // cleanup
-    for (int i = 0; i < numAlns; ++i)
-        if (alns[i].p) free(alns[i].p);
+    for (int i = 0; i < numAlns; ++i) {
+        if (alns[i].p) {
+            free(alns[i].p);
+        }
+    }
     free(alns);
 
     postprocess(localResults, unalignedCopy, record);

@@ -38,6 +38,7 @@ pbmm2_cram_test = [
   'baminput_28',
   'baminput_29',
   'baminput_30',
+  'best_n',
   'biosampleConsensus_1',
   'biosampleConsensus_2',
   'biosampleConsensus_3',
