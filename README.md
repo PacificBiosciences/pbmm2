@@ -302,7 +302,7 @@ _pbmm2_ adds following tags to each aligned record:
  - `mc`, stores [mapped concordance percentage](#how-do-you-define-identity) between 0.0 and 100.0, if the filter was used
  - `mg`, stores [gap-compressed sequence identity percentage](#how-do-you-define-gap-compressed-identity) between 0.0 and 100.0, if the filter was used
  - `mi`, stores [sequence identity percentage](#how-do-you-define-identity) between 0.0 and 100.0, if the filter was used
- - `rm`, is set to `1` if alignment has been manipulated by [repeated matches trimming](#what-is-repeated-matches-trimming)
+ - `rm`, is set to `1` if an alignment has been manipulated by [repeated matches trimming](#what-is-repeated-matches-trimming)
 
 ### Why is the output different from BLASR?
 As for any two alignments of the same data with different mappers, alignments

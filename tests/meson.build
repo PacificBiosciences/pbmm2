@@ -104,6 +104,7 @@ pbmm2_cram_test = [
   'rc_ubam_ml',
   'readgroup',
   'refxml',
+  'rmt',
   'sa_1',
   'sa_2',
   'splitsample',
