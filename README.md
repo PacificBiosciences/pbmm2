@@ -412,6 +412,12 @@ written to disk with the same prefix as your output alignment and appended
 with suffix `.ref.collapsed.fasta`. In addition, each read is collapsed
 before alignment. This mode cannot be combined with `.mmi` input.
 
+## Known issues
+Due to multithreading the ouput alignment ordering can differ between multiple runs
+with the same input parameters. The same can occur even with option `--sort` for
+records that align to the same target sequence, the same position within that target,
+and in the same orientation, which are the only fields that `samtools sort` uses.
+
 ## Full Changelog
 
  * **1.10.0**:
