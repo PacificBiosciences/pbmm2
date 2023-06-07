@@ -1,7 +1,7 @@
   $ IN="$TESTDIR"/data/median.bam
   $ REF="$TESTDIR"/data/ecoliK12_pbi_March2013.fasta
 
-  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/default_overrides.bam --log-level DEBUG -o 5 -O 56 -e 4 -E 1 -k 19 -w 10 -A 2 -B 5 -z 400 -Z 50 -r 1000 -L 0.4 -g 10000 2>&1| grep DEBUG
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/default_overrides.bam --log-level DEBUG --preset SUBREAD -o 5 -O 56 -e 4 -E 1 -k 19 -w 10 -A 2 -B 5 -z 400 -Z 50 -r 1000 -L 0.4 -g 10000 2>&1| grep DEBUG
   *Minimap2 parameters* (glob)
   *Kmer size              : 19 (glob)
   *Minimizer window size  : 10 (glob)

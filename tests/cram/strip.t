@@ -1,12 +1,12 @@
   $ IN="$TESTDIR"/data/median.bam
   $ REF="$TESTDIR"/data/ecoliK12_pbi_March2013.fasta
 
-  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/full.bam --sort --short-sa-cigar
-  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/strip.bam --sort --strip --short-sa-cigar
-  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/gapcomp_full.bam --sort --min-gap-comp-id-perc 10 --min-id-perc 0 --min-concordance-perc 0 --short-sa-cigar
-  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/id_full.bam --sort --min-gap-comp-id-perc 0 --min-id-perc 10 --min-concordance-perc 0 --short-sa-cigar
-  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/all_full.bam --sort --min-gap-comp-id-perc 10 --min-id-perc 10 --min-concordance-perc 10 --short-sa-cigar
-  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/gapcomp_strip.bam --sort --min-gap-comp-id-perc 10 --min-id-perc 0 --min-concordance-perc 0 --strip --short-sa-cigar
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/full.bam --preset SUBREAD --sort --short-sa-cigar
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/strip.bam --preset SUBREAD --sort --strip --short-sa-cigar
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/gapcomp_full.bam --preset SUBREAD --sort --min-gap-comp-id-perc 10 --min-id-perc 0 --min-concordance-perc 0 --short-sa-cigar
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/id_full.bam --preset SUBREAD --sort --min-gap-comp-id-perc 0 --min-id-perc 10 --min-concordance-perc 0 --short-sa-cigar
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/all_full.bam --preset SUBREAD --sort --min-gap-comp-id-perc 10 --min-id-perc 10 --min-concordance-perc 10 --short-sa-cigar
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/gapcomp_strip.bam --preset SUBREAD --sort --min-gap-comp-id-perc 10 --min-id-perc 0 --min-concordance-perc 0 --strip --short-sa-cigar
 
   $ samtools view "$CRAMTMP"/full.bam| head -n 1 | cut -f 12- | tr '\t' '\n' | sort
   NM:i:130
@@ -100,8 +100,8 @@ Internal BAM
   $ IN="$TESTDIR"/data/m54075_180905_225130.subreads.bam
   $ REF="$TESTDIR"/data/ecoliK12_pbi_March2013.fasta
 
-  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/full_int.bam --sort
-  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/strip_int.bam --sort --strip
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/full_int.bam --preset SUBREAD --sort
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/strip_int.bam --preset SUBREAD --sort --strip
 
   $ samtools view "$CRAMTMP"/full_int.bam| head -n 1 | cut -f 12- | tr '\t' '\n' | sort
   NM:i:215

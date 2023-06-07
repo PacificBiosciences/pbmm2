@@ -3,7 +3,7 @@
   $ SAMTOOLS_VERSION=$(samtools --version | head -n 1 | cut -d '.' -f 2)
   $ if [ $SAMTOOLS_VERSION -ge 10 ]; then SAMTOOLS_NOPG='--no-PG'; fi
 
-  $ "$PBMM2" align -j 1 "$IN" "$REF" "${CRAMTMP}"/demultiplex.bc1009--bc1009.bam --log-level FATAL
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "${CRAMTMP}"/demultiplex.bc1009--bc1009.bam --log-level FATAL --preset CCS
   $ samtools view ${SAMTOOLS_NOPG} "${CRAMTMP}"/demultiplex.bc1009--bc1009.bam > "${CRAMTMP}"/demuxed.sam
   $ wc -l < "${CRAMTMP}"/demuxed.sam | tr -d ' '
   1

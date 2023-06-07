@@ -98,7 +98,7 @@ R"({
     "description" : "Set alignment mode. See below for preset parameter details.",
     "type" : "string",
     "choices" : ["SUBREAD", "CCS", "HIFI", "ISOSEQ", "UNROLLED"],
-    "default" : "SUBREAD"
+    "default" : "CCS"
 })"};
 
 const CLI_v2::Option ChunkSize{

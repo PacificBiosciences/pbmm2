@@ -6,13 +6,8 @@
   $ cp "$CRAMTMP"/median.fastq "$CRAMTMP"/median_compressed.fastq
   $ gzip "$CRAMTMP"/median_compressed.fastq
   $ FASTQGZ="$CRAMTMP"/median_compressed.fastq.gz
-  $ samtools view "$BAM" | awk '{ print ">"$1"\n"$10 }' > "$CRAMTMP"/median.fasta
-  $ FASTA="$CRAMTMP"/median.fasta
-  $ cp "$CRAMTMP"/median.fasta "$CRAMTMP"/median_compressed.fasta
-  $ gzip "$CRAMTMP"/median_compressed.fasta
-  $ FASTAGZ="$CRAMTMP"/median_compressed.fasta.gz
 
-  $ "$PBMM2" align -j 1 "$REF" "$FASTQGZ" "$CRAMTMP"/fastq_compressed_unsorted.bam 2>&1
+  $ "$PBMM2" align -j 1 "$REF" "$FASTQGZ" "$CRAMTMP"/fastq_compressed_unsorted.bam --preset SUBREAD 2>&1
   *Input is FASTQ.* (glob)
   $ samtools view -H "$CRAMTMP"/fastq_compressed_unsorted.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
   1

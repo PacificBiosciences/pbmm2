@@ -1,12 +1,12 @@
   $ IN="$TESTDIR"/data/m54019_171011_032401_tiny.subreadset.xml
   $ REF="$TESTDIR"/data/lambdaNEB_BsaAI_allFrags_incLeftRightEnds_unrolled_250k.fasta
 
-  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/hqregion.alignmentset.xml --log-level INFO --hqregion 2>&1| grep INFO | grep "Mapped Read Length"
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/hqregion.alignmentset.xml --log-level INFO --preset SUBREAD --hqregion 2>&1| grep INFO | grep "Mapped Read Length"
   *Max Mapped Read Length: 17670 (glob)
   *Mean Mapped Read Length: 15659 (glob)
 
   $ cd "$TESTDIR"/data
-  $ "$PBMM2" align -j 1 unrolled.json lambdaNEB_BsaAI_allFrags_incLeftRightEnds_unrolled_250k.fasta "$CRAMTMP"/zmw_json.alignmentset.xml --log-level DEBUG --zmw 2>&1| grep -v "#Reads, #Aln, #RPM"
+  $ "$PBMM2" align -j 1 unrolled.json lambdaNEB_BsaAI_allFrags_incLeftRightEnds_unrolled_250k.fasta "$CRAMTMP"/zmw_json.alignmentset.xml --preset SUBREAD --log-level DEBUG --zmw 2>&1| grep -v "#Reads, #Aln, #RPM"
   *for alignments. (glob)
   *READ input file: *unrolled.json* (glob)
   *REF  input file: *lambdaNEB_BsaAI_allFrags_incLeftRightEnds_unrolled_250k.fasta* (glob)

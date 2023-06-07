@@ -6,57 +6,53 @@
   $ REF="$TESTDIR"/data/ecoliK12_pbi_March2013.fasta
 
   $ BAM="$TESTDIR"/data/median.bam
+
   $ samtools view "$BAM" | awk '{ print "@"$1"\n"$10"\n+\n"$11 }' > "$CRAMTMP"/median.fastq
   $ FASTQ="$CRAMTMP"/median.fastq
-  $ cp "$CRAMTMP"/median.fastq "$CRAMTMP"/median_compressed.fastq
-  $ gzip "$CRAMTMP"/median_compressed.fastq
-  $ FASTQGZ="$CRAMTMP"/median_compressed.fastq.gz
+
   $ samtools view "$BAM" | awk '{ print ">"$1"\n"$10 }' > "$CRAMTMP"/median.fasta
   $ FASTA="$CRAMTMP"/median.fasta
-  $ cp "$CRAMTMP"/median.fasta "$CRAMTMP"/median_compressed.fasta
-  $ gzip "$CRAMTMP"/median_compressed.fasta
-  $ FASTAGZ="$CRAMTMP"/median_compressed.fasta.gz
 
-  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/read_ref.bam --log-level INFO 2>&1 | grep "input file"
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/read_ref.bam --log-level INFO --preset SUBREAD 2>&1 | grep "input file"
   *READ input file: *median.bam* (glob)
   *REF  input file: *ecoliK12_pbi_March2013.fasta* (glob)
 
-  $ "$PBMM2" align -j 1 "$REF" "$IN" "$CRAMTMP"/ref_read.bam --log-level INFO 2>&1 | grep "input file"
+  $ "$PBMM2" align -j 1 "$REF" "$IN" "$CRAMTMP"/ref_read.bam --log-level INFO --preset SUBREAD 2>&1 | grep "input file"
   *READ input file: *median.bam* (glob)
   *REF  input file: *ecoliK12_pbi_March2013.fasta* (glob)
 
-  $ "$PBMM2" align -j 1 "$REF" "$TESTDIR"/data/median.subreadset.xml "$CRAMTMP"/ref_xml.bam --log-level INFO 2>&1 | grep "input file"
+  $ "$PBMM2" align -j 1 "$REF" "$TESTDIR"/data/median.subreadset.xml "$CRAMTMP"/ref_xml.bam --log-level INFO --preset SUBREAD 2>&1 | grep "input file"
   *READ input file: *median.subreadset.xml* (glob)
   *REF  input file: *ecoliK12_pbi_March2013.fasta* (glob)
 
-  $ "$PBMM2" align -j 1 "$TESTDIR"/data/median.subreadset.xml "$REF" "$CRAMTMP"/xml_ref.bam --log-level INFO 2>&1 | grep "input file"
+  $ "$PBMM2" align -j 1 "$TESTDIR"/data/median.subreadset.xml "$REF" "$CRAMTMP"/xml_ref.bam --log-level INFO --preset SUBREAD 2>&1 | grep "input file"
   *READ input file: *median.subreadset.xml* (glob)
   *REF  input file: *ecoliK12_pbi_March2013.fasta* (glob)
 
-  $ "$PBMM2" align -j 1 "$REF" "$TESTDIR"/data/median.transcriptset.xml "$CRAMTMP"/ref_transxml.bam --log-level INFO 2>&1 | grep "input file"
+  $ "$PBMM2" align -j 1 "$REF" "$TESTDIR"/data/median.transcriptset.xml "$CRAMTMP"/ref_transxml.bam --log-level INFO --preset SUBREAD 2>&1 | grep "input file"
   *READ input file: *median.transcriptset.xml* (glob)
   *REF  input file: *ecoliK12_pbi_March2013.fasta* (glob)
 
-  $ "$PBMM2" align -j 1 "$TESTDIR"/data/median.transcriptset.xml "$REF" "$CRAMTMP"/transxml_ref.bam --log-level INFO 2>&1 | grep "input file"
+  $ "$PBMM2" align -j 1 "$TESTDIR"/data/median.transcriptset.xml "$REF" "$CRAMTMP"/transxml_ref.bam --log-level INFO --preset SUBREAD 2>&1 | grep "input file"
   *READ input file: *median.transcriptset.xml* (glob)
   *REF  input file: *ecoliK12_pbi_March2013.fasta* (glob)
 
-  $ "$PBMM2" align -j 1 "$REF" "$TESTDIR"/data/median.consensusreadset.xml "$CRAMTMP"/ref_ccsxml.bam --log-level INFO 2>&1 | grep "input file"
+  $ "$PBMM2" align -j 1 "$REF" "$TESTDIR"/data/median.consensusreadset.xml "$CRAMTMP"/ref_ccsxml.bam --log-level INFO --preset SUBREAD 2>&1 | grep "input file"
   *READ input file: *median.consensusreadset.xml* (glob)
   *REF  input file: *ecoliK12_pbi_March2013.fasta* (glob)
 
-  $ "$PBMM2" align -j 1 "$TESTDIR"/data/median.consensusreadset.xml "$REF" "$CRAMTMP"/ccsxml_ref.bam --log-level INFO 2>&1 | grep "input file"
+  $ "$PBMM2" align -j 1 "$TESTDIR"/data/median.consensusreadset.xml "$REF" "$CRAMTMP"/ccsxml_ref.bam --log-level INFO --preset SUBREAD 2>&1 | grep "input file"
   *READ input file: *median.consensusreadset.xml* (glob)
   *REF  input file: *ecoliK12_pbi_March2013.fasta* (glob)
 
-  $ "$PBMM2" align -j 1 "$REF" "$FASTA" "$CRAMTMP"/ref_fasta.bam --log-level INFO 2>&1 | grep "input file"
+  $ "$PBMM2" align -j 1 "$REF" "$FASTA" "$CRAMTMP"/ref_fasta.bam --log-level INFO --preset SUBREAD 2>&1 | grep "input file"
   *READ input file: *median.fasta* (glob)
   *REF  input file: *ecoliK12_pbi_March2013.fasta* (glob)
 
-  $ "$PBMM2" align -j 1 "$REF" "$FASTQ" "$CRAMTMP"/ref_fastq.bam --log-level INFO 2>&1 | grep "input file"
+  $ "$PBMM2" align -j 1 "$REF" "$FASTQ" "$CRAMTMP"/ref_fastq.bam --log-level INFO --preset SUBREAD 2>&1 | grep "input file"
   *READ input file: *median.fastq* (glob)
   *REF  input file: *ecoliK12_pbi_March2013.fasta* (glob)
 
-  $ "$PBMM2" align -j 1 "$FASTQ" "$REF" "$CRAMTMP"/fastq_ref.bam --log-level INFO 2>&1 | grep "input file"
+  $ "$PBMM2" align -j 1 "$FASTQ" "$REF" "$CRAMTMP"/fastq_ref.bam --log-level INFO --preset SUBREAD 2>&1 | grep "input file"
   *READ input file: *median.fastq* (glob)
   *REF  input file: *ecoliK12_pbi_March2013.fasta* (glob)

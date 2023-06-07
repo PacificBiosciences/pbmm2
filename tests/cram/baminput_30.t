@@ -1,7 +1,7 @@
   $ IN="$TESTDIR"/data/median.bam
   $ REF="$TESTDIR"/data/ecoliK12_pbi_March2013.fasta
 
-  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/rle.bam --collapse-homopolymers
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/rle.bam --preset SUBREAD --collapse-homopolymers
   $ samtools view -H "$CRAMTMP"/rle.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
   1
   $ ls -alh "$CRAMTMP"/rle.bam.pbi 2> /dev/null | wc -l | tr -d ' '

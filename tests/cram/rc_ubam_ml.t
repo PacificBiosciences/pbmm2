@@ -2,8 +2,8 @@
   $ IN_REV="$TESTDIR"/data/m84011_220902_175841_s1.zmw58919191.rev.hifi_reads.bam
   $ REF="$TESTDIR"/data/REF_58919191.fasta
 
-  $ ${PBMM2} align -j 1 ${IN_FWD} ${REF} fwd.aligned.bam
-  $ ${PBMM2} align -j 1 ${IN_REV} ${REF} rev.aligned.bam
+  $ ${PBMM2} align -j 1 ${IN_FWD} ${REF} fwd.aligned.bam --preset CCS
+  $ ${PBMM2} align -j 1 ${IN_REV} ${REF} rev.aligned.bam --preset CCS
 
   $ samtools view ${IN_FWD} | awk '{ print $1 "\t" $2 "\t" substr($10,1,20) "\t" substr($10,length($10)-19); }' | column -t
   m84011_220902_175841_s1/58919191/ccs  4  AAAAGACTGCGCTTTTGTGG  CAAGGTTTTACCTTTTACAA

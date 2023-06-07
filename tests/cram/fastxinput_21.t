@@ -3,16 +3,8 @@
 
   $ samtools view "$BAM" | awk '{ print "@"$1"\n"$10"\n+\n"$11 }' > "$CRAMTMP"/median.fastq
   $ FASTQ="$CRAMTMP"/median.fastq
-  $ cp "$CRAMTMP"/median.fastq "$CRAMTMP"/median_compressed.fastq
-  $ gzip "$CRAMTMP"/median_compressed.fastq
-  $ FASTQGZ="$CRAMTMP"/median_compressed.fastq.gz
-  $ samtools view "$BAM" | awk '{ print ">"$1"\n"$10 }' > "$CRAMTMP"/median.fasta
-  $ FASTA="$CRAMTMP"/median.fasta
-  $ cp "$CRAMTMP"/median.fasta "$CRAMTMP"/median_compressed.fasta
-  $ gzip "$CRAMTMP"/median_compressed.fasta
-  $ FASTAGZ="$CRAMTMP"/median_compressed.fasta.gz
 
-  $ "$PBMM2" align "$REF" "$FASTQ" "$CRAMTMP"/sorted_fastq_verbose.bam --sort -j 2 -J 2 -m 100M --log-level INFO 2>&1
+  $ "$PBMM2" align "$REF" "$FASTQ" "$CRAMTMP"/sorted_fastq_verbose.bam --preset SUBREAD --sort -j 2 -J 2 -m 100M --log-level INFO 2>&1
   *Using 2 threads for alignments, 2 threads for sorting, and 200M bytes RAM for sorting. (glob)
   *Input is FASTQ.* (glob)
   *READ input file: *median.fastq* (glob)

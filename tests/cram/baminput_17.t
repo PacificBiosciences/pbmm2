@@ -1,7 +1,6 @@
-  $ IN="$TESTDIR"/data/median.bam
   $ REF="$TESTDIR"/data/ecoliK12_pbi_March2013.fasta
 
-  $ "$PBMM2" align -j 1 "$TESTDIR"/data/median.transcriptset.xml "$REF" "$CRAMTMP"/out_trans.transcriptalignmentset.xml
+  $ "$PBMM2" align -j 1 "$TESTDIR"/data/median.transcriptset.xml "$REF" "$CRAMTMP"/out_trans.transcriptalignmentset.xml --preset ISOSEQ
   $ echo $?
   0
   $ ls -alh "$CRAMTMP"/out_trans.bam 2> /dev/null | wc -l | tr -d ' '

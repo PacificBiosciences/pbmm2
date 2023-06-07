@@ -1,28 +1,20 @@
   $ BAM="$TESTDIR"/data/median.bam
   $ REF="$TESTDIR"/data/ecoliK12_pbi_March2013.fasta
 
-  $ samtools view "$BAM" | awk '{ print "@"$1"\n"$10"\n+\n"$11 }' > "$CRAMTMP"/median.fastq
-  $ FASTQ="$CRAMTMP"/median.fastq
-  $ cp "$CRAMTMP"/median.fastq "$CRAMTMP"/median_compressed.fastq
-  $ gzip "$CRAMTMP"/median_compressed.fastq
-  $ FASTQGZ="$CRAMTMP"/median_compressed.fastq.gz
   $ samtools view "$BAM" | awk '{ print ">"$1"\n"$10 }' > "$CRAMTMP"/median.fasta
   $ FASTA="$CRAMTMP"/median.fasta
-  $ cp "$CRAMTMP"/median.fasta "$CRAMTMP"/median_compressed.fasta
-  $ gzip "$CRAMTMP"/median_compressed.fasta
-  $ FASTAGZ="$CRAMTMP"/median_compressed.fasta.gz
 
-  $ "$PBMM2" align -j 1 "$REF" "$FASTA" "$CRAMTMP"/fasta_unsortedjs.json
+  $ "$PBMM2" align -j 1 "$REF" "$FASTA" "$CRAMTMP"/fasta_unsortedjs.json --preset SUBREAD
   *Input is FASTA.* (glob)
   *Unsupported input type* (glob)
   [1]
 
-  $ "$PBMM2" align -j 1 "$REF" "$FASTA" "$CRAMTMP"/fasta_sortedjs.json --sort
+  $ "$PBMM2" align -j 1 "$REF" "$FASTA" "$CRAMTMP"/fasta_sortedjs.json --preset SUBREAD --sort
   *Input is FASTA.* (glob)
   *Unsupported input type* (glob)
   [1]
 
-  $ "$PBMM2" align -j 1 "$REF" "$FASTA" > "$CRAMTMP"/fasta_unsortedoutstream.bam
+  $ "$PBMM2" align -j 1 "$REF" "$FASTA" --preset SUBREAD > "$CRAMTMP"/fasta_unsortedoutstream.bam
   *Input is FASTA.* (glob)
   $ samtools view -H "$CRAMTMP"/fasta_unsortedoutstream.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '
   1

@@ -21,7 +21,7 @@ Please refer to our [official pbbioconda page](https://github.com/PacificBioscie
 for information on Installation, Support, License, Copyright, and Disclaimer.
 
 ## Latest Version
-Version **1.11.0**: [Full changelog here](#full-changelog)
+Version **1.12.0**: [Full changelog here](#full-changelog)
 
 ## Usage
 _pbmm2_ offers following tools
@@ -35,24 +35,24 @@ Tools:
 ### Typical workflows
 ```
 A. Generate index file for reference and reuse it to align reads
-  $ pbmm2 index ref.fasta ref.mmi
-  $ pbmm2 align ref.mmi movie.subreads.bam ref.movie.bam
+  $ pbmm2 index ref.fasta ref.mmi --preset SUBREAD
+  $ pbmm2 align ref.mmi movie.subreads.bam ref.movie.bam --preset SUBREAD
 
 B. Align reads and sort on-the-fly, with 4 alignment and 2 sort threads
-  $ pbmm2 align ref.fasta movie.subreads.bam ref.movie.bam --sort -j 4 -J 2
+  $ pbmm2 align ref.fasta movie.subreads.bam ref.movie.bam --preset SUBREAD --sort -j 4 -J 2
 
 C. Align reads, sort on-the-fly, and create PBI
-  $ pbmm2 align ref.fasta movie.subreadset.xml ref.movie.alignmentset.xml --sort
+  $ pbmm2 align ref.fasta movie.subreadset.xml ref.movie.alignmentset.xml --preset SUBREAD --sort
 
 D. Omit output file and stream BAM output to stdout
-  $ pbmm2 align hg38.mmi movie1.subreadset.xml | samtools sort > hg38.movie1.sorted.bam
+  $ pbmm2 align hg38.mmi movie1.subreadset.xml --preset SUBREAD | samtools sort > hg38.movie1.sorted.bam
 
 E. Align CCS fastq input and sort output
-  $ pbmm2 align ref.fasta movie.Q20.fastq ref.movie.bam --preset CCS --sort --rg '@RG\tID:myid\tSM:mysample'
+  $ pbmm2 align ref.fasta movie.Q20.fastq ref.movie.bam --sort --rg '@RG\tID:myid\tSM:mysample'
 ```
 
 ### Index
-Indexing is optional, but recommended it you use the same reference with the same `--preset` multiple times.
+Indexing is optional, but recommended if you use the same reference with the same `--preset` multiple times.
 ```
 Usage: pbmm2 index [options] <ref.fa|xml> <out.mmi>
 ```
@@ -118,7 +118,7 @@ and FASTQ formats, as shown above.
 With FASTA/Q input, option `--rg` sets the read group. Example call:
 
 ```
-pbmm2 align hg38.fasta movie.Q20.fastq hg38.movie.bam --preset CCS --rg '@RG\tID:myid\tSM:mysample'
+pbmm2 align hg38.fasta movie.Q20.fastq hg38.movie.bam --rg '@RG\tID:myid\tSM:mysample'
 ```
 
 All three reference file formats `.fasta`, `.referenceset.xml`, and `.mmi` can be combined with FASTA/Q input.
@@ -131,7 +131,7 @@ datatype. Supported are `.fofn` files with FASTA, FASTQ, or BAM.
 ```
 echo "m64001_190131_212703.Q20.fastq.gz" > myfiles.fofn
 echo "m64001_190228_200412.Q20.fastq.gz" >> myfiles.fofn
-pbmm2 align hg38.fasta myfiles.fofn hg38.myfiles.bam --preset CCS --rg '@RG\tID:myid\tSM:mysample'
+pbmm2 align hg38.fasta myfiles.fofn hg38.myfiles.bam --rg '@RG\tID:myid\tSM:mysample'
 ```
 
 ```
@@ -162,7 +162,7 @@ Alignment modes of --preset:
     - "CCS" or "HIFI" -k 19 -w 10 -u -o 5 -O 56 -e 4 -E 1 -A 2 -B 5 -z 400 -Z 50  -r 2000   -L 0.5 -g 5000
     - "ISOSEQ"        -k 15 -w 5  -u -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 200000 -L 0.5 -g 2000 -C 5 -G 200000
     - "UNROLLED"      -k 15 -w 15    -o 2 -O 32 -e 1 -E 0 -A 1 -B 2 -z 200 -Z 100 -r 2000   -L 0.5 -g 10000
-  Default ["SUBREAD"]
+  Default ["CCS"]
 ```
 
 If you want to override any of the parameters of your chosen set,
@@ -420,7 +420,11 @@ and in the same orientation, which are the only fields that `samtools sort` uses
 
 ## Full Changelog
 
- * **1.10.0**:
+ * **1.12.0**:
+   * Set `--preset CCS` as default
+   * Change repeated matches trimming to adhere to minimap2 alignment ordering
+
+ * 1.11.0:
    * Strip HiFi kinetics tags
 
  * 1.10.0:

@@ -1,7 +1,7 @@
   $ MERGED="$TESTDIR"/data/merged.dataset.xml
   $ REF="$TESTDIR"/data/ecoliK12_pbi_March2013.fasta
 
-  $ "$PBMM2" align -j 1 "$MERGED" "$REF" "$CRAMTMP"/split_dataset_sorted.alignmentset.xml --split-by-sample --sort
+  $ "$PBMM2" align -j 1 "$MERGED" "$REF" "$CRAMTMP"/split_dataset_sorted.alignmentset.xml --preset SUBREAD --split-by-sample --sort
 
   $ [[ -f "$CRAMTMP"/split_dataset_sorted.3260208_188nM-GTAC_2xGCratio_LP7_100fps_15min_5kEColi_SP2p1_3uMSSB_BA243494.alignmentset.xml ]] || echo "File does not exist!"
   $ [[ -f "$CRAMTMP"/split_dataset_sorted.test_test.alignmentset.xml ]] || echo "File does not exist!"

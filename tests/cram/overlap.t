@@ -1,7 +1,9 @@
-  $ "$PBMM2" align -j 1 "$TESTDIR"/data/overlap_ref.fasta "$TESTDIR"/data/overlap.fasta "$CRAMTMP"/overlap.bam
+  $ "$PBMM2" align -j 1 "$TESTDIR"/data/overlap_ref.fasta "$TESTDIR"/data/overlap.fasta "$CRAMTMP"/overlap.bam --preset SUBREAD
   *Input is FASTA. Output BAM file cannot be used for polishing with GenomicConsensus* (glob)
-  $ "$PBMM2" align -j 1 "$TESTDIR"/data/synth.ref.fasta "$TESTDIR"/data/synth5k.fasta.gz "$CRAMTMP"/synth.bam
+
+  $ "$PBMM2" align -j 1 "$TESTDIR"/data/synth.ref.fasta "$TESTDIR"/data/synth5k.fasta.gz "$CRAMTMP"/synth.bam --preset SUBREAD
   *Input is FASTA. Output BAM file cannot be used for polishing with GenomicConsensus* (glob)
+
   $ samtools view "$CRAMTMP"/synth.bam | cut -f 1,6 | tr '\t' ' '
   TestMovie/0/0_2000 2000=
   TestMovie/1/0_2000 2000=

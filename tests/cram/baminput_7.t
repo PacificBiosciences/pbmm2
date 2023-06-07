@@ -1,7 +1,7 @@
   $ IN="$TESTDIR"/data/median.bam
   $ REF="$TESTDIR"/data/ecoliK12_pbi_March2013.fasta
 
-  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/unsortedds.alignmentset.xml 2> "$CRAMTMP"/unsortedds.err || echo $?
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/unsortedds.alignmentset.xml --preset SUBREAD 2> "$CRAMTMP"/unsortedds.err || echo $?
   $ cut -f 8 -d '|' < "$CRAMTMP"/unsortedds.err
   - Input is not a dataset, but output is. Please use dataset input for full SMRT Link compatibility!
   $ samtools view -H "$CRAMTMP"/unsortedds.bam | grep "@HD" | grep "unknown" | wc -l | tr -d ' '

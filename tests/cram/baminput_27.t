@@ -23,4 +23,4 @@
   [1]
 
 Test bam_sort
-  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/sorted_small.bam --sort -J 1 -m 1M --log-level INFO --log-file "$CRAMTMP"/sorted_small.txt
+  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/sorted_small.bam --preset SUBREAD --sort -J 1 -m 1M --log-level INFO --log-file "$CRAMTMP"/sorted_small.txt

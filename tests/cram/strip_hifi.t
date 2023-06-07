@@ -1,8 +1,8 @@
   $ IN="$TESTDIR"/data/median.ccs.bam
   $ REF="$TESTDIR"/data/ecoliK12_pbi_March2013.fasta
 
-  $ "$PBMM2" align -j 1 "$IN" "$REF" full.bam --sort --short-sa-cigar
-  $ "$PBMM2" align -j 1 "$IN" "$REF" strip.bam --sort --strip --short-sa-cigar
+  $ "$PBMM2" align -j 1 "$IN" "$REF" full.bam --preset CCS --sort --short-sa-cigar
+  $ "$PBMM2" align -j 1 "$IN" "$REF" strip.bam  --preset CCS --sort --strip --short-sa-cigar
 
   $ samtools view full.bam | head -n 1 | cut -f 12- | tr '\t' '\n' | sort
   NM:i:1
