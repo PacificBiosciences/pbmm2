@@ -315,9 +315,10 @@ R"({
 const CLI_v2::Option LongJoinFlankRatio{
 R"({
     "names" : ["L", "lj-min-ratio"],
-    "description" : "Long join flank ratio.",
+    "description" : "Long join flank ratio [Deprecated as of mm2 v2.19].",
     "type" : "float",
-    "default" : -1
+    "default" : -1,
+    "hidden" : true
 })"};
 
 const CLI_v2::Option NoBAI{
@@ -464,7 +465,6 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
     MM2Settings::NonCanon = options[OptionNames::NonCanon];
     MM2Settings::NoSpliceFlank = options[OptionNames::NoSpliceFlank];
     MM2Settings::DisableHPC = options[OptionNames::AlignDisableHPC];
-    MM2Settings::LongJoinFlankRatio = options[OptionNames::LongJoinFlankRatio];
     MM2Settings::NoTrimming = options[OptionNames::NoTrimming];
     MM2Settings::MaxNumAlns = options[OptionNames::MaxNumAlns];
     MM2Settings::MaxGap = options[OptionNames::MaxGap];
@@ -605,8 +605,9 @@ AlignSettings::AlignSettings(const PacBio::CLI_v2::Results& options)
             "Invalid @RG line. Missing ID field. Please provide following format: "
             "'@RG\\tID:xyz\\tSM:abc'");
     }
-    if (MM2Settings::LongJoinFlankRatio > 1) {
-        throw AbortException("Option -L,--lj-min-ratio has to be between a ratio betweem 0 and 1.");
+    if (options[OptionNames::LongJoinFlankRatio].IsUserProvided()) {
+        PBLOG_WARN
+            << "Option -L,--lj-min-ratio has been deprecated with mm2 v2.19 and pbmm2 >v1.12!";
     }
 
     if (!Sort && noBai) {

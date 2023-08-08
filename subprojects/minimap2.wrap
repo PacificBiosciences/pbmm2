@@ -1,4 +1,4 @@
 [wrap-git]
 directory=minimap2
 url=https://github.com/pacificbiosciences/minimap2.git
-revision=2.15-meson
+revision=2.26-meson

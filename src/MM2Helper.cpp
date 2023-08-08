@@ -263,7 +263,6 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
         MapOpts.flag |= MM_F_HARD_MLEVEL;
         MapOpts.mask_level = 0;
     }
-    MapOpts.min_join_flank_ratio = 0.5;
 
     switch (settings.AlignMode) {
         case AlignmentMode::SUBREADS:
@@ -342,8 +341,6 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
     if (settings.MaxGap >= 0) MapOpts.max_gap = settings.MaxGap;
     if (settings.Bandwidth >= 0) MapOpts.bw = settings.Bandwidth;
     if (settings.NoSpliceFlank) MapOpts.flag &= ~MM_F_SPLICE_FLANK;
-    if (settings.LongJoinFlankRatio >= 0)
-        MapOpts.min_join_flank_ratio = settings.LongJoinFlankRatio;
     if (settings.MaxSecondaryAlns >= 0) MapOpts.best_n = settings.MaxSecondaryAlns;
 
     if ((MapOpts.q != MapOpts.q2 || MapOpts.e != MapOpts.e2) &&
@@ -385,7 +382,6 @@ void MM2Helper::PostInit(const MM2Settings& settings, const std::string& preset,
         PBLOG_DEBUG << "Z-drop inv             : " << MapOpts.zdrop_inv;
         PBLOG_DEBUG << "Bandwidth              : " << MapOpts.bw;
         PBLOG_DEBUG << "Max gap                : " << MapOpts.max_gap;
-        PBLOG_DEBUG << "Long join flank ratio  : " << MapOpts.min_join_flank_ratio;
         if (settings.AlignMode == AlignmentMode::ISOSEQ) {
             PBLOG_DEBUG << "Max ref intron length  : " << MapOpts.max_gap_ref;
             PBLOG_DEBUG << "Prefer splice flanks   : " << (!settings.NoSpliceFlank ? "yes" : "no");
