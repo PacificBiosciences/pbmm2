@@ -95,11 +95,13 @@ TEST(MM2Test, FilterBAM)
     for (const auto& record : reader) {
         const std::vector<AlignedRecord> alignments = mm2helper.Align(record, myFilter);
         for (const auto& aln : alignments) {
-            EXPECT_TRUE(aln.Concordance > 90.0);
-            if (aln.IsAligned) alignedBam.emplace_back(std::move(aln.Record));
+            if (aln.IsAligned) {
+                EXPECT_TRUE(aln.Concordance > 90.0);
+                alignedBam.emplace_back(std::move(aln.Record));
+            }
         }
     }
-    EXPECT_EQ(85ul, alignedBam.size());
+    EXPECT_EQ(84ul, alignedBam.size());
 }
 
 TEST(MM2Test, FilterRead)
@@ -121,7 +123,7 @@ TEST(MM2Test, FilterRead)
             if (aln.IsAligned) alignedReads.emplace_back(std::move(aln.Record));
         }
     }
-    EXPECT_EQ(85ul, alignedReads.size());
+    EXPECT_EQ(84ul, alignedReads.size());
 }
 
 TEST(MM2Test, UseCommonThreadBuffer)
@@ -159,11 +161,13 @@ TEST(MM2Test, FilterAndBuffer)
     for (const auto& record : reader) {
         const std::vector<AlignedRecord> alignments = mm2helper.Align(record, myFilter, tbuf);
         for (const auto& aln : alignments) {
-            EXPECT_TRUE(aln.Concordance > 90.0);
-            if (aln.IsAligned) alignedBam.emplace_back(std::move(aln.Record));
+            if (aln.IsAligned) {
+                EXPECT_TRUE(aln.Concordance > 90.0);
+                alignedBam.emplace_back(std::move(aln.Record));
+            }
         }
     }
-    EXPECT_EQ(85ul, alignedBam.size());
+    EXPECT_EQ(84ul, alignedBam.size());
 }
 
 TEST(MM2Test, AlignCCS)
@@ -184,8 +188,8 @@ TEST(MM2Test, AlignCCS)
             if (aln.IsAligned) alignedBam.emplace_back(std::move(aln.Record));
         }
     }
-    EXPECT_EQ(8ul, alignedBam.size());
-    EXPECT_EQ(11501, alignedBases);
+    EXPECT_EQ(4ul, alignedBam.size());
+    EXPECT_EQ(7351, alignedBases);
 }
 
 TEST(MM2Test, AlignCCSWithOverrides)
@@ -209,8 +213,8 @@ TEST(MM2Test, AlignCCSWithOverrides)
             if (aln.IsAligned) alignedBam.emplace_back(std::move(aln.Record));
         }
     }
-    EXPECT_EQ(9ul, alignedBam.size());
-    EXPECT_EQ(11704, alignedBases);
+    EXPECT_EQ(5ul, alignedBam.size());
+    EXPECT_EQ(8719, alignedBases);
 }
 
 // For a proper test of idempotence, see tests/cram/idempotence.t

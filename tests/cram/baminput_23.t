@@ -16,4 +16,3 @@
   *Z-drop inv             : 50 (glob)
   *Bandwidth              : 2000 (glob)
   *Max gap                : 5000 (glob)
-  *Long join flank ratio  : 0.5 (glob)

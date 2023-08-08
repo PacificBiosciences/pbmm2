@@ -15,7 +15,7 @@
   *Generating BAI (glob)
   *Mapped Reads: 52 (glob)
   *Alignments: 96 (glob)
-  *Mapped Bases: 242437 (glob)
+  *Mapped Bases: 243366 (glob)
   *Mean Gap-Compressed Sequence Identity* (glob)
   *Max Mapped Read Length* (glob)
   *Mean Mapped Read Length* (glob)

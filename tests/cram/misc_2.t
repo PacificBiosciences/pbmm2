@@ -26,10 +26,6 @@
   $ "$PBMM2" align -j 1 "$REF" "$REF" "$CRAMTMP"/fail.bam --preset SUBREAD 2>&1; rm -rf "$CRAMTMP"/fail.bam
   *Input is FASTA.* (glob)
 
-  $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/fail.bam --preset SUBREAD -L 1.1
-  *Option -L,--lj-min-ratio has to be between a ratio betweem 0 and 1.* (glob)
-  [1]
-
   $ "$PBMM2" align -j 1 "$IN" "$REF" "$CRAMTMP"/fail.bam --preset SUBREAD --zmw
   *Option --zmw can only be used with a subreadset.xml containing subread + scraps BAM files.* (glob)
   [1]

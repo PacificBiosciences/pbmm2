@@ -3,19 +3,19 @@
   $ "$PBMM2" index "$REF" "$CRAMTMP"/ccs.mmi --preset CCS --log-level DEBUG 2>&1| grep DEBUG
   * Minimap2 parameters based on preset: CCS / HiFi (glob)
   * Kmer size              : 19 (glob)
-  * Minimizer window size  : 10 (glob)
+  * Minimizer window size  : 19 (glob)
   * Homopolymer compressed : false (glob)
 
   $ "$PBMM2" index "$REF" "$CRAMTMP"/ccs.mmi --preset hifi --log-level DEBUG 2>&1| grep DEBUG
   * Minimap2 parameters based on preset: CCS / HiFi (glob)
   * Kmer size              : 19 (glob)
-  * Minimizer window size  : 10 (glob)
+  * Minimizer window size  : 19 (glob)
   * Homopolymer compressed : false (glob)
 
   $ "$PBMM2" index "$REF" "$CRAMTMP"/ccs.mmi --preset HiFi --log-level DEBUG 2>&1| grep DEBUG
   * Minimap2 parameters based on preset: CCS / HiFi (glob)
   * Kmer size              : 19 (glob)
-  * Minimizer window size  : 10 (glob)
+  * Minimizer window size  : 19 (glob)
   * Homopolymer compressed : false (glob)
 
   $ "$PBMM2" index "$REF" "$CRAMTMP"/ccs.mmi --preset isoseq --log-level DEBUG 2>&1| grep DEBUG

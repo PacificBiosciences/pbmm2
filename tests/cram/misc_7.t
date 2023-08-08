@@ -21,7 +21,7 @@
   *Finished reading/building index (glob)
   *Mapped Reads: 104 (glob)
   *Alignments: 192 (glob)
-  *Mapped Bases: 484874 (glob)
+  *Mapped Bases: 486732 (glob)
   *Mean Gap-Compressed Sequence Identity* (glob)
   *Max Mapped Read Length* (glob)
   *Mean Mapped Read Length* (glob)

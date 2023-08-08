@@ -233,7 +233,7 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             break;
         case AlignmentMode::CCS:
             IdxOpts.k = 19;
-            IdxOpts.w = 10;
+            IdxOpts.w = 19;
             break;
         case AlignmentMode::ISOSEQ:
             IdxOpts.k = 15;
@@ -280,16 +280,20 @@ void MM2Helper::PreInit(const MM2Settings& settings, std::string* preset)
             break;
         case AlignmentMode::CCS:
             *preset = "CCS / HiFi";
-            MapOpts.a = 2;
-            MapOpts.q = 5;
-            MapOpts.q2 = 56;
-            MapOpts.e = 4;
+            MapOpts.a = 1;
+            MapOpts.q = 6;
+            MapOpts.q2 = 26;
+            MapOpts.e = 2;
             MapOpts.e2 = 1;
-            MapOpts.b = 5;
+            MapOpts.b = 4;
             MapOpts.zdrop = 400;
             MapOpts.zdrop_inv = 50;
             MapOpts.bw = 2000;
-            MapOpts.max_gap = 5000;
+            MapOpts.max_gap = 10000;
+            MapOpts.occ_dist = 500;
+            MapOpts.min_mid_occ = 50;
+            MapOpts.max_mid_occ = 500;
+            MapOpts.min_dp_max = 500;
             break;
         case AlignmentMode::ISOSEQ:
             *preset = "ISOSEQ";
