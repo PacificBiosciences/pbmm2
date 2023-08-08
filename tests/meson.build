@@ -119,17 +119,6 @@ pbmm2_cram_test = [
   'unrolled',
   ]
 
-pbmm2_test_minimap2 = find_program('minimap2', required : false)
-if not pbmm2_test_minimap2.found()
-  message('Using minimap2 from subproject')
-
-  if pbmm2_minimap2_dep.type_name() == 'internal'
-    pbmm2_test_minimap2 = pbmm2_minimap2_subproject.get_variable('mm2_main')
-  else
-    error('Could not find minimap2 executable, which is required for tests')
-  endif
-endif
-
 pbmm2_test_samtools = find_program('samtools')
 
 foreach t : pbmm2_cram_test
@@ -140,7 +129,6 @@ foreach t : pbmm2_cram_test
       '--xunit-file=' + join_paths(meson.project_build_root(), 'pbmm2-cram-' + t.underscorify() + '-test.xml'),
       '--verbose'] + files('cram/' + t + '.t'),
     env : [
-      'MINIMAP2=' + pbmm2_test_minimap2.full_path(),
       'PBMM2=' + pbmm2_main.full_path(),
       'TESTDIR=' + meson.current_source_dir(),
     ],
