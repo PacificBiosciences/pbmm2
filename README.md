@@ -21,7 +21,7 @@ Please refer to our [official pbbioconda page](https://github.com/PacificBioscie
 for information on Installation, Support, License, Copyright, and Disclaimer.
 
 ## Latest Version
-Version **1.12.0**: [Full changelog here](#full-changelog)
+Version **1.13.0**: [Full changelog here](#full-changelog)
 
 ## Usage
 _pbmm2_ offers following tools
@@ -142,7 +142,9 @@ pbmm2 align hg38.fasta mymovies.fofn hg38.mymovies.bam
 ## FAQ
 
 ### Which minimap2 version is used?
-Minimap2 version 2.15 is used, to be specific, SHA1 [c404f49](https://github.com/lh3/minimap2/commit/c404f49569fa2d606b652418ffa4b9743bcaf641).
+
+ - pbmm2 ≥v1.13.0: minimap2 v2.26
+ - pbmm2 ≥v1.13.0: minimap2 v2.15
 
 ### When are `pbi` files created?
 Whenever the output is of type `xml`, a `pbi` file is being generated.
@@ -420,7 +422,10 @@ and in the same orientation, which are the only fields that `samtools sort` uses
 
 ## Full Changelog
 
- * **1.12.0**:
+ * 1.13.0:
+   * Update minimap2 to version 2.26
+
+ * 1.12.0:
    * Set `--preset CCS` as default
    * Change repeated matches trimming to adhere to minimap2 alignment ordering
 
