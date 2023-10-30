@@ -314,7 +314,7 @@ TEST(MM2Test, FastaRefAlign)
         EXPECT_EQ(fromFasta.AlignedStart(), fromFile.AlignedStart());
         EXPECT_EQ(fromFasta.AlignedEnd(), fromFile.AlignedEnd());
         EXPECT_EQ(fromFasta.AlignedStrand(), fromFile.AlignedStrand());
-        EXPECT_EQ(fromFasta.CigarData().ToStdString(), fromFile.CigarData().ToStdString());
+        EXPECT_EQ(fromFasta.CigarData(), fromFile.CigarData());
         EXPECT_EQ(fromFasta.Impl().IsSupplementaryAlignment(),
                   fromFile.Impl().IsSupplementaryAlignment());
     }
@@ -360,7 +360,7 @@ TEST(MM2Test, FastaRefAlignMoveBAM)
         EXPECT_EQ(fromFasta.AlignedStart(), fromFile.AlignedStart());
         EXPECT_EQ(fromFasta.AlignedEnd(), fromFile.AlignedEnd());
         EXPECT_EQ(fromFasta.AlignedStrand(), fromFile.AlignedStrand());
-        EXPECT_EQ(fromFasta.CigarData().ToStdString(), fromFile.CigarData().ToStdString());
+        EXPECT_EQ(fromFasta.CigarData(), fromFile.CigarData());
         EXPECT_EQ(fromFasta.Impl().IsSupplementaryAlignment(),
                   fromFile.Impl().IsSupplementaryAlignment());
     }
@@ -408,7 +408,7 @@ TEST(MM2Test, FastaRefAlignMoveRead)
         EXPECT_EQ(fromFasta.AlignedStart(), fromFile.AlignedStart());
         EXPECT_EQ(fromFasta.AlignedEnd(), fromFile.AlignedEnd());
         EXPECT_EQ(fromFasta.AlignedStrand(), fromFile.AlignedStrand());
-        EXPECT_EQ(fromFasta.CigarData().ToStdString(), fromFile.CigarData().ToStdString());
+        EXPECT_EQ(fromFasta.CigarData(), fromFile.CigarData());
         EXPECT_EQ(fromFasta.Impl().IsSupplementaryAlignment(),
                   fromFile.Impl().IsSupplementaryAlignment());
     }
@@ -419,7 +419,7 @@ void TestTrimCigarFlanks(std::string given, std::string expected, int expectedOf
     Data::Cigar c(given);
     int offset = 0;
     TrimCigarFlanks(&c, &offset);
-    EXPECT_EQ(expected, c.ToStdString()) << " where cigar was " << given;
+    EXPECT_EQ(expected, PacBio::Data::ToStdString(c)) << " where cigar was " << given;
     EXPECT_EQ(offset, expectedOffset) << " where cigar was " << given;
 }
 
