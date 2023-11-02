@@ -164,7 +164,8 @@ struct CompatMappedRead : public Data::MappedRead
 {
     CompatMappedRead(Data::MappedRead mr, const int32_t refIdArg)
         : Data::MappedRead{std::move(mr)}, refId{refIdArg}
-    {}
+    {
+    }
 
     int32_t refId = 0;
     bool primaryAln = true;
@@ -190,10 +191,12 @@ struct CompatMappedRead : public Data::MappedRead
     void RemoveTag(const char*) const {}
     template <typename... Args>
     void EditTag(const char*, Args...) const
-    {}
+    {
+    }
     template <typename... Args>
     void AddTag(const char*, Args...) const
-    {}
+    {
+    }
 };
 
 struct AlignedRead : public AlignedRecordImpl<CompatMappedRead>

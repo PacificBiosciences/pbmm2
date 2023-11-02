@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-
-# if we have cram already, use that
-if [[ -x "$(which cram)" ]]; then
-    exec cram "$@"
-fi
-
-CRAMDIR=$(dirname "${BASH_SOURCE[0]}")/../third-party/cram-0.7
-exec env PYTHONPATH=$CRAMDIR $CRAMDIR/scripts/cram "$@"

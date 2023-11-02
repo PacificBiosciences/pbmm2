@@ -276,7 +276,8 @@ StreamWriters::StreamWriters(BAM::BamHeader& header, const std::string& outPrefi
     , sortThreads_(sortThreads)
     , numThreads_(numThreads)
     , sortMemory_(sortMemory)
-{}
+{
+}
 
 StreamWriter& StreamWriters::at(const std::string& infix, const std::string& sample)
 {

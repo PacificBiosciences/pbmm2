@@ -95,12 +95,11 @@ subdir('include')
 subdir('src')
 
 # tests
-if not meson.is_subproject()
-  if get_option('tests')
-    pbmm2_clang_formatter = find_program('tools/check-formatting')
-    pbmm2_cram_script = find_program('scripts/cram')
-    subdir('tests')
-  endif
+if (not meson.is_subproject()) and get_option('tests')
+  pbmm2_pbtestutils_dep = dependency('pbtestutils', fallback : ['pbtestutils', 'pbtestutils_dep'])
+  pbmm2_cram_script = subproject('pbtestutils').get_variable('cram_script')
+
+  subdir('tests')
 endif
 
 # dependency info

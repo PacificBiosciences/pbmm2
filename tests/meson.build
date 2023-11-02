@@ -1,10 +1,3 @@
-test(
-  'pbmm2 formatting check',
-  pbmm2_clang_formatter,
-  args : [
-    '--all'],
-  workdir : meson.project_source_root())
-
 subdir('unit')
 
 pbmm2_cram_test = [

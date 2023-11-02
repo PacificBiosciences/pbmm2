@@ -1,0 +1,4 @@
+[wrap-git]
+directory=pbtestutils
+url=ssh://git@bitbucket.nanofluidics.com:7999/bfx/pbtestutils.git
+revision=develop
