@@ -21,7 +21,7 @@ Please refer to our [official pbbioconda page](https://github.com/PacificBioscie
 for information on Installation, Support, License, Copyright, and Disclaimer.
 
 ## Latest Version
-Version **1.16.99**: [Full changelog here](#full-changelog)
+Version **1.17.0**: [Full changelog here](#full-changelog)
 
 ## Usage
 _pbmm2_ offers following tools
@@ -422,9 +422,9 @@ and in the same orientation, which are the only fields that `samtools sort` uses
 
 ## Full Changelog
 
- * 1.16.99
+ * 1.17.0
+   * Support ultra-high memory Linux systems
    * Strip `SA` tags from input
-   * High memory support
 
  * 1.16.0
    * SMRT Link 25.1 release
