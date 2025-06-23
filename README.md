@@ -211,8 +211,13 @@ minimap2 parameters:
  - soft clipping with `-Y`
  - long cigars for tag `CG` with `-L`
  - `X/=` cigars instead of `M` with `--eqx`
- - no overlapping query intervals with [repeated matches trimming](README.md#what-is-repeated-matches-trimming)
  - no secondary alignments are produced with `--secondary=no`
+
+### Are there other alignment differences from minimap2?
+In addition to the implicit minimap2 parameters, there are further alignment/output differences which are not available as minimap2 parameters at this time:
+   
+ - no overlapping query intervals with [repeated matches trimming](README.md#what-is-repeated-matches-trimming)
+ - supplementary alignments described by the `SA` tag contain exact CIGAR strings
 
 ### What sequence identity filters does _pbmm2_ offer?
 The idea of removing spurious or low-quality alignments is straightforward,
