@@ -420,6 +420,16 @@ with the same input parameters. The same can occur even with option `--sort` for
 records that align to the same target sequence, the same position within that target,
 and in the same orientation, which are the only fields that `samtools sort` uses.
 
+## How to build
+
+Install [meson](https://mesonbuild.com) and run:
+
+```shell
+meson build -Dtests=false # Not all test dependencies are publicly available
+cd build/
+ninja
+```
+
 ## Full Changelog
 
  * 1.17.0

@@ -247,8 +247,8 @@ int AlignWorkflow::Runner(const CLI_v2::Results& options)
                         }
                     }
                 }
-            } catch (...) {
-                std::cerr << "ERROR" << std::endl;
+            } catch (const std::exception& ex) {
+                std::cerr << "ERROR: " << ex.what() << std::endl;
             }
             waiting--;
         };

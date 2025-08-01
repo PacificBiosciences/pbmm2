@@ -951,7 +951,7 @@ std::vector<Out> MM2Helper::AlignImpl(const In& record,
                 sa << Idx->idx_->seq[rec.ReferenceId()].name << ',' << qrs + 1 << ',' << "+-"[qrev]
                    << ',';
 
-                sa << Data::ToStdString(rec.CigarData());
+                sa << rec.CigarData().ToStdString();
 
                 sa << ',' << static_cast<int>(rec.MapQuality()) << ',' << rec.NumMismatches()
                    << ';';
