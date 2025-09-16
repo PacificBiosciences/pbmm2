@@ -312,8 +312,8 @@ different scoring functions and seeding techniques.
 
 ### How does sorting work?
 We integrated `samtools sort` code into _pbmm2_ to use it as on-the-fly sorting.
-This allows _pbmm2_ to skip writing unaligned BAM as output and thus save
-one round-trip of writing and reading unaligned BAM to disk, minimizing disk IO
+This allows _pbmm2_ to skip writing unsorted BAM as output and thus save
+one round-trip of writing and reading unsorted BAM to disk, minimizing disk IO
 pressure.
 
 ### Is `pbmm2 unsorted` + `samtools sort` faster than `pbmm2 --sort`?
