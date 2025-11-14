@@ -144,7 +144,7 @@ pbmm2 align hg38.fasta mymovies.fofn hg38.mymovies.bam
 ### Which minimap2 version is used?
 
  - pbmm2 ≥v1.13.0: minimap2 v2.26
- - pbmm2 ≥v1.13.0: minimap2 v2.15
+ - pbmm2 <v1.13.0: minimap2 v2.15
 
 ### When are `pbi` files created?
 Whenever the output is of type `xml`, a `pbi` file is being generated.
