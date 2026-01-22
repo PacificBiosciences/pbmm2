@@ -21,7 +21,7 @@ Please refer to our [official pbbioconda page](https://github.com/PacificBioscie
 for information on Installation, Support, License, Copyright, and Disclaimer.
 
 ## Latest Version
-Version **1.17.0**: [Full changelog here](#full-changelog)
+Version **26.1.0**: [Full changelog here](#full-changelog)
 
 ## Usage
 _pbmm2_ offers following tools
@@ -419,6 +419,11 @@ records that align to the same target sequence, the same position within that ta
 and in the same orientation, which are the only fields that `samtools sort` uses.
 
 ## Full Changelog
+
+* 26.1.0
+   * Update `ISOSEQ` preset parameters
+   * Add `AS` Alignment score tag
+   * Improve error messages
 
  * 1.17.0
    * Support ultra-high memory Linux systems
