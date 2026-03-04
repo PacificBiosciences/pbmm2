@@ -21,7 +21,7 @@ Please refer to our [official pbbioconda page](https://github.com/PacificBioscie
 for information on Installation, Support, License, Copyright, and Disclaimer.
 
 ## Latest Version
-Version **26.1.0**: [Full changelog here](#full-changelog)
+Version **26.1.99**: [Full changelog here](#full-changelog)
 
 ## Usage
 _pbmm2_ offers following tools
@@ -210,7 +210,7 @@ minimap2 parameters:
  - long cigars for tag `CG` with `-L`
  - `X/=` cigars instead of `M` with `--eqx`
  - no overlapping query intervals with [repeated matches trimming](README.md#what-is-repeated-matches-trimming)
- - no secondary alignments are produced with `--secondary=no`
+ - no secondary alignments are produced per default (overridable with `--secondary`)
 
 ### What sequence identity filters does _pbmm2_ offer?
 The idea of removing spurious or low-quality alignments is straightforward,
@@ -397,6 +397,13 @@ Yes, `--strip` removes following extraneous tags if the input is BAM,
 Per default, unmapped reads are omitted. You can add them to the output BAM file
 with `--unmapped`.
 
+### Can I output secondary alignments?
+Use `--secondary` to enable secondary alignment output. Secondary alignments
+are independent alternate mappings that skip repeated matches trimming and
+do not participate in SA tag generation.
+Use `--max-secondary-alns N` to retain at most N secondary alignments prior
+to filtering (default: 5). This option is only effective with `--secondary`.
+
 ### Can I output at maximum the N best alignments per read?
 Use `-N, --best-n`. If set to `0`, default, maximum filtering is disabled.
 
@@ -419,6 +426,9 @@ records that align to the same target sequence, the same position within that ta
 and in the same orientation, which are the only fields that `samtools sort` uses.
 
 ## Full Changelog
+
+* 26.1.99
+   * Add `--secondary`
 
 * 26.1.0
    * Update `ISOSEQ` preset parameters
