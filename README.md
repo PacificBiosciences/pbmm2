@@ -426,6 +426,8 @@ records that align to the same target sequence, the same position within that ta
 and in the same orientation, which are the only fields that `samtools sort` uses.
 
 ## Full Changelog
+* 26.2.0
+   * SMRT Link 26.2 release
 
 * 26.1.99
    * Add `--secondary`
